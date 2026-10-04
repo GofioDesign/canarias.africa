@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>canarias.africa — Directorio de entidades panafricanistas de Canarias</title>
+  <meta name="description" content="Próximamente: un directorio abierto de entidades panafricanistas, africanas y afrodescendientes de Canarias.">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="canarias.africa">
+  <meta property="og:description" content="Directorio de entidades panafricanistas de Canarias. Próximamente.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://canarias.africa/">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23111'/%3E%3Crect y='0' width='32' height='4' fill='%23c8102e'/%3E%3Crect y='28' width='32' height='4' fill='%23007a3d'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%23f2b705'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --bg: #faf6ee;
+      --fg: #16130f;
+      --muted: #6b6257;
+      --rule: #d9d0c1;
+      --red: #c8102e;
+      --gold: #d99a00;
+      --green: #007a3d;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #12100d;
+        --fg: #f4eee2;
+        --muted: #a39a8c;
+        --rule: #2e2a24;
+        --gold: #f2b705;
+        --green: #2aa866;
+        --red: #e5354f;
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+    .stripe { display: flex; height: 6px; }
+    .stripe span { flex: 1; }
+    .stripe .r { background: var(--red); }
+    .stripe .k { background: var(--fg); }
+    .stripe .g { background: var(--green); }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      width: 100%;
+      max-width: 44rem;
+      margin: 0 auto;
+      padding: 3rem 1.25rem;
+    }
+    .domain {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .875rem;
+      letter-spacing: .04em;
+      color: var(--muted);
+      margin: 0 0 1.5rem;
+    }
+    .domain b { color: var(--gold); font-weight: 600; }
+    h1 {
+      font-size: clamp(2rem, 7vw, 3.5rem);
+      line-height: 1.05;
+      letter-spacing: -.02em;
+      margin: 0 0 1.25rem;
+      text-wrap: balance;
+    }
+    p.lead {
+      font-size: clamp(1.05rem, 2.6vw, 1.25rem);
+      color: var(--muted);
+      margin: 0 0 2rem;
+      max-width: 36rem;
+      text-wrap: pretty;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      align-self: flex-start;
+      border: 1px solid var(--rule);
+      border-radius: 999px;
+      padding: .45rem .9rem;
+      font-size: .875rem;
+    }
+    .dot {
+      width: .55rem; height: .55rem; border-radius: 50%;
+      background: var(--green);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .dot { animation: pulse 2.4s ease-in-out infinite; }
+      @keyframes pulse { 50% { opacity: .35; } }
+    }
+    footer {
+      border-top: 1px solid var(--rule);
+      padding: 1rem 1.25rem;
+      font-size: .8125rem;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="stripe" aria-hidden="true"><span class="r"></span><span class="k"></span><span class="g"></span></div>
+
+  <main>
+    <p class="domain">canarias<b>.africa</b></p>
+    <h1>Directorio de entidades panafricanistas de Canarias</h1>
+    <p class="lead">
+      Un mapa abierto de asociaciones, colectivos y espacios africanos, afrodescendientes
+      y panafricanistas en las ocho islas. Lo estamos construyendo.
+    </p>
+    <p class="status"><span class="dot" aria-hidden="true"></span> Próximamente</p>
+  </main>
+
+  <footer>Un proyecto de Gofio Design</footer>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Moderación · canarias.africa</title>
+<style>
+  :root { --bg:#faf6ee; --fg:#16130f; --muted:#6b6257; --rule:#d9d0c1; --ok:#007a3d; --no:#c8102e; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#12100d; --fg:#f4eee2; --muted:#a39a8c; --rule:#2e2a24; --ok:#2aa866; --no:#e5354f; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:24px 16px; }
+  nav button { margin-right:8px; }
+  article { border-top:1px solid var(--rule); padding:16px 0; }
+  .meta { color:var(--muted); font-size:14px; }
+  dl { display:grid; grid-template-columns:max-content 1fr; gap:4px 12px; margin:8px 0; }
+  dt { color:var(--muted); } dd { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+  img { max-width:240px; border-radius:4px; margin:4px 8px 0 0; }
+  button { font:inherit; padding:6px 12px; border:1px solid var(--rule); background:transparent; color:inherit; border-radius:4px; cursor:pointer; }
+  .ok { border-color:var(--ok); color:var(--ok); } .no { border-color:var(--no); color:var(--no); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Moderación de envíos</h1>
+  <p class="meta">Observaciones, contexto, obras y rutas propuestas e inscripciones. Nada se publica hasta que se aprueba.</p>
+  <nav><button data-estado="pendiente">Pendientes</button><button data-estado="aprobada">Aprobados</button><button data-estado="rechazada">Rechazados</button></nav>
+  <div id="lista"></div>
+</main>
+<script>
+const NOMBRES = { observacion:"Observación (QR)", contexto:"Contexto", obra_nueva:"Obra nueva", ruta:"Ruta propuesta", inscripcion:"Inscripción a salida" };
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+async function cargar(estado) {
+  const lista = document.getElementById("lista");
+  const r = await fetch(`/api/admin/envios?estado=${estado}`);
+  if (!r.ok) { lista.innerHTML = `<p>No se pudo cargar (${r.status}).</p>`; return; }
+  const envios = await r.json();
+  if (!envios.length) { lista.innerHTML = "<p>No hay envíos en este estado.</p>"; return; }
+  lista.innerHTML = envios.map((e) => {
+    const d = JSON.parse(e.datos), fotos = JSON.parse(e.fotos || "[]");
+    return `<article><strong>${esc(NOMBRES[e.formulario] || e.formulario)}</strong> <span class="meta">${esc(e.obra || "")} · ${esc(e.creado)}</span>
+      <dl>${Object.entries(d).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+      ${fotos.map((f) => `<img src="/api/admin/fotos/${encodeURIComponent(f)}" alt="Foto enviada">`).join("")}
+      <p><button class="ok" data-id="${e.id}" data-a="aprobada">Aprobar</button> <button class="no" data-id="${e.id}" data-a="rechazada">Rechazar</button></p></article>`;
+  }).join("");
+}
+document.addEventListener("click", async (ev) => {
+  const b = ev.target.closest("button"); if (!b) return;
+  if (b.dataset.estado) return cargar(b.dataset.estado);
+  if (b.dataset.id) {
+    await fetch(`/api/admin/envios/${b.dataset.id}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ estado: b.dataset.a }) });
+    b.closest("article").remove();
+  }
+});
+cargar("pendiente");
+</script>
+</body>
+</html>

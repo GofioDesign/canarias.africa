@@ -2,7 +2,15 @@
 
 Propuesta del 27 de octubre de 2026. Pensada para un proyecto sin financiación: un único servidor pequeño, programas libres y servicios gratuitos donde no hace falta pagar.
 
-## Recomendación en una frase
+## Opción gratuita: Cloudflare (añadida el 27 de octubre)
+
+Para empezar a 0 € (solo el dominio): web, API, base de datos (D1), fotos (R2), caché de teselas y copia de uMap en un único Worker de Cloudflare, en [`cloudflare/`](../cloudflare/README.md). La moderación se hace en `/admin`, protegida con Cloudflare Access. El foro empieza como un grupo privado y Discourse llega cuando haya presupuesto. Si algún día hace falta, el código de `servidor/` (VPS con PocketBase) sigue disponible como plan B.
+
+Comprobado el 27-10-2026: PocketHost ya no tiene plan gratuito y Oracle ha recortado su capa gratuita en 2026.
+
+## Opción con servidor propio (≈ 5 €/mes)
+
+### Recomendación en una frase
 
 Un VPS europeo de unos 5 €/mes (Hetzner CX22 o equivalente: 2 vCPU, 4 GB de RAM, 40 GB de disco) con Debian, nginx y PocketBase. El DNS va a Cloudflare (gratis), los mapas se editan en el uMap público de OSM Francia, el correo entrante se reenvía gratis a Gmail y el saliente sale por Brevo (300 correos al día gratis). El foro Discourse se monta en el mismo servidor en una segunda fase.
 

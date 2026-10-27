@@ -11,6 +11,30 @@ routerAdd("GET", "/api/publico/obras", (e) => {
   return e.json(200, { type: "FeatureCollection", features: obras.map(obraPublica) });
 });
 
+// Ficha pública de una obra: datos publicables, relaciones con autoría y fuentes,
+// y observaciones ya revisadas. Nunca incluye coordenadas sin ofuscar ni datos de contacto.
+routerAdd("GET", "/api/publico/obras/{codigo}", (e) => {
+  const { obraPublica } = require(`${__hooks}/publico.js`);
+  let obra;
+  try {
+    obra = $app.findFirstRecordByFilter("nodos", "tipo = 'obra' && publicado = true && codigo = {:c}", { c: e.request.pathValue("codigo") });
+  } catch (_) {
+    return e.json(404, { error: "No existe esa obra." });
+  }
+  const relaciones = $app.findRecordsByFilter("relaciones", "origen = {:id} || destino = {:id}", "fecha", 0, 0, { id: obra.id });
+  const observaciones = $app.findRecordsByFilter("observaciones", "obra = {:id} && estado_revision = 'aprobada'", "-created", 0, 0, { id: obra.id });
+  const ficha = obraPublica(obra);
+  ficha.properties.descripcion = obra.get("descripcion");
+  ficha.properties.relaciones = relaciones.map((r) => ({
+    tipo: r.get("tipo"), origen: r.get("origen"), destino: r.get("destino"),
+    certeza: r.get("certeza"), fecha: r.get("fecha"), fuente: r.get("fuente"),
+  }));
+  ficha.properties.observaciones = observaciones.map((o) => ({
+    fecha: o.get("created"), fase: o.get("fase"), texto: o.get("texto"), alias: o.get("alias"),
+  }));
+  return e.json(200, ficha);
+});
+
 // Un QR impreso apunta a https://canarias.africa/q/<código>. El código se puede rotar
 // (por ejemplo, si una foto del QR circula fuera de la obra): basta con generar uno nuevo
 // en la colección «qr» y reimprimir. Los códigos retirados dejan de aceptar observaciones.
@@ -49,4 +73,4 @@ onRecordCreateRequest((e) => {
   }
   e.record.set("estado_revision", "pendiente");
   e.next();
-}, "observaciones", "aportaciones", "inscripciones");
+}, "observaciones", "contexto", "propuestas_obra", "propuestas_ruta", "inscripciones");

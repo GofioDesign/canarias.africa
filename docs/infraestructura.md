@@ -47,7 +47,8 @@ Un VPS europeo de unos 5 €/mes (Hetzner CX22 o equivalente: 2 vCPU, 4 GB de RA
 
 ## Datos y RGPD
 
-- Colecciones de PocketBase: `nodos` (todos los tipos, con `tipo`, `codigo`, `sensibilidad`, `lat`, `lon`, `municipio`, `publicado`), `relaciones` (`origen`, `destino`, `tipo`, `certeza`, `fecha`, `fuente`), `qr` (`codigo`, `obra`, `activo`), `observaciones`, `aportaciones` (contexto y obra nueva), `inscripciones` (salidas de mapeo).
+- Colecciones de PocketBase: `nodos` (todos los tipos, con `tipo`, `codigo`, `sensibilidad`, `lat`, `lon`, `municipio`, `publicado`), `relaciones` (`origen`, `destino`, `tipo`, `certeza`, `fecha`, `fuente`), `qr` (`codigo`, `obra`, `activo`), `observaciones`, `contexto`, `propuestas_obra`, `propuestas_ruta` e `inscripciones` (salidas de mapeo). La web envía los formularios a `/api/collections/<colección>/records`.
+- Lectura pública: `GET /api/publico/obras` (todas, ofuscadas) y `GET /api/publico/obras/<código>` (ficha con relaciones y observaciones aprobadas).
 - Toda aportación entra como `pendiente` y exige aceptar el aviso de privacidad.
 - La lectura pública solo pasa por rutas que ya devuelven datos ofuscados. Las colecciones no tienen reglas de lectura pública.
 - El panel de administración de PocketBase no se publica: se entra por túnel SSH.

@@ -1379,6 +1379,18 @@ async function cargarObrasPublicas(){
     route();
   }catch(e){ /* vista previa: datos de ejemplo */ }
 }
+/* Ficha completa: GET /api/publico/obras/<código> → Feature con descripcion, relaciones y observaciones aprobadas */
+async function cargarFicha(o){
+  if(DEMO||o._ficha) return false;
+  try{
+    const r=await fetch(API.obras+"/"+encodeURIComponent(o.id)); if(!r.ok) return false;
+    const p=(await r.json()).properties||{};
+    if(p.descripcion) o.desc=p.descripcion;
+    if(Array.isArray(p.observaciones)) o.obs=p.observaciones.map(x=>[x.fecha,x.alias||"anónimo",x.fase?"QR":"Ficha",FASES[x.fase]?x.fase:null,x.texto||"","validada"]);
+    if(Array.isArray(p.relaciones)) o.rels=p.relaciones;
+    o._ficha=true; return true;
+  }catch(e){ return false; }
+}
 async function cargarUMap(){
   const capa=async c=>{ const r=await fetch(MAPA.umap+c+".geojson"); if(!r.ok) throw new Error(c); return (await r.json()).features||[]; };
   let cambio=false;
@@ -1570,9 +1582,9 @@ function vObra(o){
   return `<p class="eyebrow"><a href="#archivo">← Archivo</a></p>
   <section class="ficha-head" style="margin-top:14px">
     <div class="stack">
-      <div class="idline"><span class="idbadge">${o.id}</span>${chip(o.fase)}<span class="fake">datos ficticios</span></div>
+      <div class="idline"><span class="idbadge">${o.id}</span>${chip(o.fase)}${DEMO?`<span class="fake">datos ficticios</span>`:""}</div>
       <h1>${esc(o.t)}</h1>
-      <p class="lede muted">${o.tipo} · ${esc(o.lugar)} · ${M.n}, ${ISLAS[M.isla]}</p>
+      <p class="lede muted">${o.tipo} · ${esc(o.lugar)} · ${M.n}, ${ISLAS[M.isla]}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}
       <div class="btns"><a class="btn lichen" href="#contexto-${o.id.toLowerCase()}">Aportar contexto</a></div>
       <div class="qrhint">${o.qr.st==="activo"?`<p><b>¿Estás junto a la obra?</b> Escanea su QR para contar cómo está hoy. El estado de una obra solo se puede observar desde su QR.</p><div class="btns" style="align-items:center"><a class="btn alt" href="#${qrHash(o)}" style="padding:6px 12px;font-size:.88rem">Simular escaneo del QR</a><span class="fake">solo en el prototipo</span></div>`
         :sensOf(o)==="reservada"?`<p class="muted">Esta obra no lleva QR en el sitio, para no señalar dónde está. Su estado lo revisa el equipo junto con la autoridad de patrimonio. Puedes aportar contexto.</p>`
@@ -2276,7 +2288,9 @@ function route(){
   document.querySelectorAll("nav.main a").forEach(a=>{ if(a.getAttribute("href")==="#"+sec) a.setAttribute("aria-current","page"); });
   window.scrollTo(0,0);
   if(h==="archivo"){ renderCerca(); renderRes(); ["q","m","f","c"].forEach(k=>{ const el=$("#f-"+k); el.addEventListener("input",()=>{FILT[k]=el.value;renderRes();}); }); }
-  if(h.startsWith("obra-")&&$("#qr")){ const o=OBRAS.find(x=>slug(x.id)===h); drawQR($("#qr"),API.qr+qrTok(o.id)); }
+  if(h.startsWith("obra-")){ const o=OBRAS.find(x=>slug(x.id)===h);
+    if(o&&$("#qr")) drawQR($("#qr"),API.qr+qrTok(o.id));
+    if(o) cargarFicha(o).then(n=>{ if(n&&(location.hash||"").slice(1)===h) route(); }); }
   initMaps();
   if(h==="red") wireRed();
   if(h==="ayudas") wireAyudas();

@@ -1,0 +1,5 @@
+# Todo pasa por index.php (Apache o LiteSpeed con mod_rewrite).
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L,QSA]
+Options -Indexes

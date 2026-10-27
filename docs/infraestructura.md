@@ -2,24 +2,26 @@
 
 Propuesta del 27 de octubre de 2026. Pensada para un proyecto sin financiación: un único servidor pequeño, programas libres y servicios gratuitos donde no hace falta pagar.
 
-## Opción gratuita: Cloudflare (añadida el 27 de octubre)
+## Por qué no Cloudflare (27 de octubre)
 
-Para empezar a 0 € (solo el dominio): web, API, base de datos (D1), fotos (R2), caché de teselas y copia de uMap en un único Worker de Cloudflare, en [`cloudflare/`](../cloudflare/README.md). La moderación se hace en `/admin`, protegida con Cloudflare Access. El foro empieza como un grupo privado y Discourse llega cuando haya presupuesto. Si algún día hace falta, el código de `servidor/` (VPS con PocketBase) sigue disponible como plan B.
+Desde 2025, por orden judicial a petición de LaLiga, las operadoras españolas bloquean IP de Cloudflare durante los partidos, y los bloqueos siguen en 2026. Una web servida a través de Cloudflare (proxy, Workers, Pages o R2) deja de verse en España justo los fines de semana, que es cuando hay salidas y escaneos de QR. Por eso la web, la API y las fotos van en un servidor con IP propia. Cloudflare solo se usaría, si acaso, como DNS sin proxy (nube gris) y para el reenvío de correo, que no pasan por esas IP. Lo más seguro es dejar el DNS en el registrador.
 
-Comprobado el 27-10-2026: PocketHost ya no tiene plan gratuito y Oracle ha recortado su capa gratuita en 2026.
+## Opción gratuita: servidor Always Free de Oracle
+
+El mismo código de `servidor/` (nginx + PocketBase) en una máquina ARM gratuita de Oracle Cloud (en 2026, unas 2 OCPU y 12 GB de RAM; hay que comprobarlo en la consola). Conviene pasar la cuenta a «Pay As You Go», que pide tarjeta: dentro de los límites gratuitos no cobra y evita que Oracle recupere las máquinas que ve inactivas. Si Oracle falla, se pasa al VPS de 5 €/mes con las copias de seguridad en una hora.
 
 ## Opción con servidor propio (≈ 5 €/mes)
 
 ### Recomendación en una frase
 
-Un VPS europeo de unos 5 €/mes (Hetzner CX22 o equivalente: 2 vCPU, 4 GB de RAM, 40 GB de disco) con Debian, nginx y PocketBase. El DNS va a Cloudflare (gratis), los mapas se editan en el uMap público de OSM Francia, el correo entrante se reenvía gratis a Gmail y el saliente sale por Brevo (300 correos al día gratis). El foro Discourse se monta en el mismo servidor en una segunda fase.
+Un VPS europeo de unos 5 €/mes (Hetzner CX22 o equivalente: 2 vCPU, 4 GB de RAM, 40 GB de disco) con Debian, nginx y PocketBase. El DNS se queda en el registrador, los mapas se editan en el uMap público de OSM Francia, el correo entrante se reenvía gratis a Gmail (reenvío del registrador o ImprovMX) y el saliente sale por Brevo (300 correos al día gratis). El foro Discourse se monta en el mismo servidor en una segunda fase.
 
 ## Piezas
 
 | Pieza | Elección | Coste | Por qué |
 |---|---|---|---|
 | Servidor | VPS Hetzner CX22 (Alemania o Finlandia), Debian | ≈ 5 €/mes (comprobar al contratar) | Datos en la UE (RGPD), aguanta web + API + caché de teselas + Discourse |
-| DNS | Cloudflare, plan gratuito, solo DNS (nube gris) | 0 € | Gestión cómoda, reenvío de correo gratuito, sin cambiar de registrador |
+| DNS | El del registrador (o Cloudflare solo DNS, nube gris) | 0 € | Nunca con el proxy de Cloudflare, por los bloqueos de LaLiga |
 | Dominio | canarias.africa, se queda en su registrador actual | Renovación anual del .africa | Solo se cambian los servidores de nombres |
 | Web | HTML estático servido por nginx (`web/`) | 0 € | Es lo que ya es el prototipo |
 | Teselas OSM | Caché de nginx en `/teselas/osm/`, máx. 5 GB | 0 € | Decidido; respeta la política de teselas de OSM |
@@ -28,9 +30,9 @@ Un VPS europeo de unos 5 €/mes (Hetzner CX22 o equivalente: 2 vCPU, 4 GB de RA
 | Ofuscación de coordenadas | En PocketBase: `/api/publico/obras` publica abierta / zona de 0,02° / solo municipio | 0 € | Las coordenadas reales nunca salen del servidor |
 | QR | `canarias.africa/q/<código>`; el código vive en la colección `qr` y se puede rotar | 0 € | La observación solo entra con un código activo |
 | Foro de artistas | Discourse autoalojado en `foro.canarias.africa`, categoría privada (fase 2) | 0 € (mismo VPS; si va justo, subir a 8 GB ≈ +5 €/mes) | Propuesta del hilo de diseño |
-| Correo entrante | Cloudflare Email Routing: hola@, foro@… → Gmail | 0 € | Sin buzones que mantener |
+| Correo entrante | Reenvío del registrador o ImprovMX gratis: hola@ → Gmail | 0 € | Sin buzones que mantener |
 | Correo saliente | Brevo SMTP (formularios, Discourse, «enviar como» desde Gmail) | 0 € hasta 300/día | Ya tienes Brevo conectado |
-| Copias de seguridad | restic cifrado, diario, a Cloudflare R2 o Backblaze B2 | 0 € (hasta 10 GB) | Guarda base de datos, fotos, configuración y copias de Discourse |
+| Copias de seguridad | restic cifrado, diario, a Backblaze B2 | 0 € (hasta 10 GB) | Guarda base de datos, fotos, configuración y copias de Discourse |
 | Código | Este repositorio en GitHub | 0 € | |
 
 **Coste total estimado:** unos 5 €/mes más la renovación del dominio. Unos 60 €/año.
@@ -49,8 +51,8 @@ Un VPS europeo de unos 5 €/mes (Hetzner CX22 o equivalente: 2 vCPU, 4 GB de RA
 | `canarias.africa` | A / AAAA | IP del VPS |
 | `www` | CNAME | `canarias.africa` |
 | `foro` | A / AAAA | IP del VPS (fase 2) |
-| `@` | MX + TXT | Los que indique Cloudflare Email Routing |
-| `@` | TXT (SPF) | `v=spf1 include:_spf.mx.cloudflare.net include:spf.brevo.com ~all` |
+| `@` | MX + TXT | Los que indique el servicio de reenvío de correo |
+| `@` | TXT (SPF) | `v=spf1 include:spf.brevo.com (más el del servicio de reenvío) ~all` |
 | `brevo._domainkey` y `_dmarc` | TXT / CNAME | Los que indique Brevo al verificar el dominio |
 
 ## Datos y RGPD
@@ -65,7 +67,7 @@ Un VPS europeo de unos 5 €/mes (Hetzner CX22 o equivalente: 2 vCPU, 4 GB de RA
 ## Fases
 
 1. **Fase 0, sin coste:** prototipo en el repositorio; GitHub Pages opcional para enseñarlo.
-2. **Fase 1, ≈ 5 €/mes:** VPS, DNS en Cloudflare, nginx con caché de teselas, PocketBase con formularios, sincronización de uMap, copias de seguridad, correo.
+2. **Fase 1, 0–5 €/mes:** servidor (Oracle gratis o VPS), DNS, nginx con caché de teselas, PocketBase con formularios, sincronización de uMap, copias de seguridad, correo.
 3. **Fase 2:** Discourse en `foro.canarias.africa`, con acceso solo por invitación.
 4. **Más adelante:** uMap propio, teselas propias en PMTiles a partir de Geofabrik.
 

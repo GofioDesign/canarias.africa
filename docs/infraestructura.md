@@ -41,9 +41,11 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 
    | Nombre | Tipo | Valor |
    |---|---|---|
-   | `@` | A | 185.199.108.153, 185.199.109.153, 185.199.110.153, 185.199.111.153 |
+   | `@` | A | 185.199.108.153, 185.199.109.153, 185.199.110.153, 185.199.111.153 (ya están, 27-10-2026) |
+   | `@` | AAAA | 2606:50c0:8000::153, 2606:50c0:8001::153, 2606:50c0:8002::153, 2606:50c0:8003::153 (ya están) |
    | `www` | CNAME | `gofiodesign.github.io` |
    | `api` | A o CNAME | El que indique el hosting para el subdominio |
+   | `_github-pages-challenge-GofioDesign` | TXT | El que dé GitHub al verificar el dominio (evita que otra cuenta lo use en Pages) |
 
 3. **Hosting:** crear el subdominio `api.canarias.africa` con certificado SSL y con su carpeta pública apuntando a `servidor-php/publico/`. Subir `servidor-php/privado/` fuera de la carpeta pública si el hosting lo permite (si no, su `.htaccess` la bloquea). Copiar `privado/config.ejemplo.php` como `config.php` y rellenarlo. Programar cada hora: `php …/servidor-php/cron/tareas.php`.
 4. Requisitos del hosting: PHP 8.1 o superior con PDO SQLite, GD y cURL, y Apache o LiteSpeed con `mod_rewrite`. No hace falta MySQL.

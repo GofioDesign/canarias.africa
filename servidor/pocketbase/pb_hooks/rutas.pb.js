@@ -22,7 +22,7 @@ routerAdd("GET", "/api/publico/obras/{codigo}", (e) => {
     return e.json(404, { error: "No existe esa obra." });
   }
   const relaciones = $app.findRecordsByFilter("relaciones", "origen = {:id} || destino = {:id}", "fecha", 0, 0, { id: obra.id });
-  const observaciones = $app.findRecordsByFilter("observaciones", "obra = {:id} && estado_revision = 'aprobada'", "-created", 0, 0, { id: obra.id });
+  const observaciones = $app.findRecordsByFilter("observaciones", "obra = {:c} && estado_revision = 'aprobada'", "-created", 0, 0, { c: obra.get("codigo") });
   const ficha = obraPublica(obra);
   ficha.properties.descripcion = obra.get("descripcion");
   ficha.properties.relaciones = relaciones.map((r) => ({
@@ -59,7 +59,9 @@ onRecordCreateRequest((e) => {
   } catch (_) {
     throw new BadRequestError("El código QR no es válido o ya no está activo.");
   }
-  if (qr.get("obra") !== e.record.get("obra")) {
+  // En «observaciones», el campo obra es texto con el código público (CA-…), que es lo que envía la web.
+  const obra = $app.findRecordById("nodos", qr.get("obra"));
+  if (obra.get("codigo") !== e.record.get("obra")) {
     throw new BadRequestError("El código QR no corresponde a esta obra.");
   }
   e.record.set("estado_revision", "pendiente");

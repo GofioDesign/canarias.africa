@@ -1,0 +1,2231 @@
+<title>CANARIAS.AFRICA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: archivo de campo. Barra superior fija, una columna de lectura, el mapa como pieza central. */
+:root{
+  --bg:#ECEFEA; --surface:#F7F8F5; --ink:#1B201E; --muted:#56605A; --line:#CBD2CA;
+  --lichen:#D6A300; --lichen-ink:#735400; --sea:#DCE5E6; --land:#C9CFC4; --land-edge:#9AA59B;
+  --ph-gest:#8C8F86; --ph-crea:#3E7C5A; --ph-plen:#2F7A3E; --ph-desg:#B07A12; --ph-inte:#2D6C8C; --ph-tran:#7A4E8C; --ph-desa:#7E6F66; --ph-memo:#6B7470;
+  --warn-bg:#FFF2C2; --warn-ink:#5C4400;
+  --tile-filter:none;
+  --n-obra:#C99700; --n-agente:#2D6C8C; --n-entidad:#7A4E8C; --n-terr:#4F7A3A; --n-reg:#8A928C; --n-rec:#A4502E;
+  --f-display:"Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --f-body:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121614; --surface:#1A1F1C; --ink:#E4E9E2; --muted:#9BA69F; --line:#2D3631;
+  --lichen:#E5B51E; --lichen-ink:#F0CB5A; --sea:#17252A; --land:#2B332E; --land-edge:#4A564E;
+  --ph-gest:#9A9D94; --ph-crea:#62B285; --ph-plen:#5DBE6E; --ph-desg:#E0A73A; --ph-inte:#5AA9CF; --ph-tran:#B48AC6; --ph-desa:#A8988D; --ph-memo:#98A39E;
+  --warn-bg:#3A3110; --warn-ink:#F2D98A; --n-obra:#E5B51E; --n-agente:#5AA9CF; --n-entidad:#B48AC6; --n-terr:#7DB866; --n-reg:#7C8781; --n-rec:#D9825E; --tile-filter:brightness(.72) contrast(1.08) saturate(.55); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121614; --surface:#1A1F1C; --ink:#E4E9E2; --muted:#9BA69F; --line:#2D3631;
+  --lichen:#E5B51E; --lichen-ink:#F0CB5A; --sea:#17252A; --land:#2B332E; --land-edge:#4A564E;
+  --ph-gest:#9A9D94; --ph-crea:#62B285; --ph-plen:#5DBE6E; --ph-desg:#E0A73A; --ph-inte:#5AA9CF; --ph-tran:#B48AC6; --ph-desa:#A8988D; --ph-memo:#98A39E;
+  --warn-bg:#3A3110; --warn-ink:#F2D98A; --n-obra:#E5B51E; --n-agente:#5AA9CF; --n-entidad:#B48AC6; --n-terr:#7DB866; --n-reg:#7C8781; --n-rec:#D9825E; --tile-filter:brightness(.72) contrast(1.08) saturate(.55); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ink)}
+a{color:var(--lichen-ink);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--lichen);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.08;text-wrap:balance;margin:0;letter-spacing:-.01em}
+h1{font-size:clamp(2.1rem,6vw,3.6rem);font-weight:800}
+h2{font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:700}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0}
+.mono{font-family:var(--f-mono);font-size:.82em;letter-spacing:.01em}
+.eyebrow{font-family:var(--f-mono);font-size:.74rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+.muted{color:var(--muted)}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Cabecera */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ink);color:var(--bg)}
+.top .wrap{display:flex;align-items:center;gap:20px;padding-block:10px;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:800;font-size:1.15rem;color:var(--bg);text-decoration:none;letter-spacing:.01em;display:flex;align-items:center;gap:8px}
+.brand i{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--lichen);flex:none}
+.brand .acr{display:inline-flex;flex-wrap:wrap;align-items:baseline;row-gap:2px}
+.brand .l{display:inline-flex;align-items:baseline;transition:color .3s,margin .45s ease}
+.brand .x{display:inline-block;max-width:0;opacity:0;overflow:hidden;white-space:nowrap;vertical-align:bottom;font-weight:500;transition:max-width .45s ease,opacity .3s ease}
+.brand:hover .l,.brand:focus-visible .l{color:var(--lichen);margin-right:.32em}
+.brand:hover .l.n,.brand:focus-visible .l.n{margin-right:.8em}
+.brand:hover .x,.brand:focus-visible .x{max-width:9em;opacity:1;color:var(--bg)}
+.brand:hover .dom,.brand:focus-visible .dom{margin-left:.2em}
+@media (prefers-reduced-motion:reduce){.brand .l,.brand .x{transition:none}}
+nav.main{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+nav.main a{color:var(--bg);text-decoration:none;font-family:var(--f-display);font-weight:500;font-size:.95rem;padding:5px 10px;border-radius:4px;opacity:.82}
+nav.main a:hover{opacity:1}
+nav.main a[aria-current="page"]{background:var(--lichen);color:#1B201E;opacity:1}
+.proto{background:var(--warn-bg);color:var(--warn-ink);font-family:var(--f-mono);font-size:.76rem}
+.proto .wrap{padding-block:6px}
+
+main{padding-block:36px 72px}
+section+section{margin-top:56px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.lede{font-size:1.2rem;max-width:62ch}
+.prose{max-width:66ch}
+
+/* Inicio */
+.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:40px;align-items:center}
+.hero h1 span{display:block;color:var(--muted);font-weight:500;font-size:.42em;margin-top:12px;letter-spacing:0}
+.acron{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--f-display);font-size:1rem;margin-top:16px}
+.acron b{color:var(--lichen-ink);font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:28px}
+.stats div{background:var(--surface);padding:14px}
+.stats strong{display:block;font-family:var(--f-display);font-size:2rem;font-variant-numeric:tabular-nums;line-height:1}
+.stats span{font-size:.85rem;color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin-top:20px}
+.steps li{list-style:none;border-top:3px solid var(--ink);padding-top:12px}
+.steps ol{padding:0;margin:0}
+.steps b{font-family:var(--f-mono);font-size:.8rem;color:var(--lichen-ink)}
+.munis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
+.muni{background:var(--surface);border:1px solid var(--line);padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.muni h3 a{color:inherit;text-decoration:none}
+.muni h3 a:hover{text-decoration:underline}
+.muni .row{display:flex;justify-content:space-between;gap:8px;font-size:.88rem;color:var(--muted)}
+
+/* Mapa */
+.map{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
+.map figure{margin:0;background:var(--sea);border:1px solid var(--line);flex:1 1 300px;min-width:0;position:relative}
+.map figure.lz{flex:.62 1 220px}
+.map figure>svg{display:block;width:100%;height:auto}
+.map figcaption{position:absolute;left:10px;top:8px;font-family:var(--f-display);font-weight:700;font-size:.95rem;color:var(--muted)}
+.isle{fill:var(--land);stroke:var(--land-edge);stroke-width:1.2}
+.pt circle.dot{stroke:var(--surface);stroke-width:2}
+.pt text{font-family:var(--f-mono);font-size:10px;fill:var(--ink)}
+.pt:hover circle.dot,.pt:focus circle.dot{stroke:var(--ink)}
+.pt.dim{opacity:.25}
+.mlabel{font-family:var(--f-display);font-size:10.5px;fill:var(--muted);font-weight:500}
+.route-line{fill:none;stroke:var(--ink);stroke-width:2;stroke-dasharray:5 4}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.85rem;margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}
+
+/* Archivo */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:20px 0}
+.filters label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted);font-family:var(--f-mono)}
+select,input,textarea{font:inherit;font-size:.95rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:7px 9px;max-width:100%}
+textarea{min-height:110px;width:100%;resize:vertical}
+.list{display:flex;flex-direction:column;border-top:1px solid var(--line);margin-top:22px}
+.item{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--line);text-decoration:none;color:inherit}
+.item:hover{background:var(--surface)}
+.item .t{font-family:var(--f-display);font-weight:700;font-size:1.05rem}
+.item .s{font-size:.88rem;color:var(--muted)}
+.count{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+
+/* Chips */
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:.74rem;padding:3px 8px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.fake{display:inline-block;font-family:var(--f-mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;background:var(--warn-bg);color:var(--warn-ink);padding:2px 6px;border-radius:3px;vertical-align:middle}
+
+/* Ficha */
+.ficha-head{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:28px;align-items:start}
+.idline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.idbadge{font-family:var(--f-mono);font-weight:600;font-size:.9rem;background:var(--ink);color:var(--bg);padding:3px 8px;border-radius:3px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
+.dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 16px;margin:0;font-size:.95rem}
+.dl dt{font-family:var(--f-mono);font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding-top:3px}
+.dl dd{margin:0}
+.panel{background:var(--surface);border:1px solid var(--line);padding:18px}
+.cert{display:inline-flex;gap:3px;vertical-align:middle;margin-right:6px}
+.cert i{width:9px;height:9px;border-radius:2px;border:1.5px solid var(--ink)}
+.cert i.on{background:var(--ink)}
+.qr{background:#fff;padding:10px;border:1px solid var(--line)}
+.qr canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
+.qrhint{display:flex;flex-direction:column;gap:8px;align-items:flex-start;font-size:.95rem;border-top:1px solid var(--line);padding-top:12px}
+.qrnote{font-size:.78rem;color:var(--muted);margin-top:6px;font-family:var(--f-mono)}
+.timeline{position:relative;display:flex;flex-direction:column;gap:0;margin-top:14px;padding-left:22px}
+.timeline::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.tl{position:relative;padding:0 0 16px}
+.tl::before{content:"";position:absolute;left:-21px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--c);border:2px solid var(--bg)}
+.tl .d{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+.obs{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line)}
+.ob{padding:12px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px}
+.ob .meta{font-family:var(--f-mono);font-size:.76rem;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.ver-ok{color:var(--ph-plen)} .ver-pend{color:var(--ph-desg)} .ver-no{color:var(--ph-desa)}
+.cite{font-family:var(--f-mono);font-size:.8rem;background:var(--surface);border:1px dashed var(--line);padding:10px 12px;overflow-x:auto}
+
+/* Botones */
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-display);font-weight:700;font-size:1rem;background:var(--ink);color:var(--bg);border:0;border-radius:4px;padding:10px 16px;text-decoration:none;cursor:pointer}
+.btn.alt{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn.lichen{background:var(--lichen);color:#1B201E}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+
+/* Formulario */
+form.obsf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px;max-width:760px}
+form.obsf .full{grid-column:1/-1}
+form.obsf label{display:flex;flex-direction:column;gap:6px;font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+fieldset{border:1px solid var(--line);padding:12px 14px;margin:0}
+legend{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);padding:0 6px}
+.radios{display:flex;flex-wrap:wrap;gap:8px 16px;font-family:var(--f-body);font-size:.95rem;color:var(--ink)}
+.radios label{flex-direction:row;align-items:center;gap:6px;font-family:var(--f-body);font-size:.95rem;color:var(--ink)}
+.ok{background:var(--surface);border:1px solid var(--ph-plen);padding:14px 16px;max-width:760px}
+
+/* Rutas */
+.routes{display:flex;flex-direction:column;gap:28px}
+.route{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;border-top:3px solid var(--ink);padding-top:16px}
+.stops{counter-reset:s;list-style:none;padding:0;margin:10px 0 0;display:flex;flex-direction:column;gap:6px}
+.stops li{counter-increment:s;display:flex;gap:10px;align-items:baseline}
+.stops li::before{content:counter(s);font-family:var(--f-mono);font-size:.78rem;background:var(--ink);color:var(--bg);width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.curline{font-size:.95rem}
+.tesis{margin:0;font-style:italic;border-left:3px solid var(--lichen);padding-left:14px;max-width:60ch}
+.facts{display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--f-mono);font-size:.82rem;color:var(--muted);margin-top:6px}
+
+/* Ayudas */
+.aytable{overflow-x:auto;border:1px solid var(--line);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:640px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:400}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.slot{border:2px dashed var(--line);padding:18px;display:flex;flex-direction:column;gap:8px}
+
+/* Sistema */
+.ents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.ent{background:var(--surface);border:1px solid var(--line)}
+.ent h3{background:var(--ink);color:var(--bg);padding:8px 12px;font-size:1rem;display:flex;justify-content:space-between;gap:8px}
+.ent h3 small{font-family:var(--f-mono);font-weight:400;font-size:.72rem;opacity:.8}
+.ent ul{list-style:none;margin:0;padding:6px 12px 10px}
+.ent li{display:grid;grid-template-columns:minmax(0,10.5em) minmax(0,1fr);gap:10px;padding:5px 0;border-bottom:1px dotted var(--line);font-size:.88rem}
+.ent li:last-child{border-bottom:0}
+.ent code{font-family:var(--f-mono);font-size:.8rem;overflow-wrap:anywhere}
+.scale{display:flex;flex-wrap:wrap;gap:8px}
+.scale .chip{font-size:.78rem}
+pre.json{font-family:var(--f-mono);font-size:.78rem;line-height:1.5;background:var(--surface);border:1px solid var(--line);padding:14px;overflow-x:auto;margin:0}
+.cycle{display:flex;flex-wrap:wrap;gap:0;margin-top:12px}
+.cycle div{flex:1 1 150px;padding:10px 12px;border:1px solid var(--line);margin:-1px 0 0 -1px;background:var(--surface);font-size:.9rem}
+.cycle b{display:block;font-family:var(--f-mono);font-size:.74rem;color:var(--lichen-ink);font-weight:600}
+
+/* Leaflet 1.9.4 (CSS incluido en línea) */
+
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	}
+.leaflet-container {
+	overflow: hidden;
+	}
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	-webkit-user-select: none;
+	   -moz-user-select: none;
+	        user-select: none;
+	  -webkit-user-drag: none;
+	}
+.leaflet-tile::selection {
+	background: transparent;
+}
+.leaflet-safari .leaflet-tile {
+	image-rendering: -webkit-optimize-contrast;
+	}
+.leaflet-safari .leaflet-tile-container {
+	width: 1600px;
+	height: 1600px;
+	-webkit-transform-origin: 0 0;
+	}
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	display: block;
+	}
+.leaflet-container .leaflet-overlay-pane svg {
+	max-width: none !important;
+	max-height: none !important;
+	}
+.leaflet-container .leaflet-marker-pane img,
+.leaflet-container .leaflet-shadow-pane img,
+.leaflet-container .leaflet-tile-pane img,
+.leaflet-container img.leaflet-image-layer,
+.leaflet-container .leaflet-tile {
+	max-width: none !important;
+	max-height: none !important;
+	width: auto;
+	padding: 0;
+	}
+.leaflet-container img.leaflet-tile {
+	mix-blend-mode: plus-lighter;
+}
+.leaflet-container.leaflet-touch-zoom {
+	-ms-touch-action: pan-x pan-y;
+	touch-action: pan-x pan-y;
+	}
+.leaflet-container.leaflet-touch-drag {
+	-ms-touch-action: pinch-zoom;
+	touch-action: none;
+	touch-action: pinch-zoom;
+}
+.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
+	-ms-touch-action: none;
+	touch-action: none;
+}
+.leaflet-container {
+	-webkit-tap-highlight-color: transparent;
+}
+.leaflet-container a {
+	-webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
+}
+.leaflet-tile {
+	filter: inherit;
+	visibility: hidden;
+	}
+.leaflet-tile-loaded {
+	visibility: inherit;
+	}
+.leaflet-zoom-box {
+	width: 0;
+	height: 0;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	z-index: 800;
+	}
+.leaflet-overlay-pane svg {
+	-moz-user-select: none;
+	}
+.leaflet-pane         { z-index: 400; }
+.leaflet-tile-pane    { z-index: 200; }
+.leaflet-overlay-pane { z-index: 400; }
+.leaflet-shadow-pane  { z-index: 500; }
+.leaflet-marker-pane  { z-index: 600; }
+.leaflet-tooltip-pane   { z-index: 650; }
+.leaflet-popup-pane   { z-index: 700; }
+.leaflet-map-pane canvas { z-index: 100; }
+.leaflet-map-pane svg    { z-index: 200; }
+.leaflet-vml-shape {
+	width: 1px;
+	height: 1px;
+	}
+.lvml {
+	behavior: none;
+	display: inline-block;
+	position: absolute;
+	}
+.leaflet-control {
+	position: relative;
+	z-index: 800;
+	pointer-events: visiblePainted; 
+	pointer-events: auto;
+	}
+.leaflet-top,
+.leaflet-bottom {
+	position: absolute;
+	z-index: 1000;
+	pointer-events: none;
+	}
+.leaflet-top {
+	top: 0;
+	}
+.leaflet-right {
+	right: 0;
+	}
+.leaflet-bottom {
+	bottom: 0;
+	}
+.leaflet-left {
+	left: 0;
+	}
+.leaflet-control {
+	float: left;
+	clear: both;
+	}
+.leaflet-right .leaflet-control {
+	float: right;
+	}
+.leaflet-top .leaflet-control {
+	margin-top: 10px;
+	}
+.leaflet-bottom .leaflet-control {
+	margin-bottom: 10px;
+	}
+.leaflet-left .leaflet-control {
+	margin-left: 10px;
+	}
+.leaflet-right .leaflet-control {
+	margin-right: 10px;
+	}
+.leaflet-fade-anim .leaflet-popup {
+	opacity: 0;
+	-webkit-transition: opacity 0.2s linear;
+	   -moz-transition: opacity 0.2s linear;
+	        transition: opacity 0.2s linear;
+	}
+.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
+	opacity: 1;
+	}
+.leaflet-zoom-animated {
+	-webkit-transform-origin: 0 0;
+	    -ms-transform-origin: 0 0;
+	        transform-origin: 0 0;
+	}
+svg.leaflet-zoom-animated {
+	will-change: transform;
+}
+.leaflet-zoom-anim .leaflet-zoom-animated {
+	-webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
+	   -moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
+	        transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
+	}
+.leaflet-zoom-anim .leaflet-tile,
+.leaflet-pan-anim .leaflet-tile {
+	-webkit-transition: none;
+	   -moz-transition: none;
+	        transition: none;
+	}
+.leaflet-zoom-anim .leaflet-zoom-hide {
+	visibility: hidden;
+	}
+.leaflet-interactive {
+	cursor: pointer;
+	}
+.leaflet-grab {
+	cursor: -webkit-grab;
+	cursor:    -moz-grab;
+	cursor:         grab;
+	}
+.leaflet-crosshair,
+.leaflet-crosshair .leaflet-interactive {
+	cursor: crosshair;
+	}
+.leaflet-popup-pane,
+.leaflet-control {
+	cursor: auto;
+	}
+.leaflet-dragging .leaflet-grab,
+.leaflet-dragging .leaflet-grab .leaflet-interactive,
+.leaflet-dragging .leaflet-marker-draggable {
+	cursor: move;
+	cursor: -webkit-grabbing;
+	cursor:    -moz-grabbing;
+	cursor:         grabbing;
+	}
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-image-layer,
+.leaflet-pane > svg path,
+.leaflet-tile-container {
+	pointer-events: none;
+	}
+.leaflet-marker-icon.leaflet-interactive,
+.leaflet-image-layer.leaflet-interactive,
+.leaflet-pane > svg path.leaflet-interactive,
+svg.leaflet-image-layer.leaflet-interactive path {
+	pointer-events: visiblePainted; 
+	pointer-events: auto;
+	}
+.leaflet-container {
+	background: #ddd;
+	outline-offset: 1px;
+	}
+.leaflet-container a {
+	color: #0078A8;
+	}
+.leaflet-zoom-box {
+	border: 2px dotted #38f;
+	background: rgba(255,255,255,0.5);
+	}
+.leaflet-container {
+	font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-size: 0.75rem;
+	line-height: 1.5;
+	}
+.leaflet-bar {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+	border-radius: 4px;
+	}
+.leaflet-bar a {
+	background-color: #fff;
+	border-bottom: 1px solid #ccc;
+	width: 26px;
+	height: 26px;
+	line-height: 26px;
+	display: block;
+	text-align: center;
+	text-decoration: none;
+	color: black;
+	}
+.leaflet-bar a,
+.leaflet-control-layers-toggle {
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	display: block;
+	}
+.leaflet-bar a:hover,
+.leaflet-bar a:focus {
+	background-color: #f4f4f4;
+	}
+.leaflet-bar a:first-child {
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+	}
+.leaflet-bar a:last-child {
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+	border-bottom: none;
+	}
+.leaflet-bar a.leaflet-disabled {
+	cursor: default;
+	background-color: #f4f4f4;
+	color: #bbb;
+	}
+.leaflet-touch .leaflet-bar a {
+	width: 30px;
+	height: 30px;
+	line-height: 30px;
+	}
+.leaflet-touch .leaflet-bar a:first-child {
+	border-top-left-radius: 2px;
+	border-top-right-radius: 2px;
+	}
+.leaflet-touch .leaflet-bar a:last-child {
+	border-bottom-left-radius: 2px;
+	border-bottom-right-radius: 2px;
+	}
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+	font: bold 18px 'Lucida Console', Monaco, monospace;
+	text-indent: 1px;
+	}
+.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
+	font-size: 22px;
+	}
+.leaflet-control-layers {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+	background: #fff;
+	border-radius: 5px;
+	}
+.leaflet-control-layers-toggle {
+	background-image: none;
+	width: 36px;
+	height: 36px;
+	}
+.leaflet-retina .leaflet-control-layers-toggle {
+	background-image: none;
+	background-size: 26px 26px;
+	}
+.leaflet-touch .leaflet-control-layers-toggle {
+	width: 44px;
+	height: 44px;
+	}
+.leaflet-control-layers .leaflet-control-layers-list,
+.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+	display: none;
+	}
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+	display: block;
+	position: relative;
+	}
+.leaflet-control-layers-expanded {
+	padding: 6px 10px 6px 6px;
+	color: #333;
+	background: #fff;
+	}
+.leaflet-control-layers-scrollbar {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	padding-right: 5px;
+	}
+.leaflet-control-layers-selector {
+	margin-top: 2px;
+	position: relative;
+	top: 1px;
+	}
+.leaflet-control-layers label {
+	display: block;
+	font-size: 13px;
+	font-size: 1.08333em;
+	}
+.leaflet-control-layers-separator {
+	height: 0;
+	border-top: 1px solid #ddd;
+	margin: 5px -10px 5px -6px;
+	}
+.leaflet-default-icon-path { 
+	background-image: none;
+	}
+.leaflet-container .leaflet-control-attribution {
+	background: #fff;
+	background: rgba(255, 255, 255, 0.8);
+	margin: 0;
+	}
+.leaflet-control-attribution,
+.leaflet-control-scale-line {
+	padding: 0 5px;
+	color: #333;
+	line-height: 1.4;
+	}
+.leaflet-control-attribution a {
+	text-decoration: none;
+	}
+.leaflet-control-attribution a:hover,
+.leaflet-control-attribution a:focus {
+	text-decoration: underline;
+	}
+.leaflet-attribution-flag {
+	display: inline !important;
+	vertical-align: baseline !important;
+	width: 1em;
+	height: 0.6669em;
+	}
+.leaflet-left .leaflet-control-scale {
+	margin-left: 5px;
+	}
+.leaflet-bottom .leaflet-control-scale {
+	margin-bottom: 5px;
+	}
+.leaflet-control-scale-line {
+	border: 2px solid #777;
+	border-top: none;
+	line-height: 1.1;
+	padding: 2px 5px 1px;
+	white-space: nowrap;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	background: rgba(255, 255, 255, 0.8);
+	text-shadow: 1px 1px #fff;
+	}
+.leaflet-control-scale-line:not(:first-child) {
+	border-top: 2px solid #777;
+	border-bottom: none;
+	margin-top: -2px;
+	}
+.leaflet-control-scale-line:not(:first-child):not(:last-child) {
+	border-bottom: 2px solid #777;
+	}
+.leaflet-touch .leaflet-control-attribution,
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	box-shadow: none;
+	}
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	border: 2px solid rgba(0,0,0,0.2);
+	background-clip: padding-box;
+	}
+.leaflet-popup {
+	position: absolute;
+	text-align: center;
+	margin-bottom: 20px;
+	}
+.leaflet-popup-content-wrapper {
+	padding: 1px;
+	text-align: left;
+	border-radius: 12px;
+	}
+.leaflet-popup-content {
+	margin: 13px 24px 13px 20px;
+	line-height: 1.3;
+	font-size: 13px;
+	font-size: 1.08333em;
+	min-height: 1px;
+	}
+.leaflet-popup-content p {
+	margin: 17px 0;
+	margin: 1.3em 0;
+	}
+.leaflet-popup-tip-container {
+	width: 40px;
+	height: 20px;
+	position: absolute;
+	left: 50%;
+	margin-top: -1px;
+	margin-left: -20px;
+	overflow: hidden;
+	pointer-events: none;
+	}
+.leaflet-popup-tip {
+	width: 17px;
+	height: 17px;
+	padding: 1px;
+	margin: -10px auto 0;
+	pointer-events: auto;
+	-webkit-transform: rotate(45deg);
+	   -moz-transform: rotate(45deg);
+	    -ms-transform: rotate(45deg);
+	        transform: rotate(45deg);
+	}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+	background: white;
+	color: #333;
+	box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+	}
+.leaflet-container a.leaflet-popup-close-button {
+	position: absolute;
+	top: 0;
+	right: 0;
+	border: none;
+	text-align: center;
+	width: 24px;
+	height: 24px;
+	font: 16px/24px Tahoma, Verdana, sans-serif;
+	color: #757575;
+	text-decoration: none;
+	background: transparent;
+	}
+.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container a.leaflet-popup-close-button:focus {
+	color: #585858;
+	}
+.leaflet-popup-scrolled {
+	overflow: auto;
+	}
+.leaflet-oldie .leaflet-popup-content-wrapper {
+	-ms-zoom: 1;
+	}
+.leaflet-oldie .leaflet-popup-tip {
+	width: 24px;
+	margin: 0 auto;
+	-ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
+	filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
+	}
+.leaflet-oldie .leaflet-control-zoom,
+.leaflet-oldie .leaflet-control-layers,
+.leaflet-oldie .leaflet-popup-content-wrapper,
+.leaflet-oldie .leaflet-popup-tip {
+	border: 1px solid #999;
+	}
+.leaflet-div-icon {
+	background: #fff;
+	border: 1px solid #666;
+	}
+.leaflet-tooltip {
+	position: absolute;
+	padding: 6px;
+	background-color: #fff;
+	border: 1px solid #fff;
+	border-radius: 3px;
+	color: #222;
+	white-space: nowrap;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	pointer-events: none;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+	}
+.leaflet-tooltip.leaflet-interactive {
+	cursor: pointer;
+	pointer-events: auto;
+	}
+.leaflet-tooltip-top:before,
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	position: absolute;
+	pointer-events: none;
+	border: 6px solid transparent;
+	background: transparent;
+	content: "";
+	}
+.leaflet-tooltip-bottom {
+	margin-top: 6px;
+}
+.leaflet-tooltip-top {
+	margin-top: -6px;
+}
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-top:before {
+	left: 50%;
+	margin-left: -6px;
+	}
+.leaflet-tooltip-top:before {
+	bottom: 0;
+	margin-bottom: -12px;
+	border-top-color: #fff;
+	}
+.leaflet-tooltip-bottom:before {
+	top: 0;
+	margin-top: -12px;
+	margin-left: -6px;
+	border-bottom-color: #fff;
+	}
+.leaflet-tooltip-left {
+	margin-left: -6px;
+}
+.leaflet-tooltip-right {
+	margin-left: 6px;
+}
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	top: 50%;
+	margin-top: -6px;
+	}
+.leaflet-tooltip-left:before {
+	right: 0;
+	margin-right: -12px;
+	border-left-color: #fff;
+	}
+.leaflet-tooltip-right:before {
+	left: 0;
+	margin-left: -12px;
+	border-right-color: #fff;
+	}
+@media print {
+	.leaflet-control {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+		}
+	}
+
+/* Mapas OSM */
+.lmap{height:340px;background:var(--sea);font-family:var(--f-body);z-index:0}
+.lmap.small{height:280px}
+.lmap .leaflet-tile-pane{filter:var(--tile-filter)}
+.leaflet-container .leaflet-control-attribution{background:var(--surface);color:var(--muted);font-family:var(--f-mono);font-size:10px}
+.leaflet-container .leaflet-control-attribution a{color:var(--lichen-ink)}
+.leaflet-bar a{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.leaflet-tooltip{font-family:var(--f-display);font-size:12px}
+.map figure .lmap+.osm-note{margin:0;padding:6px 10px;font-size:.76rem;color:var(--muted);font-family:var(--f-mono);border-top:1px solid var(--line);background:var(--surface)}
+.map figcaption{z-index:500;background:var(--surface);padding:1px 6px;border-radius:3px;left:52px}
+path.isle-fb{fill:var(--land);fill-opacity:1;stroke:var(--land-edge);stroke-width:1.2}
+path.mk{stroke:var(--surface);stroke-width:2;fill-opacity:1}
+path.mk.dim{opacity:.25}
+path.mk-ring{fill:none;stroke:var(--lichen);stroke-width:3}
+path.mk-zona{fill-opacity:.22;stroke-width:1.5;stroke-dasharray:4 3}
+path.mk-zona.mk-plenitud{stroke:var(--ph-plen)} path.mk-zona.mk-desgaste{stroke:var(--ph-desg)}
+.sens{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ph-tran);border:1px dashed currentColor;padding:1px 6px;border-radius:3px}
+path.mk-yo{fill:var(--ink);stroke:var(--lichen);stroke-width:3;fill-opacity:1}
+path.radio-yo{fill:var(--lichen);fill-opacity:.07;stroke:var(--lichen);stroke-width:1.5;stroke-dasharray:4 4}
+.cerca{background:var(--surface);border:1px solid var(--line);padding:18px;margin-top:22px;display:flex;flex-direction:column;gap:14px}
+.cbar{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.zl{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted);font-family:var(--f-mono)}
+.chead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.near{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.near li{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.invite{border-left:3px solid var(--lichen);padding-left:16px;display:flex;flex-direction:column;gap:10px;max-width:68ch}
+.nueva{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px}
+.nueva[hidden]{display:none}
+@media (max-width:760px){.nueva{grid-template-columns:minmax(0,1fr)}}
+path.mk-gestacion{fill:var(--ph-gest)} path.mk-creacion{fill:var(--ph-crea)} path.mk-plenitud{fill:var(--ph-plen)} path.mk-desgaste{fill:var(--ph-desg)}
+path.mk-intervencion{fill:var(--ph-inte)} path.mk-transformacion{fill:var(--ph-tran)} path.mk-desaparicion{fill:var(--ph-desa)} path.mk-memoria{fill:var(--ph-memo)}
+.lmap path.route-line{stroke:var(--ink);stroke-width:2.5;stroke-dasharray:6 5;fill:none}
+.mlab{font-family:var(--f-display);font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* Portada */
+.defs{margin:0;display:flex;flex-direction:column;gap:18px;border-left:3px solid var(--lichen);padding-left:20px}
+.defs dt{font-family:var(--f-display);font-weight:700;font-size:1.1rem}
+.defs dd{margin:4px 0 0;color:var(--muted)}
+.offer{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:20px}
+.of{background:var(--surface);padding:18px;display:flex;flex-direction:column;gap:8px;color:inherit;text-decoration:none}
+a.of:hover{background:var(--bg)}
+a.of:hover h3{text-decoration:underline}
+.of.off{background:var(--bg)}
+.of .st{font-family:var(--f-mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.07em}
+.of p{font-size:.95rem;color:var(--muted)}
+.of .go{margin-top:auto;font-family:var(--f-display);font-weight:700;color:var(--lichen-ink)}
+.para{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;margin-top:20px}
+.para>div{border-top:3px solid var(--ink);padding-top:12px;display:flex;flex-direction:column;gap:6px}
+@media (max-width:900px){.offer{grid-template-columns:repeat(2,minmax(0,1fr))}.para{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.offer,.para{grid-template-columns:minmax(0,1fr)}}
+
+/* Pie: sello de Gofio Design */
+.pie-dcha{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.gofio{display:inline-flex;align-items:center;gap:10px;color:inherit;text-decoration:none}
+.gofio .sello{width:190px;height:auto;display:block;flex:none;transition:transform .35s ease}
+.gofio:hover .sello,.gofio:focus-visible .sello{transform:rotate(-2deg) scale(1.04)}
+@media (prefers-reduced-motion:reduce){.gofio .sello{transition:none}}
+/* Acróstico, comunidad y derechos */
+.claim{font-family:var(--f-body);font-style:italic;font-size:1.1rem;margin:14px 0 0;color:var(--ink)}
+.acro{border-left:3px solid var(--lichen);padding-left:20px}
+.acro ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.acro li{display:flex;align-items:baseline;gap:2px;font-family:var(--f-display);font-size:clamp(1.05rem,2.2vw,1.45rem);line-height:1.25}
+.acro li b{color:var(--lichen-ink);font-weight:800;min-width:1.05em}
+.acro li span{color:var(--ink)}
+.acro li.sep{margin-top:10px}
+.acro .ar{margin:14px 0 0;color:var(--muted);font-size:.95rem}
+.acro .ar b{font-family:var(--f-display);color:var(--ink)}
+.defs.row{flex-direction:row;flex-wrap:wrap;border-left:0;padding-left:0;margin-top:12px}
+.defs.row>div{flex:1 1 240px;border-left:3px solid var(--lichen);padding-left:16px}
+.gate{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:8px;padding:20px;background:var(--surface)}
+.foro{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.cat{border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.cat h3{margin:0;font-size:1.05rem}.cat p{margin:0;font-size:.92rem}
+.cat .count{font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.hilos{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.hilo{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.hilo .mono{white-space:nowrap;font-size:.8rem}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag{font-family:var(--f-mono);font-size:.7rem;border:1px solid var(--line);border-radius:3px;padding:2px 6px;color:var(--muted)}
+.normas{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.rights{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:28px}
+.rights h3{margin:0 0 8px}
+@media (max-width:860px){.hero .acro{margin-top:4px}}
+/* Inscripción y apoyo */
+.insc-cta{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--lichen);padding-block:20px;padding-inline:20px}
+.aplist{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.ap{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 0;border-bottom:1px solid var(--line)}
+.fakelink{cursor:default;opacity:.85;font-size:.9rem;padding:7px 12px}
+.apoya{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
+.apoya>div{display:flex;flex-direction:column;gap:6px}
+
+/* Ayudas */
+.now{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.nw{display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--ph-plen);color:inherit;text-decoration:none;font-size:.92rem}
+.nw.soon{border-left-color:var(--ph-desg)}
+.nw b{font-family:var(--f-display);font-size:1rem}
+.nw:hover b{text-decoration:underline}
+.mwrap{border:1px solid var(--line);background:var(--surface)}
+.months{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.months li{padding:10px 14px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:9.5em minmax(0,1fr);gap:4px 16px;font-size:.88rem;align-items:baseline}
+.months li>.evs{display:flex;flex-wrap:wrap;gap:6px 18px}
+.months li:last-child{border-bottom:0}
+@media (max-width:560px){.months li{grid-template-columns:minmax(0,1fr)}}
+.mh{font-family:var(--f-mono);font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.ev{all:unset;cursor:pointer;display:flex;gap:6px;align-items:baseline;line-height:1.3}
+.ev:hover span{text-decoration:underline}
+.ev:focus-visible{outline:3px solid var(--lichen);outline-offset:2px}
+.ev .sw{background:var(--ph-inte);width:8px;height:8px;flex:none;transform:translateY(-1px)}
+.ev .sw.open{background:var(--ph-plen)} .ev .sw.est{background:transparent;border:1.5px solid var(--muted)}
+.cvgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cv{background:var(--surface);border:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:90px;transition:box-shadow .3s}
+.cv.soon{border-color:var(--ph-desg)}
+.cv.flash{box-shadow:0 0 0 3px var(--lichen)}
+.cvrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cv .dl{font-size:.9rem}
+.cvnote{font-size:.86rem;color:var(--muted);border-left:2px solid var(--line);padding-left:10px}
+.cvfoot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:auto;font-size:.88rem}
+@media (max-width:760px){.cvgrid{grid-template-columns:minmax(0,1fr)}}
+
+/* Red nodal */
+.types{display:flex;flex-wrap:wrap;gap:6px 14px;margin:18px 0 12px}
+.types label{display:inline-flex;align-items:center;gap:6px;font-size:.9rem;cursor:pointer}
+.graph{background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.graph svg{display:block;width:100%;height:auto}
+.graph line{stroke:var(--land-edge);stroke-width:1}
+.graph line.dlg{stroke:var(--lichen);stroke-width:2.2;stroke-dasharray:4 3}
+.graph .nd circle{stroke:var(--surface);stroke-width:1.5}
+.graph .nd text{font-family:var(--f-display);font-size:10px;fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+.graph .nd:hover circle,.graph .nd:focus circle{stroke:var(--ink);stroke-width:2.5}
+.graph .nd.focus circle{stroke:var(--ink);stroke-width:3}
+#gsvg .nd{cursor:grab;touch-action:none}
+#gsvg .nd.drag{cursor:grabbing}
+#gsvg .nd.drag circle{stroke:var(--ink);stroke-width:2.5}
+#gsvg .nd:focus-visible circle{stroke:var(--lichen);stroke-width:3}
+#gsvg line.cross{stroke-opacity:.45}
+.plano{fill:var(--bg);fill-opacity:.55;stroke:var(--land-edge);stroke-width:1}
+.plabel{font-family:var(--f-mono);font-size:11px;fill:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.redbar{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;margin-top:20px}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:4px;overflow:hidden}
+.seg button{font:inherit;font-family:var(--f-display);font-weight:700;background:transparent;color:var(--ink);border:0;padding:7px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.rels{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.rel{display:grid;grid-template-columns:minmax(0,11em) minmax(0,1fr);gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:.95rem}
+.rel .k{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);padding-top:2px}
+.rel .pp{font-size:.85rem;color:var(--muted)}
+.ntag{display:inline-flex;align-items:center;gap:5px;font-family:var(--f-mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.ent.fut{background:transparent;border-style:dashed}
+.ent.fut h3{background:transparent;color:var(--ink);border-bottom:1px dashed var(--line)}
+.ent .desc{padding:8px 12px 0;font-size:.88rem;color:var(--muted)}
+.convs{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.conv{display:grid;grid-template-columns:minmax(0,1fr) 12em;gap:16px;padding:14px 0;border-bottom:1px solid var(--line)}
+.conv h3 a{color:inherit}
+.conv .when{font-family:var(--f-mono);font-size:.82rem;text-align:right}
+.conv .when b{display:block;font-size:.95rem;color:var(--ink)}
+.v-ok{color:var(--ph-plen)} .v-part{color:var(--ph-desg)} .v-est{color:var(--muted)}
+@media (max-width:760px){ .conv,.rel{grid-template-columns:minmax(0,1fr)} .conv .when{text-align:left} }
+
+footer{border-top:1px solid var(--line);padding-block:24px 40px;font-size:.88rem;color:var(--muted)}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+
+@media (max-width:760px){
+  .hero,.ficha-head,.grid2,.route,.ents{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps,.munis{grid-template-columns:minmax(0,1fr)}
+  .item{grid-template-columns:minmax(0,1fr) auto}
+  .item .mono{grid-column:1/-1}
+  form.obsf{grid-template-columns:minmax(0,1fr)}
+  .ficha-head aside{max-width:200px}
+  nav.main{margin-left:0;width:100%}
+  .ob{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:no-preference){
+  .view{animation:in .25s ease-out}
+  @keyframes in{from{transform:translateY(6px)}to{transform:none}}
+}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#inicio" aria-label="CANARIAS.AFRICA: Centro de Arte No Ubicado. Acciones, Relaciones, Investigaciones y Articulaciones Sociales"><i aria-hidden="true"></i><span class="acr" aria-hidden="true"><span class="l">C<span class="x">entro de</span></span><span class="l">A<span class="x">rte</span></span><span class="l n">N<span class="x">o Ubicado</span></span><span class="l">A<span class="x">cciones</span></span><span class="l">R<span class="x">elaciones</span></span><span class="l">I<span class="x">nvestigaciones</span></span><span class="l">A<span class="x">rticulaciones</span></span><span class="l">S<span class="x">ociales</span></span><span class="dom">.AFRICA</span></span></a>
+    <nav class="main" aria-label="Secciones">
+      <a href="#inicio">Inicio</a>
+      <a href="#archivo">Archivo y mapa</a>
+      <a href="#red">Red nodal</a>
+      <a href="#rutas">Rutas</a>
+      <a href="#aportar">Proponer obra</a>
+      <a href="#ayudas">Ayudas</a>
+      <a href="#apoya">Apoya</a>
+      <a href="#comunidad">Comunidad</a>
+      <a href="#sistema">Cómo funciona</a>
+    </nav>
+  </div>
+</header>
+<div class="proto"><div class="wrap">PROTOTIPO · Las obras, personas, fechas y observaciones son ficticias y sirven para probar el sistema. Las convocatorias de «Ayudas a artistas» son reales.</div></div>
+
+<main class="wrap" id="app" tabindex="-1"></main>
+
+<footer><div class="wrap">
+  <span>CANARIAS.AFRICA · Centro de Arte No Ubicado · prototipo v0.1, octubre de 2026</span>
+  <span class="pie-dcha"><a href="#derechos">Derechos de imagen y uso</a><a class="gofio" href="https://gofiodesign.eu" target="_blank" rel="noopener" aria-label="Un proyecto de Gofio Design"><svg class="sello" viewBox="0 0 560 200" aria-hidden="true"><rect x="5" y="5" width="550" height="190" rx="22" fill="#F2E9D7" stroke="#62381F" stroke-width="6"/><rect x="17" y="17" width="526" height="166" rx="14" fill="none" stroke="#62381F" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round"/><g transform="translate(34 34) scale(0.3539) translate(-322 -141)"><path d="M671.03 506.91C666.93 507.67 617.89 507.98 509.57 507.94C359.18 507.89 353.8 507.82 347.96 505.97C340.24 503.52 334.38 498.48 330.81 491.22L328 485.5V167.5L330.77 162.24C333.94 156.22 339.25 151.95 346.82 149.31C351.73 147.59 360.28 147.5 511.5 147.5C667.23 147.5 671.14 147.55 677 149.46C681.32 150.87 684.31 152.72 687.67 156.09C688.85 157.26 689.85 158.01 690.7 158.91C695.58 164.03 695.58 173.8 695.54 293.97C695.53 304.32 695.53 315.5 695.53 327.56C695.52 338 695.53 347.78 695.53 356.94C695.53 481.37 695.53 490.53 690.97 495.47C690.27 496.23 689.47 496.89 688.54 497.84C683.6 502.93 678.62 505.51 671.03 506.91Z" fill="#62381F"/><path d="M361.86 476.54C360.71 475.74 359.25 473.81 358.61 472.26C357.73 470.14 357.51 433.58 357.72 325.24L358 181.04L360.65 178.4L363.3 175.75L454.57 175.92C541.11 176.08 546.37 176.19 556.13 178.07C574.08 181.54 588.51 187.04 601.11 195.22C604.9 197.69 608.9 200.18 610 200.77C613.95 202.87 633.86 223.93 640.12 232.63C651.27 248.12 660.37 268.63 664.01 286.5C667.46 303.39 667.47 334.96 664.04 350.02C662.26 357.82 655.75 379.4 654.38 382C653.95 382.83 651.99 386.81 650.02 390.86C645.6 399.97 642.06 405.15 633.47 415.1C613.99 437.69 584.22 454.57 556 459.04C541.09 461.41 520.14 461.75 508.98 459.81C494.53 457.29 479.94 453.35 472.77 450.02C458.7 443.48 438.1 428.02 429.84 417.8C413.12 397.11 404.8 375.13 403.02 347C400.8 312 419.15 274.77 447.73 256.28C457.62 249.89 473.8 242.46 482.21 240.46C492.52 238.01 521.49 238.83 533 241.9C558.74 248.75 578.7 266.91 589.59 293.36C594.41 305.07 595.94 313.89 595.16 325.45C594.38 337.04 592.4 344.52 587.48 354.5C579.1 371.48 564.67 384.25 547.02 390.29C538.53 393.2 517.69 393.36 509 390.59C495.22 386.19 482.03 376.24 476.72 366.24C467.25 348.39 468.92 330.84 481.41 316.79C497.91 298.24 528.5 303.8 528.5 325.34C528.5 327.66 527.79 330.56 526.93 331.79C524.93 334.65 519.32 337 514.49 337C509.66 337 506.63 339.48 505.54 344.34C503.97 351.27 508.04 358.49 515.22 361.57C521.15 364.1 532.55 363.02 540.07 359.2C547.06 355.65 550.31 352.4 554 345.24C557.51 338.45 559.61 324.88 558.45 316.62C555.99 299.26 538.92 280.77 521.39 276.47C507.93 273.17 487.93 276.4 474.79 283.99C467.37 288.27 457.28 298.06 451.84 306.25C439.2 325.25 437.35 348.63 446.62 372C453.87 390.25 470.23 407.33 488.77 415.99C500.68 421.55 508.06 423.22 522.5 423.58C535.8 423.92 544.87 422.67 556.47 418.89C588.29 408.54 612.96 381.24 622.21 346.13C625.75 332.71 625.94 310.71 622.62 298C617.2 277.2 607.84 259.94 593.5 244.32C579.79 229.38 556.91 216.75 534 211.49C518.91 208.02 486.23 208.81 470 213.03C459.67 215.71 445.47 222.1 433.5 229.45C420.69 237.31 405.72 252.5 395.44 268.06C379.43 292.29 373.44 312.75 373.36 343.5C373.31 359.43 374.85 371.55 378.44 383.65C390.31 423.6 415.34 454.34 450.81 472.56C455.04 474.73 458.49 476.84 458.5 477.25C458.5 477.66 437.23 478 411.22 478C371.39 478 363.62 477.77 361.86 476.54ZM619.5 478.06L597 477.5L607.63 472.38C613.48 469.56 621.47 465.17 625.4 462.63C633.81 457.19 649.38 442.1 659.39 429.68L666.5 420.87L666.47 446.68C666.44 473.59 666.3 474.48 662 476.71C659.06 478.23 644.9 478.68 619.5 478.06Z" fill="#BA6F36"/></g><text x="196" y="86" font-family="Bricolage Grotesque, Lexend, sans-serif" font-size="27" font-weight="600" letter-spacing="7" fill="#BA6F36">UN PROYECTO</text><text x="194" y="146" font-family="Bricolage Grotesque, Lexend, sans-serif" font-size="56" font-weight="800" fill="#62381F">Gofio Design</text></svg></a></span>
+</div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+/* ---------- Vocabularios ---------- */
+const FASES = {
+  gestacion:{n:"Gestación",c:"--ph-gest",d:"La obra está en proyecto o en marcha."},
+  creacion:{n:"Creación",c:"--ph-crea",d:"Se está haciendo o se acaba de terminar."},
+  plenitud:{n:"Plenitud",c:"--ph-plen",d:"Completa y legible, como se concibió."},
+  desgaste:{n:"Desgaste",c:"--ph-desg",d:"El sol, la sal o el uso la están borrando."},
+  intervencion:{n:"Intervención",c:"--ph-inte",d:"Restaurada, repintada o reparada."},
+  transformacion:{n:"Transformación",c:"--ph-tran",d:"Otra obra o uso se ha superpuesto."},
+  desaparicion:{n:"Desaparición",c:"--ph-desa",d:"Ya no está en su sitio."},
+  memoria:{n:"Memoria",c:"--ph-memo",d:"Solo queda en fotos, documentos y testimonios."}
+};
+const CERTEZA = {
+  confirmada:{n:"Confirmada",v:4,d:"Documento firmado o la propia autoría lo confirma."},
+  probable:{n:"Probable",v:3,d:"Dos o más fuentes independientes coinciden."},
+  atribuida:{n:"Atribuida",v:2,d:"Una sola fuente o comparación de estilo."},
+  desconocida:{n:"Desconocida",v:0,d:"Sin datos. Se pide ayuda a la ciudadanía."}
+};
+const FIN = {publica:"Pública",privada:"Privada",altruista:"Altruista",mixta:"Mixta",desconocida:"Sin determinar"};
+const MUNIS = {
+  ARI:{n:"Arico",isla:"TF",lon:-16.49,lat:28.19},
+  FAS:{n:"Fasnia",isla:"TF",lon:-16.45,lat:28.245},
+  VIL:{n:"Vilaflor",isla:"TF",lon:-16.635,lat:28.157},
+  BUE:{n:"Buenavista del Norte",isla:"TF",lon:-16.86,lat:28.372},
+  HAR:{n:"Haría",isla:"LZ",lon:-13.50,lat:29.145},
+  TIN:{n:"Tinajo",isla:"LZ",lon:-13.675,lat:29.063}
+};
+const ISLAS = {TF:"Tenerife",LZ:"Lanzarote"};
+
+/* ---------- Datos de ejemplo (FICTICIOS) ---------- */
+const OBRAS = [
+ {id:"CA-TF-ARI-0001",t:"Mural del lavadero",tipo:"Mural",m:"ARI",lugar:"Lavadero viejo, Villa de Arico",lon:-16.497,lat:28.205,
+  fecha:{v:"1987",p:"aprox."},aut:[{n:"Taller juvenil municipal",rol:"Ejecución",c:"probable",f:"Dos testimonios vecinales"}],
+  fin:{t:"publica",e:"Ayuntamiento (dato ficticio)"},fase:"desgaste",
+  fen:[["1987","creacion","Pintado en verano, según testimonios."],["1998","plenitud","Aparece completo en una foto de fiestas."],["2019","desgaste","La parte baja pierde pigmento por humedad."]],
+  qr:{st:"activo",inst:"2026-05-14",rev:"2026-09-20"},
+  obs:[["2026-09-20","Rosa_A.","QR","desgaste","El azul del cielo casi ha desaparecido. Adjunto foto.","validada"],["2026-06-02","anónimo","QR · salida colectiva","desgaste","Mi abuela dice que lo pintaron chicos del instituto de Granadilla.","pendiente"]]},
+ {id:"CA-TF-ARI-0002",t:"Señales en el barranco",tipo:"Intervención en paisaje",m:"ARI",lugar:"Cauce del barranco, cerca de Poris",lon:-16.445,lat:28.168,
+  fecha:{v:"2019",p:"exacta"},aut:[{n:"Colectivo Malpaís",rol:"Autoría",c:"confirmada",f:"Declaración del colectivo"}],
+  fin:{t:"altruista",e:"Autofinanciada"},fase:"plenitud",
+  fen:[["2019-03","creacion","Montaje en tres jornadas."],["2019-04","plenitud",""]],
+  qr:{st:"activo",inst:"2026-05-14",rev:"2026-09-21"},
+  obs:[["2026-09-21","pedro.g","QR","plenitud","Sigue completa. Alguien ha añadido piedras al círculo.","validada"]]},
+ {id:"CA-TF-FAS-0001",t:"Banco de picón",tipo:"Escultura",m:"FAS",lugar:"Plaza de la iglesia, Fasnia",lon:-16.452,lat:28.238,
+  fecha:{v:"2008",p:"aprox."},aut:[{n:"Desconocida",rol:"",c:"desconocida",f:""}],
+  fin:{t:"desconocida",e:""},fase:"transformacion",
+  fen:[["2008","creacion","Fecha estimada por el material."],["2021","transformacion","Se le añade un respaldo de madera municipal."]],
+  qr:{st:"pendiente",inst:"",rev:""},
+  obs:[["2026-07-11","M.Luz","Ficha",null,"¿Alguien sabe quién lo hizo? Yo creo que fue un cantero de Arafo.","pendiente"]]},
+ {id:"CA-TF-FAS-0002",t:"Inscripción de la era",tipo:"Inscripción",m:"FAS",lugar:"Era alta, camino de Los Roques",lon:-16.442,lat:28.228,
+  fecha:{v:"1950–1959",p:"década"},aut:[{n:"Trabajadores de la era",rol:"Grabado",c:"atribuida",f:"Un testimonio oral"}],
+  fin:{t:"altruista",e:""},fase:"desgaste",
+  fen:[["1950s","creacion","Iniciales y una fecha grabadas en la piedra."],["2010","desgaste","El liquen cubre la mitad de las letras."]],
+  qr:{st:"activo",inst:"2026-05-15",rev:"2026-05-15"},
+  obs:[]},
+ {id:"CA-TF-VIL-0001",t:"Pinos de chapa",tipo:"Escultura",m:"VIL",lugar:"Entrada al pueblo, Vilaflor",lon:-16.633,lat:28.162,
+  fecha:{v:"2001",p:"exacta"},aut:[{n:"Ana R.",rol:"Autoría",c:"confirmada",f:"Placa y contrato"},{n:"Herrería local",rol:"Fabricación",c:"probable",f:"Factura parcial"}],
+  fin:{t:"privada",e:"Bodega patrocinadora (ficticia)"},fase:"plenitud",
+  fen:[["2001","creacion",""],["2001","plenitud",""],["2016","intervencion","Repintado antióxido."],["2017","plenitud",""]],
+  qr:{st:"activo",inst:"2026-05-16",rev:"2026-10-02"},
+  obs:[["2026-10-02","javi_v","QR","plenitud","Bien. Óxido leve en la base del pino pequeño.","validada"]]},
+ {id:"CA-TF-VIL-0002",t:"Acción del cráter",tipo:"Acción efímera",m:"VIL",lugar:"Ladera sobre el pueblo",lon:-16.62,lat:28.185,
+  fecha:{v:"2015-06-21",p:"exacta"},aut:[{n:"Grupo de danza escolar",rol:"Acción",c:"probable",f:"Vídeo y cartel"}],
+  fin:{t:"altruista",e:""},fase:"memoria",
+  fen:[["2015-06-21","creacion","Acción de una tarde en el solsticio."],["2015-06-21","desaparicion","Efímera por diseño."],["2015","memoria","Se conserva un vídeo de 4 minutos."]],
+  qr:{st:"no aplica",inst:"",rev:""},
+  obs:[["2026-08-30","anónimo","Ficha",null,"Tengo fotos en papel de ese día, puedo escanearlas.","pendiente"]]},
+ {id:"CA-TF-BUE-0001",t:"Mural de la cooperativa",tipo:"Mural",m:"BUE",lugar:"Fachada de la antigua cooperativa",lon:-16.858,lat:28.368,
+  fecha:{v:"1979",p:"aprox."},aut:[{n:"Pintor itinerante sin identificar",rol:"Autoría",c:"atribuida",f:"Comparación con un mural de Garachico"}],
+  fin:{t:"publica",e:"Cabildo (dato ficticio)"},fase:"intervencion",
+  fen:[["1979","creacion",""],["1990","plenitud",""],["2012","desgaste",""],["2024","intervencion","Restauración con vecinos."]],
+  qr:{st:"activo",inst:"2026-05-20",rev:"2026-09-28"},
+  obs:[["2026-09-28","lola.b","QR","intervencion","La restauración ha cambiado el color del mar. Antes era verde.","validada"],["2026-04-10","anónimo","QR","desgaste","","descartada"]]},
+ {id:"CA-TF-BUE-0002",t:"Palabras en Teno",tipo:"Instalación",m:"BUE",lugar:"Camino de Teno Alto",lon:-16.872,lat:28.348,
+  fecha:{v:"2021",p:"exacta"},aut:[{n:"Colectivo Malpaís",rol:"Autoría",c:"confirmada",f:"Declaración del colectivo"}],
+  fin:{t:"mixta",e:"Ayuntamiento + aportaciones vecinales (ficticio)"},fase:"plenitud",
+  fen:[["2021","creacion",""],["2021","plenitud",""]],
+  qr:{st:"dañado",inst:"2026-05-20",rev:"2026-10-12"},
+  obs:[["2026-10-12","ruta_teno","QR · salida colectiva","plenitud","Obra bien. El QR está despegado por el viento.","validada"]]},
+ {id:"CA-LZ-HAR-0001",t:"Molino pintado",tipo:"Mural",m:"HAR",lugar:"Molino de Máguez",lon:-13.51,lat:29.158,
+  fecha:{v:"1995",p:"aprox."},aut:[{n:"Familia propietaria",rol:"Encargo",c:"probable",f:"Dos testimonios"}],
+  fin:{t:"privada",e:"Particular"},fase:"desgaste",
+  fen:[["1995","creacion",""],["2008","desgaste","La pintura se cuartea por la sal."]],
+  qr:{st:"activo",inst:"2026-06-03",rev:"2026-06-03"},
+  obs:[["2026-06-03","nieves","QR","desgaste","Se lee la fecha 1995 en una esquina.","validada"]]},
+ {id:"CA-LZ-HAR-0002",t:"Huella del palmeral",tipo:"Instalación",m:"HAR",lugar:"Palmeral, salida hacia Arrieta",lon:-13.492,lat:29.135,
+  fecha:{v:"2012",p:"exacta"},aut:[{n:"Desconocida",rol:"",c:"desconocida",f:""}],
+  fin:{t:"desconocida",e:""},fase:"desaparicion",
+  fen:[["2012","creacion",""],["2014","plenitud",""],["2022","desaparicion","Retirada sin aviso. Solo quedan anclajes."]],
+  qr:{st:"retirado",inst:"",rev:""},
+  obs:[["2026-07-19","anónimo","QR","desaparicion","Quedan cuatro tornillos en la piedra donde estaba.","validada"]]},
+ {id:"CA-LZ-TIN-0001",t:"Caracolas de lava",tipo:"Escultura",m:"TIN",lugar:"Rotonda de Mancha Blanca",lon:-13.684,lat:29.042,
+  fecha:{v:"1990–1999",p:"década"},aut:[{n:"Escultor de Tinajo",rol:"Autoría",c:"atribuida",f:"Un testimonio"}],
+  fin:{t:"publica",e:"Ayuntamiento (dato ficticio)"},fase:"plenitud",
+  fen:[["1990s","creacion",""],["1990s","plenitud",""]],
+  qr:{st:"activo",inst:"2026-06-04",rev:"2026-10-05"},
+  obs:[]},
+ {id:"CA-LZ-TIN-0002",t:"Muro de La Santa",tipo:"Mural",m:"TIN",lugar:"Muro del puerto, La Santa",lon:-13.665,lat:29.092,
+  fecha:{v:"2017",p:"exacta"},aut:[{n:"Talleres de verano",rol:"Ejecución",c:"confirmada",f:"Cartel del taller"}],
+  fin:{t:"altruista",e:""},fase:"desgaste",
+  fen:[["2017","creacion",""],["2018","plenitud",""],["2025","desgaste","Grafitis encima en la parte derecha."]],
+  qr:{st:"activo",inst:"2026-06-04",rev:"2026-10-05"},
+  obs:[["2026-10-05","surf_ls","QR","desgaste","Yo participé en el taller con 12 años.","pendiente"]]},
+ {id:"CA-TF-ARI-0003",t:"Grabados de la ladera",tipo:"Grabado rupestre aborigen",m:"ARI",lugar:"Ubicación reservada",lon:-16.47,lat:28.21,
+  fecha:{v:"Época prehispánica",p:"estimada"},aut:[{n:"Población aborigen de Tenerife",rol:"Autoría",c:"atribuida",f:"Inventario arqueológico (ficticio)"}],
+  fin:{t:"desconocida",e:""},fase:"desgaste",sens:{n:"reservada",m:"Arte rupestre: Bien de Interés Cultural por ley (Ley 16/1985, art. 40.2)"},
+  fen:[["prehispánica","creacion","Motivos geométricos grabados en basalto."],["2024","desgaste","Erosión y pisadas junto al panel."]],
+  qr:{st:"no aplica",inst:"",rev:""},
+  obs:[["2026-09-02","equipo","Revisión con patrimonio","desgaste","Se recomienda no señalizar el acceso.","validada"]]}
+];
+/* Obras sensibles: la web pública nunca recibe sus coordenadas exactas.
+   difusa: punto ajustado a una cuadrícula fija de ~2 km (no se puede promediar); reservada: solo el municipio. */
+const SENS={abierta:{n:"Abierta",d:"Ubicación exacta pública, QR en el sitio."},
+ difusa:{n:"Difusa",d:"Se muestra una zona de unos 2 km. No entra en rutas. Para obras sin protección suficiente o en terreno privado."},
+ reservada:{n:"Reservada",d:"Solo se muestra el municipio. Sin QR en el sitio. Las coordenadas exactas solo las ve el equipo y la investigación acreditada. Para patrimonio protegido, como el arte rupestre aborigen."}};
+const sensOf=o=>(o.sens&&o.sens.n)||"abierta";
+OBRAS.forEach(o=>{ const n=sensOf(o);
+  if(n==="difusa"){ const c=.02; o.lat=(Math.floor(o.lat/c)+.5)*c; o.lon=(Math.floor(o.lon/c)+.5)*c; }
+  if(n==="reservada"){ o.lat=MUNIS[o.m].lat; o.lon=MUNIS[o.m].lon; } });
+const enMapa=o=>sensOf(o)!=="reservada";
+/* Rutas = proyectos curatoriales sobre obras ya catalogadas (todo ficticio) */
+const RUTAS = [
+ {id:"barranco",n:"Del barranco a la era",cur:"Marta Q.",ms:["ARI","FAS"],km:9.2,h:"3 h 30 min",dif:"Media",
+  tesis:"El agua y el trabajo agrícola como origen de la expresión artística del sureste. La ruta sube por donde bajaba el agua y une obras hechas por quienes la trabajaban.",
+  stops:[["CA-TF-ARI-0002","Empieza en la costa: una intervención reciente que vuelve a señalar el cauce."],["CA-TF-ARI-0001","El lavadero, lugar de reunión de mujeres, pintado por jóvenes en los ochenta."],["CA-TF-FAS-0002","La inscripción de la era: firma colectiva de un trabajo que ya no existe."],["CA-TF-FAS-0001","Cierra con una obra hecha con piedra de la propia era."]],sal:[]},
+ {id:"teno",n:"Teno, palabras y fachadas",cur:"Colectivo Malpaís",ms:["BUE"],km:6.5,h:"2 h 30 min",dif:"Media",
+  tesis:"Cómo se escribe sobre el paisaje: de la fachada cooperativa a las palabras en el camino.",
+  stops:[["CA-TF-BUE-0001","Un mural restaurado con vecinos: la memoria corregida."],["CA-TF-BUE-0002","Palabras que dialogan con la serie «Señales» del sur."]],sal:[]},
+ {id:"cumbre",n:"Vilaflor, pinos y cráter",cur:"Marta Q.",ms:["VIL"],km:4.1,h:"1 h 45 min",dif:"Fácil",
+  tesis:"Lo que permanece y lo que fue efímero: una escultura de chapa y una acción que solo existe en vídeo.",
+  stops:[["CA-TF-VIL-0001","La obra encargada, con placa y contrato."],["CA-TF-VIL-0002","El lugar vacío de una acción de un solo día."]],sal:[]},
+ {id:"norte-lz",n:"Norte de Lanzarote: molino y palmeral",cur:"Nieves R.",ms:["HAR"],km:5.3,h:"2 h",dif:"Fácil",
+  tesis:"Arqueología de lo desaparecido: seguir una obra por sus restos.",
+  stops:[["CA-LZ-HAR-0001","Un molino pintado que se cuartea con la sal."],["CA-LZ-HAR-0002","Cuatro tornillos en la piedra: lo que queda de una instalación."]],sal:[]},
+ {id:"tinajo",n:"Tinajo, de la lava al puerto",cur:"Nieves R.",ms:["TIN"],km:7.8,h:"2 h 45 min",dif:"Media",
+  tesis:"Un motivo que viaja: de una escultura pública a un mural de taller que copia el molino de Haría.",
+  stops:[["CA-LZ-TIN-0001","La escultura de la rotonda."],["CA-LZ-TIN-0002","El muro del taller de verano."]],sal:[]}
+];
+RUTAS.forEach(r=>{ r.notas=Object.fromEntries(r.stops); r.stops=r.stops.map(x=>x[0]); });
+
+/* Convocatorias: copia del calendario público de ayudas (se actualiza desde allí) */
+const CAL_URL="https://claude.ai/artifact/F14r4stooU4Bgfyf37mjtq";
+const CONV = [
+ {id:"rural",n:"Cultura en el medio rural",c:"Gobierno de Canarias",a:"canarias",t:"Ayuda a proyecto",para:["artista","entidad"],
+  imp:"10.000–20.000 € (hasta el 80 %)",abre:"2026-10-14",cierres:["2026-11-04"],
+  req:"Autónomos con actividad cultural y entidades culturales. Solo en 26 municipios rurales; proyecto mínimo de 12.500 €.",
+  nota:"Actividad presencial en el municipio. BDNS 933060.",url:"https://www.gobiernodecanarias.org/boc/archivo/2026/204/pda/3527.html",v:"ok"},
+ {id:"cme",n:"Culture Moves Europe, movilidad individual",c:"Comisión Europea (Europa Creativa)",a:"internacional",t:"Movilidad",para:["artista"],
+  imp:"85 €/día + 400–800 € de viaje; +175 € por residir en región ultraperiférica",abre:"2026-10-01",
+  cierres:["2026-10-31","2026-11-30","2027-01-31","2027-02-28","2027-03-31","2027-04-30"],
+  req:"Mayores de 18 años residentes en un país de Europa Creativa. Estancias de 7 a 60 días con un socio de otro país.",
+  nota:"Convocatoria continua con cierres mensuales. Solo una ayuda individual entre oct. 2025 y jul. 2028.",url:"https://culture.ec.europa.eu/culture-moves-europe/call-for-individual-mobility",v:"ok"},
+ {id:"dakart",n:"Dak'Art 2026, Bienal de Dakar",c:"Bienal de Arte Africano Contemporáneo",a:"internacional",t:"Open call",para:["artista","entidad"],
+  imp:"Sin dotación: inscripción en el programa OFF",evento:["2026-11-19","2026-12-19"],cierres:[],
+  req:"El OFF admite eventos autónomos de artistas, colectivos e instituciones, sin selección curatorial.",
+  nota:"Bienal del 19 de noviembre al 19 de diciembre de 2026. La inscripción en el OFF cerró el 13 de septiembre.",url:"https://biennaledakar.org/",v:"part"},
+ {id:"rijks",n:"Residencia Rijksakademie 2028",c:"Rijksakademie van beeldende kunsten, Ámsterdam",a:"internacional",t:"Residencia",para:["artista"],
+  imp:"Estudio + 19.800 €/año de beca + 2.500 € de producción",prox:{m:"2027-02",txt:"Abre el 1 ene 2027; cierre previsto el 1 feb"},cierres:[],
+  req:"Cualquier país y disciplina. Tasa de solicitud de 60 € y cuota de participación de 1.875 €/año.",
+  nota:"Uno o dos años. Se espera que cada residente ayude a reunir unos 20.000 €/año de beca.",url:"https://rijksakademie.nl/en/residency-apply/apply",v:"part"},
+ {id:"prince",n:"Prince Claus Seed Awards",c:"Prince Claus Fund",a:"internacional",t:"Premio",para:["artista"],
+  imp:"5.000 € (100 premios)",prox:{m:"2027-01",txt:"Hacia enero de 2027 (en 2026 cerró el 8 ene)"},cierres:[],
+  req:"Artistas en sus primeros cinco años de carrera de África, Asia, América Latina, Caribe, Oriente Medio y Europa del Este. España no es elegible.",
+  nota:"Útil para socios africanos de la red, no para residentes en Canarias.",url:"https://on-the-move.org/news/prince-claus-seed-awards-emerging-artists-and-cultural-practitioners-2026",v:"part"},
+ {id:"thami",n:"Residencia Thami Mnyele",c:"Thami Mnyele Foundation, Ámsterdam",a:"internacional",t:"Residencia",para:["artista"],
+  imp:"3 meses + 1.800 €/mes",cierres:[],
+  req:"Artistas de África. Hasta dos residencias completas al año.",
+  nota:"Ahora no admite solicitudes y no anuncia fecha.",url:"https://www.thami-mnyele.nl/residency",v:"part"},
+ {id:"ecoop",n:"Europa Creativa, proyectos de cooperación",c:"Comisión Europea",a:"internacional",t:"Ayuda a proyecto",para:["entidad"],
+  imp:"61 M€ en total en 2027",prox:{m:"2027-05",txt:"Convocatoria en T1 2027; en 2026 cerró el 5 may"},cierres:[],
+  req:"Consorcios de entidades de al menos tres países.",
+  nota:"Último año antes del nuevo ciclo presupuestario de la UE.",url:"https://culture.ec.europa.eu/whats-new/news/creative-europe-in-2027-one-last-year-before-the-new-budget-cycle",v:"part"},
+ {id:"mac",n:"Interreg MAC 2021-2027",c:"UE (FEDER): Madeira, Azores, Canarias y países africanos",a:"internacional",t:"Ayuda a proyecto",para:["entidad"],
+  imp:"Cofinanciación de hasta el 85 % (ediciones anteriores)",cierres:[],
+  req:"Partenariado con socios de Cabo Verde, Senegal, Mauritania u otros países del programa.",
+  nota:"La 3.ª convocatoria cerró el 15 dic 2025. La 4.ª no tiene fecha.",url:"https://interregmac.org/3a-convocatoria/",v:"est"},
+
+ {id:"plasticas",n:"Creación en artes plásticas y visuales",c:"Gobierno de Canarias (Canarias Crea)",a:"canarias",t:"Ayuda a proyecto",para:["artista"],
+  imp:"Hasta 4.000 € por artista (200.000 € en total)",prox:{m:"2027-05",txt:"Hacia abril-mayo de 2027 (la de 2026 se anunció el 27 abr)"},cierres:[],
+  req:"Personas físicas residentes en Canarias y dadas de alta en el IAE.",
+  nota:"Pintura, escultura, fotografía, vídeo, arte digital, instalación.",url:"https://sede.gobiernodecanarias.org/sede/tramites/10881",v:"ok"},
+ {id:"movcan",n:"Movilidad de artistas (Canarias Crea)",c:"Gobierno de Canarias",a:"canarias",t:"Movilidad",para:["artista","entidad"],
+  imp:"Hasta 15.000 € al año por solicitante",prox:{m:"2027-03",txt:"Tres periodos al año; el 3.º de 2026 cerró el 15 oct"},cierres:[],
+  req:"Artistas y profesionales de la cultura de Canarias, o quien los represente y pague el viaje.",
+  nota:"Viajes a ferias, encuentros y residencias, también en África.",url:"https://sede.gobiernodecanarias.org/sede/tramites/10873",v:"ok"},
+ {id:"teamat",n:"Residencias TEA × Matadero Madrid",c:"TEA Tenerife Espacio de las Artes (Cabildo de Tenerife)",a:"canarias",t:"Residencia",para:["artista"],
+  imp:"7.500 € + viajes Tenerife–Madrid",prox:{m:"2027-02",txt:"Hacia enero-febrero de 2027 (en 2026 cerró el 19 feb)"},cierres:[],
+  req:"Nacidos o residentes en Canarias. Una plaza artística y una curatorial, de abril a julio.",
+  nota:"",url:"https://teatenerife.es/descargar/announcements/nwBL2vEfAUgXkYf3KuAJ.pdf",v:"ok"},
+ {id:"bienaltea",n:"Bienal Contemporánea TEA",c:"TEA Tenerife Espacio de las Artes",a:"canarias",t:"Open call",para:["artista","entidad"],
+  imp:"Sin dotación indicada en la web",cierres:[],
+  req:"Artistas y colectivos con proyectos sobre territorio y comunidad.",
+  nota:"La edición 2026 cerró el 2 ene 2026 (exposición en noviembre de 2026). No consta si se repetirá.",url:"https://teatenerife.es/convocatoria/bienal-contemporanea-tea-2026/55",v:"part"},
+ {id:"cabtf",n:"Proyectos culturales de asociaciones",c:"Cabildo de Tenerife",a:"canarias",t:"Ayuda a proyecto",para:["entidad"],
+  imp:"Hasta 7.500 € en pequeño formato (674.000 € en total)",prox:{m:"2027-06",txt:"Hacia mayo-junio de 2027"},cierres:[],
+  req:"Solo asociaciones y fundaciones culturales; proyecto en Tenerife.",
+  nota:"",url:"https://www.elalisio.es/el-cabildo-destina-674-000-euros-a-subvenciones-para-asociaciones-y-fundaciones-culturales-de-tenerife-en-2026/",v:"part"},
+ {id:"cajac",n:"Proyectos culturales: artes visuales y plásticas",c:"Fundación CajaCanarias",a:"canarias",t:"Ayuda a proyecto",para:["artista","entidad"],
+  imp:"Hasta 20.000 €",prox:{m:"2027-10",txt:"Hacia septiembre-octubre de 2027 (en 2026 cerró el 9 oct)"},cierres:[],
+  req:"Provincia de Santa Cruz de Tenerife. Autónomos dedicados a la creación, o entidades con al menos un año de antigüedad.",
+  nota:"Ejecución en el año siguiente.",url:"https://www.cajacanarias.com/wp-content/uploads/2026/06/bases-proyectos-culturales-artes-visuales-y-plasticas-2026-fundacion-cajacanarias.pdf",v:"ok"},
+
+ {id:"pice",n:"PICE: movilidad y residencias",c:"Acción Cultural Española (AC/E)",a:"nacional",t:"Movilidad",para:["artista","entidad"],
+  imp:"Según bases (no comprobado)",prox:{m:"2027-01",txt:"Tres fases al año; la 1.ª de 2026 fue del 8 sep 2025 al 9 ene 2026"},cierres:[],
+  req:"Profesionales invitados por una institución extranjera.",
+  nota:"Por el calendario de 2026, la fase 1 de 2027 podría estar abierta ya. Hay que comprobarlo en accioncultural.es.",url:"https://www.accioncultural.es/media/2026/PICE/Bases-Esp-Mov2026.pdf",v:"part"},
+ {id:"accion",n:"Acción y promoción cultural",c:"Ministerio de Cultura",a:"nacional",t:"Ayuda a proyecto",para:["entidad"],
+  imp:"Según bases (no comprobado)",prox:{m:"2027-02",txt:"Hacia enero-febrero de 2027 (en 2026 cerró el 11 feb)"},cierres:[],
+  req:"Entidades sin ánimo de lucro con memoria de actividad de los dos últimos años.",
+  nota:"",url:"https://cultura.sede.gob.es/procedimiento/portada?idProc=133550",v:"part"},
+ {id:"impacto",n:"Proyectos culturales con especial impacto social",c:"Ministerio de Cultura",a:"nacional",t:"Ayuda a proyecto",para:["entidad"],
+  imp:"10.000–80.000 €",prox:{m:"2027-04",txt:"Hacia primavera de 2027 (la de 2026 se anunció en marzo)"},cierres:[],
+  req:"Entidades, también con ánimo de lucro. Participación ciudadana y comunidad.",
+  nota:"",url:"https://www.lamoncloa.gob.es/serviciosdeprensa/notasprensa/cultura/Paginas/2026/120326-ayudas-proyectos-impacto-social.aspx",v:"part"},
+ {id:"micelio",n:"Micelio: arte participativo y medio ambiente",c:"Concomitentes, con la Fundación Daniel y Nina Carasso",a:"nacional",t:"Ayuda a proyecto",para:["artista","entidad"],
+  imp:"40.000 € por proyecto (dos proyectos)",prox:{m:"2027-03",txt:"Hacia febrero-marzo de 2027 (en 2026 cerró el 1 mar)"},cierres:[],
+  req:"Grupo ciudadano con una mediadora cultural; la artista se incorpora después. Proyecto en España.",
+  nota:"Categoría propia para colectivos liderados por menores de 35 años.",url:"https://concomitentes.org/wp-content/uploads/2026/01/Micelio-2026-bases-maquetadas-2.pdf",v:"ok"},
+ {id:"leonardo",n:"Becas Leonardo",c:"Fundación BBVA",a:"nacional",t:"Beca",para:["artista"],
+  imp:"Hasta 50.000 €",prox:{m:"2027-03",txt:"Hacia marzo de 2027 (en 2026 cerró el 20 mar)"},cierres:[],
+  req:"De 30 a 45 años. Incluye el área de música, ópera y artes plásticas.",
+  nota:"",url:"https://sgi.umh.es/files/2026/01/Resumen-Becas-Leonardo-2026-FBBVA.pdf",v:"ok"},
+ {id:"botin",n:"Becas de Arte",c:"Fundación Botín",a:"nacional",t:"Beca",para:["artista"],
+  imp:"23.000 € (seis becas)",prox:{m:"2027-05",txt:"Abre hacia finales de enero; en 2026 cerró el 8 may"},cierres:[],
+  req:"Cualquier nacionalidad y edad. Una beca reservada a menores de 30 años españoles o residentes que se formen fuera.",
+  nota:"",url:"https://fundacionbotin.org/wp-content/uploads/2026/01/Bases-AAPP-Esp-2026.pdf",v:"ok"},
+ {id:"roma",n:"Residencias en la Real Academia de España en Roma",c:"MAEC-AECID",a:"nacional",t:"Residencia",para:["artista"],
+  imp:"1.400 €/mes + alojamiento, de 4 a 9 meses",prox:{m:"2027-06",txt:"Hacia mayo-junio de 2027 (en 2026, del 21 may al 3 jun)"},cierres:[],
+  req:"Nacionalidad española, de la UE o iberoamericana. Trayectoria demostrable.",
+  nota:"",url:"https://www.becas.com/aecid/becas-roma-residencias-investigaciones-espanoles",v:"part"},
+ {id:"matadero",n:"Residencias para artistas visuales",c:"Matadero Madrid",a:"nacional",t:"Residencia",para:["artista"],
+  imp:"4.000 € + 2.400 € de alojamiento + viaje (artistas de fuera de Madrid)",prox:{m:"2027-09",txt:"Hacia septiembre de 2027 (para 2027 cerró el 11 sep 2026)"},cierres:[],
+  req:"Cuatro plazas trimestrales para artistas residentes en España fuera de Madrid.",
+  nota:"",url:"https://www.mataderomadrid.org/sites/default/files/media/document/2026/07/Bases%20Artistas%20Visuales%202027.pdf",v:"ok"},
+ {id:"generaciones",n:"Generaciones",c:"Fundación Montemadrid (La Casa Encendida)",a:"nacional",t:"Premio",para:["artista"],
+  imp:"12.000 € por proyecto (seis proyectos)",cierres:[],
+  req:"Artistas jóvenes (límite de edad sin comprobar).",
+  nota:"No he localizado las fechas de la próxima edición.",url:"https://www.lacasaencendida.es/en/exhibitions/generacion-2026_english",v:"est"},
+ {id:"injuve",n:"Ayudas para la Creación Joven",c:"Injuve",a:"nacional",t:"Ayuda a proyecto",para:["artista","entidad"],
+  imp:"Según bases (no comprobado)",cierres:[],
+  req:"Jóvenes creadores. Producción, movilidad, investigación, comisariado y emprendimiento.",
+  nota:"La de 2025/26 se publicó en abril de 2025. Fechas de la siguiente sin comprobar.",url:"https://injuve.es/sites/default/files/adjuntos/2025/10/Prorroga%20convocatoria%2025-26_Ayudas%20Creacion.pdf.xsig_.pdf",v:"est"}
+];
+
+/* ---------- Modelo nodal ----------
+   Todo es un nodo {id, tipo, etiqueta, atributos} o una relación {id, de, tipo, a, propiedades}.
+   Los tipos y las relaciones viven en dos registros: añadir una dimensión nueva es añadir entradas, sin migrar datos. */
+const TIPOS = {
+ obra:{n:"Obra",g:"--n-obra",p:"CA",d:"Pieza con ficha permanente. Es el nodo central, pero no el único.",a:["título","tipo","fecha y precisión","fase actual","fenología[]","sensibilidad: abierta, difusa o reservada (+ motivo)"]},
+ agente:{n:"Agente",g:"--n-agente",p:"AG",d:"Persona, colectivo o grupo que crea, encarga, restaura o cuida.",a:["nombre","clase: persona, colectivo, grupo","canales[]: tienda, mecenazgo, encargos, web (solo si su autoría está confirmada)"]},
+ entidad:{n:"Entidad",g:"--n-entidad",p:"EN",d:"Institución, empresa o particular que financia.",a:["nombre","naturaleza: pública, privada, particular"]},
+ convocatoria:{n:"Convocatoria",g:"--n-entidad",p:"CV",d:"Ayuda o incentivo que puede financiar obras o actividades.",a:["organismo","importe","plazos"]},
+ lugar:{n:"Lugar",g:"--n-terr",p:"LU",d:"Punto concreto del territorio donde está o estuvo algo.",a:["nombre","lat, lon","precisión en metros"]},
+ municipio:{n:"Municipio",g:"--n-terr",p:"MU",d:"Término municipal.",a:["nombre","isla"]},
+ fuente:{n:"Fuente",g:"--n-reg",p:"FU",d:"Documento, testimonio, foto o vídeo que sostiene un dato.",a:["clase","descripción","fecha"]},
+ observacion:{n:"Observación",g:"--n-reg",p:"OBS",d:"Aportación ciudadana fechada. El estado de una obra solo se observa escaneando su QR; el contexto se puede aportar desde la ficha.",a:["fecha","alias","clase: estado (QR) o contexto (ficha)","fase observada (solo estado)","verificación"]},
+ qr:{n:"QR",g:"--n-reg",p:"QR",d:"Código físico georreferenciado junto a la obra.",a:["estado","instalado","última revisión"]},
+ ruta:{n:"Ruta",g:"--n-rec",p:"RU",d:"Proyecto curatorial: un recorrido a pie que propone una lectura de obras ya catalogadas.",a:["título","tesis curatorial","km","duración","dificultad"]},
+ salida:{n:"Salida",g:"--n-rec",p:"SA",d:"Salida colectiva de mapeo.",a:["fecha","participantes"]}
+};
+const RELT = {
+ autoria:{n:"autoría de",de:"agente",a:"obra",p:"rol, certeza, fuente"},
+ financia:{n:"financia",de:"entidad",a:"obra",p:"modalidad, importe si se conoce"},
+ situada_en:{n:"está en",de:"obra",a:"lugar",p:"desde, hasta (si se trasladó)"},
+ pertenece_a:{n:"pertenece a",de:"lugar",a:"municipio",p:"—"},
+ sostiene:{n:"sostiene",de:"fuente",a:"obra",p:"qué dato sostiene"},
+ observa:{n:"observa",de:"observación",a:"obra",p:"fecha, fase observada, token del QR"},
+ senala:{n:"señala",de:"qr",a:"obra",p:"coordenadas de colocación"},
+ incluye:{n:"incluye",de:"ruta",a:"obra",p:"orden de parada, nota curatorial"},
+ cura:{n:"cura",de:"agente",a:"ruta",p:"rol: curaduría, cocuraduría"},
+ recorre:{n:"recorre",de:"salida",a:"ruta",p:"fecha"},
+ dialoga:{n:"dialoga con",de:"obra",a:"obra",p:"modo: continúa, responde a, se superpone a"},
+ ambito:{n:"tiene como ámbito",de:"convocatoria",a:"municipio",p:"condiciones"}
+};
+const FUTURAS = [
+ ["Material","Picón, basalto, cal, chapa. Ayuda a planificar la conservación.","obra —hecha_de→ material"],
+ ["Técnica","Pintura mural, grabado, ensamblaje, acción.","obra —usa→ técnica"],
+ ["Tema","Agua, emigración, fiesta, trabajo agrícola.","obra —trata→ tema"],
+ ["Acontecimiento","Hecho histórico o social que la obra recuerda o provocó.","obra —recuerda→ acontecimiento"],
+ ["Ecosistema","Barranco, malpaís, pinar, y especies como los líquenes que colonizan la obra.","obra —convive_con→ ecosistema"],
+ ["Exposición virtual","Selección curatorial de nodos con un relato.","exposición —reúne→ obra"],
+ ["Campaña de micromecenazgo","canarias.africa como intermediario de campañas colectivas para obras o artistas del museo.","campaña —financia→ obra · mecenas —aporta_a→ campaña"]
+];
+/* Relaciones entre obras (ficticias) */
+const DIALOGOS = [
+ ["CA-TF-BUE-0002","continúa","CA-TF-ARI-0002","Segunda pieza de la serie «Señales» del mismo colectivo."],
+ ["CA-LZ-TIN-0002","responde a","CA-LZ-HAR-0001","El taller de 2017 copió el motivo del molino."],
+ ["CA-TF-FAS-0001","se superpone a","CA-TF-FAS-0002","El banco se hizo con piedra retirada de la era."]
+];
+
+/* Canales propios de cada artista (ficticios). canarias.africa solo enlaza; no vende. */
+const CANALES={"Colectivo Malpaís":[["Tienda"],["Mecenazgo"]],"Ana R.":[["Web"],["Tienda"],["Encargos"]]};
+const G={byKey:new Map(),byId:new Map(),edges:[]};
+function addNode(tipo,key,label,attrs){
+  if(G.byKey.has(key)) return G.byKey.get(key);
+  const T=TIPOS[tipo], cnt=[...G.byKey.values()].filter(n=>n.tipo===tipo).length+1;
+  const n={id:tipo==="obra"?key:`${T.p}-${String(cnt).padStart(4,"0")}`,key,tipo,label,attrs:attrs||{}};
+  G.byKey.set(key,n); G.byId.set(n.id,n); return n;
+}
+function rel(de,tipo,a,props){ if(!de||!a) return; G.edges.push({id:"RE-"+String(G.edges.length+1).padStart(4,"0"),de:de.id,tipo,a:a.id,p:props||{}}); }
+function buildGraph(){
+  Object.entries(MUNIS).forEach(([k,m])=>addNode("municipio","mu:"+k,m.n,{isla:ISLAS[m.isla]}));
+  OBRAS.forEach(o=>{
+    const ob=addNode("obra",o.id,o.t,{tipo:o.tipo,fecha:`${o.fecha.v} (${o.fecha.p})`,"fase actual":FASES[o.fase].n});
+    const lu=addNode("lugar","lu:"+o.id,o.lugar,sensOf(o)==="reservada"?{ubicación:"reservada",municipio:MUNIS[o.m].n}:{coordenadas:`${o.lat.toFixed(sensOf(o)==="difusa"?2:4)}° N, ${Math.abs(o.lon).toFixed(sensOf(o)==="difusa"?2:4)}° O`,precisión:sensOf(o)==="difusa"?"zona de ~2 km":"±25 m"});
+    rel(ob,"situada_en",lu); rel(lu,"pertenece_a",G.byKey.get("mu:"+o.m));
+    o.aut.forEach(a=>{
+      if(a.c==="desconocida") return;
+      const ag=addNode("agente","ag:"+a.n,a.n,{clase:/colectivo|taller|grupo|familia|trabajadores|herrería/i.test(a.n)?"colectivo":"persona"});
+      if(CANALES[a.n]&&!ag.attrs.canales) ag.attrs.canales=CANALES[a.n];
+      rel(ag,"autoria",ob,{rol:a.rol,certeza:CERTEZA[a.c].n});
+      if(a.f){ const fu=addNode("fuente","fu:"+o.id+":"+a.f,a.f,{}); rel(fu,"sostiene",ob,{dato:"autoría de "+a.n}); }
+    });
+    if(o.fin.e){ const en=addNode("entidad","en:"+o.fin.e,o.fin.e,{}); rel(en,"financia",ob,{modalidad:FIN[o.fin.t]}); }
+    if(o.qr.inst){ const q=addNode("qr","qr:"+o.id,"QR · "+o.id,{estado:o.qr.st,instalado:fd(o.qr.inst),"última revisión":fd(o.qr.rev)}); rel(q,"senala",ob); }
+    o.obs.forEach((b,i)=>{ const n=addNode("observacion","obs:"+o.id+":"+i,`${fd(b[0])} · ${b[1]}`,{vía:b[2],clase:b[3]?"estado (QR)":"contexto (ficha)",...(b[3]?{"fase observada":FASES[b[3]].n}:{}),verificación:b[5],texto:b[4]||"—"}); rel(n,"observa",ob,{fecha:fd(b[0])}); });
+  });
+  RUTAS.forEach(r=>{
+    const ru=addNode("ruta","ru:"+r.id,r.n,{"tesis curatorial":r.tesis,km:r.km.toLocaleString("es-ES"),duración:r.h,dificultad:r.dif});
+    rel(G.byKey.get("ag:"+r.cur)||addNode("agente","ag:"+r.cur,r.cur,{clase:/colectivo/i.test(r.cur)?"colectivo":"persona"}),"cura",ru,{rol:"curaduría"});
+    r.stops.forEach((s,i)=>rel(ru,"incluye",G.byKey.get(s),{orden:i+1,nota:r.notas[s]}));
+    r.sal.forEach(d=>{ const sa=addNode("salida","sa:"+r.id+d,"Salida "+fd(d),{fecha:fd(d),nota:"fecha de ejemplo"}); rel(sa,"recorre",ru,{fecha:fd(d)}); });
+  });
+  DIALOGOS.forEach(([a,modo,b,nota])=>rel(G.byKey.get(a),"dialoga",G.byKey.get(b),{modo,nota}));
+}
+
+
+/* ---------- Utilidades ---------- */
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const byId = id=>OBRAS.find(o=>o.id===id);
+const slug = id=>"obra-"+id.toLowerCase();
+const css = v=>`var(${v})`;
+const MESES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+function fd(s){ if(!s||!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s||"—"; const [y,m,d]=s.split("-"); return `${+d} ${MESES[+m-1]} ${y}`; }
+function addMonths(s,n){ const d=new Date(s+"T12:00:00"); d.setMonth(d.getMonth()+n); return d.toISOString().slice(0,10); }
+const HOY="2026-10-27";
+function chip(f){ const F=FASES[f]; return `<span class="chip" style="color:${css(F.c)}">${F.n}</span>`; }
+function cert(c){ const v=CERTEZA[c].v; return `<span class="cert" aria-hidden="true">${[1,2,3,4].map(i=>`<i class="${i<=v?"on":""}"></i>`).join("")}</span>`; }
+
+let LOCAL=[];
+try{ LOCAL=JSON.parse(localStorage.getItem("ca-obs")||"[]"); }catch(e){ LOCAL=[]; }
+function saveLocal(){ try{ localStorage.setItem("ca-obs",JSON.stringify(LOCAL)); }catch(e){} }
+function obsOf(o){ return [...LOCAL.filter(x=>x[6]===o.id).map(x=>x.slice(0,6).concat(["tuya"])), ...o.obs].sort((a,b)=>a[0]<b[0]?1:-1); }
+
+/* ---------- Mapa ---------- */
+const OUT = {
+ TF:{box:[-16.94,-16.10,27.98,28.62],W:440,poly:[[-16.92,28.345],[-16.90,28.375],[-16.86,28.385],[-16.76,28.378],[-16.66,28.395],[-16.55,28.418],[-16.45,28.47],[-16.36,28.55],[-16.24,28.57],[-16.13,28.585],[-16.16,28.53],[-16.25,28.47],[-16.33,28.40],[-16.37,28.35],[-16.38,28.30],[-16.43,28.23],[-16.43,28.16],[-16.48,28.10],[-16.54,28.03],[-16.63,28.02],[-16.72,28.04],[-16.74,28.10],[-16.80,28.17],[-16.84,28.25],[-16.89,28.30]]},
+ LZ:{box:[-13.90,-13.38,28.82,29.26],W:280,poly:[[-13.47,29.24],[-13.42,29.22],[-13.46,29.13],[-13.49,29.03],[-13.55,28.96],[-13.66,28.915],[-13.75,28.87],[-13.83,28.85],[-13.87,28.86],[-13.84,28.94],[-13.83,28.98],[-13.75,29.04],[-13.67,29.10],[-13.58,29.12],[-13.53,29.17],[-13.49,29.22]]}
+};
+function proj(isla){ const o=OUT[isla],[x0,x1,y0,y1]=o.box,k=Math.cos(28.6*Math.PI/180),W=o.W,H=W*(y1-y0)/((x1-x0)*k);
+  return {W,H,p:(lon,lat)=>[ (lon-x0)/(x1-x0)*W, (y1-lat)/(y1-y0)*H ]}; }
+function svgIsland(isla,obras,opt){
+  const P=proj(isla),{W,H}=P;
+  const poly=OUT[isla].poly.map(([a,b])=>P.p(a,b).map(n=>n.toFixed(1)).join(",")).join(" ");
+  let s=`<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" role="img" aria-label="Mapa de ${ISLAS[isla]} con obras registradas"><polygon class="isle" points="${poly}"/>`;
+  Object.entries(MUNIS).filter(([k,m])=>m.isla===isla).forEach(([k,m])=>{ const [x,y]=P.p(m.lon,m.lat); const right=x<W*0.5; s+=`<text class="mlabel" x="${(x+(right?16:-16)).toFixed(1)}" y="${(y-14).toFixed(1)}" text-anchor="${right?"start":"end"}">${m.n}</text>`; });
+  if(opt.route){ const pts=opt.route.map(id=>byId(id)).filter(o=>MUNIS[o.m].isla===isla).map(o=>P.p(o.lon,o.lat).map(n=>n.toFixed(1)).join(",")); if(pts.length>1) s+=`<polyline class="route-line" points="${pts.join(" ")}"/>`; }
+  obras.filter(o=>MUNIS[o.m].isla===isla&&enMapa(o)).forEach(o=>{
+    const [x,y]=P.p(o.lon,o.lat), on=!opt.only||opt.only.includes(o.id), big=opt.focus===o.id;
+    s+=`<a class="pt${on?"":" dim"}" href="#${slug(o.id)}" aria-label="${esc(o.t)}"><title>${esc(o.t)} · ${FASES[o.fase].n}</title>`+
+       (big?`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="none" stroke="${css("--lichen")}" stroke-width="3"/>`:"")+
+       `<circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${big?7:6}" fill="${css(FASES[o.fase].c)}"/></a>`;
+  });
+  s+=`<g font-family="var(--f-mono)" font-size="9" fill="${css("--muted")}"><text x="${W-10}" y="${H-10}" text-anchor="end">${isla==="TF"?"10 km":"5 km"} ⟷</text></g></svg>`;
+  return `<figure class="${isla==="LZ"?"lz":""}"><figcaption>${ISLAS[isla]}</figcaption>${s}</figure>`;
+}
+function mapa(obras,opt={}){ const islas=opt.islas||["TF","LZ"]; return `<div class="map">${islas.map(i=>mapIsland(i,obras,opt)).join("")}</div>`; }
+
+/* Mapas: Leaflet + teselas de OpenStreetMap servidas desde la caché propia de canarias.africa.
+   Los nodos geográficos (obras, QR, rutas) se dibujan y editan en uMap; la web lee sus capas en GeoJSON
+   y las une con la red por la propiedad "id". Si las teselas no cargan, se dibuja el contorno de la isla. */
+const MAPA = {
+  teselas: "/teselas/osm/{z}/{x}/{y}.png",
+  atribucion: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+  umap: { servidor: "https://umap.openstreetmap.fr", mapa: null, capas: { obras: null, qr: null, rutas: null } } // ids por crear en uMap
+};
+async function cargarUMap(){
+  const U=MAPA.umap; if(!U.mapa||!U.capas.obras) return; // prototipo: usa los datos de ejemplo
+  try{
+    const r=await fetch(`${U.servidor}/datalayer/${U.mapa}/${U.capas.obras}/`); const gj=await r.json();
+    gj.features.forEach(f=>{ const o=byId(f.properties.id); if(o&&f.geometry.type==="Point"){ [o.lon,o.lat]=f.geometry.coordinates; } });
+  }catch(e){ /* se mantienen las últimas coordenadas guardadas */ }
+}
+let MAPSEQ=0, MAPQ=[];
+function mapIsland(isla,obras,opt){
+  const id="lmap-"+(++MAPSEQ); MAPQ.push({id,isla,obras,opt});
+  return `<figure class="${isla==="LZ"?"lz":""}"><figcaption>${ISLAS[isla]}</figcaption><div class="lmap${opt.focus?" small":""}" id="${id}"></div><p class="osm-note" hidden>Esta vista previa no llega a la caché de mapas de canarias.africa, así que muestra un contorno simplificado. En la web se verá el mapa de OpenStreetMap.</p></figure>`;
+}
+function initMaps(){
+  const q=MAPQ.splice(0);
+  q.forEach(c=>{
+    const el=document.getElementById(c.id); if(!el) return;
+    if(!window.L){ el.outerHTML=c.cerca?`<p class="muted" style="padding:12px">El mapa no ha podido cargarse.</p>`:svgIsland(c.isla,c.obras,c.opt); return; }
+    const islas=c.isla?[c.isla]:["TF","LZ"];
+    const m=L.map(el,{scrollWheelZoom:false,zoomControl:true});
+    const base=L.tileLayer(MAPA.teselas,{maxZoom:19,attribution:MAPA.atribucion+' · nodos editados en <a href="https://umap.openstreetmap.fr" target="_blank" rel="noopener">uMap</a>'}).addTo(m);
+    let fell=false;
+    base.on("tileerror",()=>{ if(fell) return; fell=true; el.classList.add("offline"); el.parentNode.querySelector(".osm-note").hidden=false;
+      islas.forEach(i=>L.polygon(OUT[i].poly.map(([lon,lat])=>[lat,lon]),{className:"isle-fb",interactive:false}).addTo(m).bringToBack());
+      Object.values(MUNIS).filter(x=>islas.includes(x.isla)).forEach(x=>L.marker([x.lat,x.lon],{interactive:false,icon:L.divIcon({className:"mlab",html:x.n,iconSize:null,iconAnchor:[-10,22]})}).addTo(m)); });
+    if(c.opt.route){ const pts=c.opt.route.map(byId).filter(o=>MUNIS[o.m].isla===c.isla).map(o=>[o.lat,o.lon]); if(pts.length>1) L.polyline(pts,{className:"route-line",interactive:false}).addTo(m); }
+    c.obras.filter(o=>islas.includes(MUNIS[o.m].isla)&&enMapa(o)).forEach(o=>{
+      if(sensOf(o)==="difusa"){ L.circle([o.lat,o.lon],{radius:1100,className:`mk-zona mk-${o.fase}`}).addTo(m).bindTooltip(`${esc(o.t)} · zona aproximada`).on("click",()=>{ location.hash=slug(o.id); }); return; }
+      const on=!c.opt.only||c.opt.only.includes(o.id), big=c.opt.focus===o.id;
+      if(big&&sensOf(o)==="abierta") L.circleMarker([o.lat,o.lon],{radius:14,className:"mk-ring",interactive:false}).addTo(m);
+      L.circleMarker([o.lat,o.lon],{radius:big?8:7,className:`mk mk-${o.fase}${on?"":" dim"}`}).addTo(m)
+       .bindTooltip(`${esc(o.t)} · ${FASES[o.fase].n}`).on("click",()=>{ location.hash=slug(o.id); });
+    });
+    if(c.cerca){ L.circleMarker([c.lat,c.lon],{radius:8,className:"mk-yo",interactive:false}).addTo(m); L.circle([c.lat,c.lon],{radius:RADIO_KM*1000,className:"radio-yo",interactive:false}).addTo(m); m.setView([c.lat,c.lon],11); }
+    else if(c.opt.focus){ const o=byId(c.opt.focus), n=sensOf(o); m.setView([o.lat,o.lon],n==="reservada"?11:n==="difusa"?13:14); }
+    else if(c.opt.route){ m.fitBounds(L.latLngBounds(c.opt.route.map(byId).map(o=>[o.lat,o.lon])),{padding:[40,40],maxZoom:14}); }
+    else m.fitBounds(L.latLngBounds(OUT[c.isla].poly.map(([lon,lat])=>[lat,lon])),{padding:[8,8]});
+  });
+}
+
+function leyenda(){ return `<div class="legend">${["plenitud","desgaste","intervencion","transformacion","desaparicion","memoria"].map(f=>`<span><i class="sw" style="background:${css(FASES[f].c)}"></i>${FASES[f].n}</span>`).join("")}</div>`; }
+
+/* ---------- QR ilustrativo ---------- */
+function drawQR(canvas,text){
+  const N=25,c=canvas.getContext("2d"); canvas.width=canvas.height=N*8;
+  let h=2166136261; for(const ch of text){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); }
+  const rnd=()=>{ h^=h<<13; h^=h>>>17; h^=h<<5; return (h>>>0)/4294967296; };
+  c.fillStyle="#fff"; c.fillRect(0,0,N*8,N*8); c.fillStyle="#111";
+  const finder=(x,y)=>{ c.fillRect(x*8,y*8,56,56); c.fillStyle="#fff"; c.fillRect(x*8+8,y*8+8,40,40); c.fillStyle="#111"; c.fillRect(x*8+16,y*8+16,24,24); };
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){ const inF=(x<8&&y<8)||(x>N-9&&y<8)||(x<8&&y>N-9); if(!inF&&rnd()>.52) c.fillRect(x*8,y*8,8,8); }
+  finder(0,0); finder(N-7,0); finder(0,N-7);
+}
+
+/* ---------- Vistas ---------- */
+function vInicio(){
+  const S={on:["Disponible","--ph-plen"],soon:["Próximamente","--ph-desg"],later:["Más adelante","--muted"]};
+  const OF=[
+   ["Archivo colaborativo","Fichas permanentes de obras en el espacio público y rural: quién las hizo, quién las pagó y cómo han cambiado.","#archivo","on"],
+   ["Red nodal","Cómo se conectan obras, personas, lugares, fuentes y financiación. Cada nodo tiene su página.","#red","on"],
+   ["QR en las obras","Un código junto a cada obra abre su ficha. Solo escaneándolo se puede contar cómo está hoy.","#archivo","on"],
+   ["Rutas curatoriales","Proyectos de curaduría sobre obras catalogadas, que se recorren a pie. Puedes proponer la tuya.","#rutas","on"],
+   ["Salidas colectivas de mapeo","En municipios de Tenerife, para localizar y documentar obras entre vecinas y vecinos. Apúntate y te avisamos de la fecha.","#inscripcion","on"],
+   ["Ayudas a artistas","Calendario de convocatorias, residencias e incentivos para artistas y colectivos de Canarias.","#ayudas","on"],
+   ["Datos para investigar","Fichas, fuentes y relaciones consultables para investigación y docencia, con reglas claras de uso y crédito.","#derechos","on"],
+   ["Comunidad artística","Foro privado para artistas: ideas, colaboraciones, logística, materiales y experiencias con entidades.","#comunidad","on"],
+   ["Exposiciones virtuales","Recorridos curatoriales por la red: temas, épocas y autorías.","","soon"],
+   ["Apoya a los artistas","Mecenazgo y souvenirs directamente con quien hizo la obra. Nosotros no vendemos: te llevamos a sus canales.","#apoya","on"]
+  ];
+  const PARA=[["Vecindad","Reconoce las obras de tu pueblo, cuenta lo que sabes y ayuda a que no se pierdan."],
+   ["Artistas","Registra tu obra con su autoría, encuentra ayudas y conecta con otros proyectos."],
+   ["Investigación","Consulta fuentes, grados de certeza y la evolución de cada pieza en datos abiertos."],
+   ["Ayuntamientos y entidades","Conoce el patrimonio artístico contemporáneo de tu territorio y su estado."]];
+  return `
+  <section class="hero">
+    <div class="stack">
+      <p class="eyebrow">Museo distribuido de arte y memoria contemporánea</p>
+      <h1>Un museo sin edificio.<span>Las obras están donde siempre estuvieron: en plazas, barrancos, molinos y muros. canarias.africa las registra, las conecta y las sigue en el tiempo, con la gente que vive junto a ellas.</span></h1>
+      <p class="claim">«Un museo sin ubicación única para un arte que deja memoria en el territorio.»</p>
+      <div class="btns" style="margin-top:8px"><a class="btn" href="#ofrece">Qué ofrecemos</a><a class="btn alt" href="#archivo">Entrar al archivo</a></div>
+    </div>
+    <dl class="defs" aria-label="Metodologías">
+      <div><dt>Centro de Arte No Ubicado</dt><dd>No tiene sede. Su colección está repartida por el territorio y se visita a pie.</dd></div>
+      <div><dt>arte nodal</dt><dd>Método para ver cómo se conecta el conocimiento: cada obra es un nodo unido a personas, lugares, fuentes y otras obras.</dd></div>
+      <div><dt>arqueología artística contemporánea</dt><dd>Método para recuperar la memoria de obras recientes, desgastadas o desaparecidas a partir de restos, documentos y testimonios.</dd></div>
+    </dl>
+  </section>
+
+
+  <section id="ofrece">
+    <p class="eyebrow">Servicios</p>
+    <h2>Qué ofrece canarias.africa</h2>
+    <div class="offer">${OF.map(([t,d,h,s])=>{ const [sl,sc]=S[s]; const inner=`<span class="st" style="color:${css(sc)}">${sl}</span><h3>${t}</h3><p>${d}</p>${h?`<span class="go">Ir →</span>`:""}`; return h?`<a class="of" href="${h}">${inner}</a>`:`<div class="of off">${inner}</div>`; }).join("")}</div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Para quién</p>
+    <h2>Un archivo que se hace entre todas las personas</h2>
+    <div class="para">${PARA.map(([t,d])=>`<div><h3>${t}</h3><p class="muted">${d}</p></div>`).join("")}</div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Cómo participar</p>
+    <h2>Encuentra, escanea, observa</h2>
+    <div class="steps"><ol style="display:contents">
+      <li><b>1 · Encuentra</b><h3>Una obra en la calle o en el monte</h3><p class="muted">Murales, esculturas, inscripciones, acciones que ya no están. Si no tiene ficha, propónla.</p></li>
+      <li><b>2 · Escanea</b><h3>El QR junto a la obra</h3><p class="muted">Te lleva a su ficha permanente: quién la hizo, quién la pagó y cómo ha cambiado.</p></li>
+      <li><b>3 · Observa</b><h3>Cuéntanos cómo está hoy</h3><p class="muted">Cada observación queda fechada. Con ellas reconstruimos la vida de la obra.</p></li>
+    </ol></div>
+  </section>
+
+  <section class="insc-cta">
+    <div class="stack"><p class="eyebrow">Tenerife · fechas por fijar</p>
+    <h2>Salidas colectivas de mapeo en tu municipio</h2>
+    <p class="muted prose">Apúntate en cualquiera de los 31 municipios de Tenerife. Cuando haya grupo, fijamos la fecha y te avisamos.</p></div>
+    <div class="btns"><a class="btn lichen" href="#inscripcion">Apuntarme a una salida</a></div>
+  </section>`;
+}
+
+let FILT={m:"",f:"",c:"",q:""};
+function vArchivo(){
+  return `<section class="stack">
+    <p class="eyebrow">Archivo colaborativo</p>
+    <h1>Archivo y mapa</h1>
+    <p class="lede muted">Cada punto es una obra con identificador permanente. El color indica en qué momento de su vida está.</p>
+  </section>
+  <div id="cerca"></div>
+  <div class="filters" role="search">
+    <label for="f-q">Buscar<input id="f-q" type="search" placeholder="Título, lugar o autoría" value="${esc(FILT.q)}"></label>
+    <label for="f-m">Municipio<select id="f-m"><option value="">Todos</option>${Object.entries(MUNIS).map(([k,m])=>`<option value="${k}" ${FILT.m===k?"selected":""}>${m.n}</option>`).join("")}</select></label>
+    <label for="f-f">Fase<select id="f-f"><option value="">Todas</option>${Object.entries(FASES).map(([k,F])=>`<option value="${k}" ${FILT.f===k?"selected":""}>${F.n}</option>`).join("")}</select></label>
+    <label for="f-c">Autoría<select id="f-c"><option value="">Cualquier certeza</option>${Object.entries(CERTEZA).map(([k,C])=>`<option value="${k}" ${FILT.c===k?"selected":""}>${C.n}</option>`).join("")}</select></label>
+  </div>
+  <div id="res"></div>`;
+}
+/* ---------- Cerca de ti ---------- */
+const ZONAS=[...Object.values(MUNIS).map(m=>[m.n,m.lat,m.lon]),
+ ["Santa Cruz de Tenerife",28.468,-16.254],["San Cristóbal de La Laguna",28.487,-16.315],["Puerto de la Cruz",28.414,-16.548],
+ ["Las Palmas de Gran Canaria",28.124,-15.430],["Agüimes",27.905,-15.446],["Arrecife",28.963,-13.548],["Puerto del Rosario",28.500,-13.862],
+ ["San Sebastián de La Gomera",28.091,-17.111],["Santa Cruz de La Palma",28.683,-17.765],["Valverde",27.809,-17.915]];
+const RADIO_KM=15;
+let CERCA=null; try{ CERCA=JSON.parse(localStorage.getItem("ca-cerca")||"null"); }catch(e){}
+function km(a1,o1,a2,o2){ const r=Math.PI/180, x=Math.sin((a2-a1)*r/2)**2+Math.cos(a1*r)*Math.cos(a2*r)*Math.sin((o2-o1)*r/2)**2; return 12742*Math.asin(Math.sqrt(x)); }
+function setCerca(v){ CERCA=v; try{ localStorage.setItem("ca-cerca",JSON.stringify(v)); }catch(e){} renderCerca(); }
+function mapCerca(lat,lon){ const id="lmap-"+(++MAPSEQ); MAPQ.push({id,cerca:true,lat,lon,obras:OBRAS,opt:{}});
+  return `<div class="map"><figure><figcaption>Tu zona</figcaption><div class="lmap" id="${id}"></div><p class="osm-note" hidden>Esta vista previa no llega a la caché de mapas de canarias.africa, así que muestra un contorno simplificado. En la web se verá el mapa de OpenStreetMap.</p></figure></div>`; }
+function renderCerca(){
+  const box=$("#cerca"); if(!box) return;
+  const zonaSel=`<label for="c-zona" class="zl">o elige tu zona<select id="c-zona"><option value="">Elige un municipio</option>${ZONAS.map((z,i)=>`<option value="${i}">${z[0]}</option>`).join("")}</select></label>`;
+  if(!CERCA){
+    box.innerHTML=`<div class="cerca"><div class="stack" style="gap:6px"><h2>¿Qué hay cerca de ti?</h2><p class="muted">El mapa se centra en tu zona y te enseña las obras más próximas.</p></div>
+      <div class="cbar"><button class="btn" type="button" id="c-geo">Usar mi ubicación</button>${zonaSel}</div><p class="muted" id="c-msg" style="font-size:.9rem"></p></div>`;
+  } else {
+    const near=OBRAS.filter(enMapa).map(o=>({o,d:km(CERCA.lat,CERCA.lon,o.lat,o.lon)})).sort((a,b)=>a.d-b.d), dentro=near.filter(x=>x.d<=RADIO_KM);
+    box.innerHTML=`<div class="cerca"><div class="chead"><h2>Cerca de ti <span class="muted" style="font-weight:500">· ${esc(CERCA.n)}</span></h2><button class="btn alt" type="button" id="c-reset">Cambiar zona</button></div>
+      ${dentro.length?`<p>${dentro.length} ${dentro.length===1?"obra":"obras"} a menos de ${RADIO_KM} km.</p>
+        <ul class="near">${dentro.slice(0,5).map(x=>`<li><a href="#${slug(x.o.id)}">${esc(x.o.t)}</a> <span class="mono muted">${x.d.toFixed(1).replace(".",",")} km</span> ${chip(x.o.fase)}</li>`).join("")}</ul>`
+      :`<div class="invite"><h3>Todavía no hay obras mapeadas en tu zona</h3><p>¿Conoces alguna obra de arte o expresión artística en tu región? Un mural, una escultura, una inscripción, una fiesta, una acción que alguien recuerda. Colabora y será la primera del mapa.</p>
+        <div class="btns"><a class="btn lichen" href="#aportar" data-obra="nueva">Colaborar con una obra</a></div>
+        <p class="muted" style="font-size:.88rem">La obra registrada más cercana está a ${Math.round(near[0].d)} km: <a href="#${slug(near[0].o.id)}">${esc(near[0].o.t)}</a>.</p></div>`}
+      ${mapCerca(CERCA.lat,CERCA.lon)}</div>`;
+    initMaps();
+  }
+  const g=$("#c-geo"); if(g) g.addEventListener("click",()=>{
+    const msg=$("#c-msg"); msg.textContent="Buscando tu ubicación…";
+    if(!navigator.geolocation){ msg.textContent="Tu navegador no permite compartir la ubicación. Elige tu zona en la lista."; return; }
+    navigator.geolocation.getCurrentPosition(p=>setCerca({lat:p.coords.latitude,lon:p.coords.longitude,n:"tu ubicación"}),
+      ()=>{ msg.textContent="No hemos podido usar tu ubicación (en esta vista previa está bloqueada). Elige tu zona en la lista."; },{timeout:8000,maximumAge:600000});
+  });
+  const z=$("#c-zona"); if(z) z.addEventListener("change",()=>{ const r=ZONAS[+z.value]; if(r) setCerca({lat:r[1],lon:r[2],n:r[0]}); });
+  const rs=$("#c-reset"); if(rs) rs.addEventListener("click",()=>setCerca(null));
+}
+
+function renderRes(){
+  const q=FILT.q.toLowerCase();
+  const r=OBRAS.filter(o=>(!FILT.m||o.m===FILT.m)&&(!FILT.f||o.fase===FILT.f)&&(!FILT.c||o.aut[0].c===FILT.c)&&(!q||(o.t+o.lugar+o.aut.map(a=>a.n).join(" ")).toLowerCase().includes(q)));
+  $("#res").innerHTML = mapa(OBRAS,{only:r.map(o=>o.id)})+leyenda()+
+   `<p class="count" style="margin-top:18px">${r.length} de ${OBRAS.length} obras</p><div class="list">${r.map(o=>`
+    <a class="item" href="#${slug(o.id)}"><span class="mono">${o.id}</span>
+    <span><span class="t">${esc(o.t)}</span> <span class="fake">ficticia</span>${sensOf(o)!=="abierta"?` <span class="sens">ubicación ${sensOf(o)}</span>`:""}<br><span class="s">${o.tipo} · ${esc(o.lugar)} · ${MUNIS[o.m].n}</span></span>${chip(o.fase)}</a>`).join("")||`<p class="muted" style="padding:16px 0">Ninguna obra cumple estos filtros. Prueba a quitar alguno.</p>`}</div>`;
+  initMaps();
+}
+
+function vObra(o){
+  const obs=obsOf(o), M=MUNIS[o.m];
+  const prox=o.qr.rev?addMonths(o.qr.rev,6):"";
+  const qrTxt={activo:"Activo",pendiente:"Pendiente de instalar",dañado:"Dañado, hay que reponerlo",retirado:"Retirado (la obra ya no está)","no aplica":"No aplica (obra efímera)"}[o.qr.st];
+  const qrTxt2=sensOf(o)==="reservada"?"No se coloca, para no señalar la ubicación":qrTxt;
+  return `<p class="eyebrow"><a href="#archivo">← Archivo</a></p>
+  <section class="ficha-head" style="margin-top:14px">
+    <div class="stack">
+      <div class="idline"><span class="idbadge">${o.id}</span>${chip(o.fase)}<span class="fake">datos ficticios</span></div>
+      <h1>${esc(o.t)}</h1>
+      <p class="lede muted">${o.tipo} · ${esc(o.lugar)} · ${M.n}, ${ISLAS[M.isla]}</p>
+      <div class="btns"><a class="btn lichen" href="#contexto-${o.id.toLowerCase()}">Aportar contexto</a></div>
+      <div class="qrhint">${o.qr.st==="activo"?`<p><b>¿Estás junto a la obra?</b> Escanea su QR para contar cómo está hoy. El estado de una obra solo se puede observar desde su QR.</p><div class="btns" style="align-items:center"><a class="btn alt" href="#${qrHash(o)}" style="padding:6px 12px;font-size:.88rem">Simular escaneo del QR</a><span class="fake">solo en el prototipo</span></div>`
+        :sensOf(o)==="reservada"?`<p class="muted">Esta obra no lleva QR en el sitio, para no señalar dónde está. Su estado lo revisa el equipo junto con la autoridad de patrimonio. Puedes aportar contexto.</p>`
+        :`<p class="muted">Esta obra no tiene un QR activo (${esc(o.qr.st)}), así que ahora no se puede observar su estado. Lo revisaremos en la próxima salida de mapeo.</p>`}</div>
+      ${(()=>{ const ags=o.aut.filter(a=>a.c==="confirmada").map(a=>G.byKey.get("ag:"+a.n)).filter(ag=>ag&&canales(ag).length); return ags.length?`<div class="apoya"><span class="eyebrow">Apoya a la autoría</span>${ags.map(ag=>`<div><b>${esc(ag.label)}</b>${botonesCanal(ag)}</div>`).join("")}</div>`:""; })()}
+    </div>
+    <aside ${sensOf(o)==="reservada"?"hidden":""}><div class="qr"><canvas id="qr" aria-label="Código QR ilustrativo de la ficha"></canvas></div><p class="qrnote">QR ilustrativo, no escaneable · canarias.africa/${o.id.toLowerCase()}</p></aside>
+  </section>
+
+  <section class="grid2">
+    <div class="stack">
+      <h2>Ficha</h2>
+      <dl class="dl">
+        <dt>Fecha</dt><dd>${esc(o.fecha.v)} <span class="muted">(${o.fecha.p})</span></dd>
+        <dt>Autoría</dt><dd>${o.aut.map(a=>`<div>${cert(a.c)}<b>${esc(a.n)}</b>${a.rol?` · ${a.rol}`:""}<br><span class="muted" style="font-size:.88rem">${CERTEZA[a.c].n}${a.f?`: ${esc(a.f)}`:""}</span></div>`).join("")}</dd>
+        <dt>Financiación</dt><dd>${FIN[o.fin.t]}${o.fin.e?` <span class="muted">· ${esc(o.fin.e)}</span>`:""}</dd>
+        <dt>Ubicación</dt><dd>${sensOf(o)==="abierta"?`<span class="mono">${o.lat.toFixed(4)}° N, ${Math.abs(o.lon).toFixed(4)}° O · ±25 m</span>`
+          :`<span class="sens">${sensOf(o)==="reservada"?"Reservada":"Zona aproximada (~2 km)"}</span><br><span class="muted" style="font-size:.88rem">${SENS[sensOf(o)].d}${o.sens.m?` Motivo: ${esc(o.sens.m)}.`:""}</span>`}</dd>
+        <dt>QR</dt><dd>${qrTxt2}${o.qr.inst?`<br><span class="muted" style="font-size:.88rem">Instalado ${fd(o.qr.inst)} · última revisión ${fd(o.qr.rev)} · próxima ${fd(prox)}${prox&&prox<HOY?" <b>(vencida)</b>":""}</span>`:""}</dd>
+        <dt>Derechos</dt><dd>Obra © su autoría · ficha © CANARIAS.AFRICA · <a href="#derechos">uso y permisos</a></dd>
+      </dl>
+      ${mapa(OBRAS,{islas:[M.isla],focus:o.id})}
+    </div>
+    <div class="stack">
+      <h2>Fenología</h2>
+      <p class="muted" style="font-size:.95rem">El ciclo de vida de la obra, reconstruido con documentos y observaciones.</p>
+      <div class="timeline">${o.fen.map(([d,f,n])=>`<div class="tl" style="--c:${css(FASES[f].c)}"><span class="d">${esc(d)}</span><h3>${FASES[f].n}</h3>${n?`<p>${esc(n)}</p>`:""}</div>`).join("")}</div>
+    </div>
+  </section>
+
+  <section class="stack">
+    <h2>Observaciones y contexto <span class="count">(${obs.length})</span></h2>
+    ${obs.length?`<div class="obs">${obs.map(b=>`<div class="ob"><div class="meta"><span>${fd(b[0])}</span><span>${esc(b[1])}</span><span>vía ${esc(b[2])}</span></div>
+      <div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${b[3]?chip(b[3]):`<span class="chip" style="color:var(--n-agente)">Contexto</span>`}<span class="mono ${b[5]==="validada"?"ver-ok":b[5]==="descartada"?"ver-no":"ver-pend"}">${b[5]==="validada"?"✓ validada":b[5]==="descartada"?"✕ descartada":"◷ pendiente de revisión"}</span>${b[6]?`<span class="fake">tu aportación · solo en este navegador</span>`:""}</div>
+      ${b[4]?`<p style="margin-top:6px">${esc(b[4])}</p>`:`<p class="muted" style="margin-top:6px">Sin texto.</p>`}</div></div>`).join("")}</div>`
+      :`<p class="muted">Todavía nadie ha aportado nada sobre esta obra.</p>`}
+  </section>
+
+  <section class="grid2">
+    <div class="stack"><h2>Relaciones en la red</h2>${relList(o.id,["observa"])}</div>
+    <div class="stack"><h2>Vecindario</h2>${ego(o.id)}<p class="muted" style="font-size:.9rem"><a href="#red">Ver la red completa</a></p></div>
+  </section>
+
+  <section class="stack">
+    <h3>Cómo citar esta ficha</h3>
+    <div class="cite">CANARIAS.AFRICA. «${esc(o.t)}». Ficha ${o.id}, versión ${o.fen.length+o.obs.length}. canarias.africa/${o.id.toLowerCase()}. Consultado el ${fd(HOY)}. Para imágenes: «Título», Autoría, año. Foto: nombre o alias (fecha) / CANARIAS.AFRICA.</div>
+  </section>`;
+}
+
+let PRESEL="";
+/* Token de cada QR físico: se renueva cuando se repone el código. Sin token válido no se puede observar el estado. */
+function qrTok(id){ let h=2166136261; for(const ch of id+":v1"){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); } return (h>>>0).toString(36).slice(0,5); }
+const qrHash=o=>`qr-${o.id.toLowerCase()}-${qrTok(o.id)}`;
+const LIC=`<label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-lic" required style="margin-top:4px"> Confirmo que las fotos o documentos son míos o puedo compartirlos. Conservo mis derechos y autorizo, sin exclusividad, a mostrarlos con mi crédito en el archivo (<a href="#derechos">derechos de imagen</a>).</label>`;
+const ALIAS=`<label for="o-alias">Tu nombre o alias (opcional)<input id="o-alias" type="text" placeholder="Se mostrará en la ficha" autocomplete="nickname"></label>`;
+function cabObra(o,eyebrow){ return `<p class="eyebrow"><a href="#${slug(o.id)}">← Ficha de la obra</a></p>
+  <section class="stack" style="margin-top:14px"><div class="idline"><span class="idbadge">${o.id}</span>${chip(o.fase)}</div>
+  <p class="eyebrow">${eyebrow}</p><h1>${esc(o.t)}</h1><p class="lede muted">${esc(o.lugar)} · ${MUNIS[o.m].n}</p></section>`; }
+
+/* Observación del estado: solo al escanear el QR junto a la obra */
+function vQR(o){
+  return cabObra(o,"Has escaneado el QR de esta obra")+`
+  <div id="okbox" style="margin-top:20px"></div>
+  <form class="obsf" id="obsf" data-modo="qr" data-obra="${o.id}" novalidate style="margin-top:20px">
+    <fieldset class="full"><legend>¿Cómo la ves hoy?</legend><div class="radios">
+      ${["plenitud","desgaste","intervencion","transformacion","desaparicion"].map(f=>`<label><input type="radio" name="o-fase" id="o-fase-${f}" value="${f}" ${f===o.fase?"checked":""}> ${FASES[f].n}</label>`).join("")}
+    </div></fieldset>
+    <label class="full" for="o-txt">Qué ves<textarea id="o-txt" placeholder="Por ejemplo: la parte baja ha perdido color; hay una pintada nueva a la derecha."></textarea></label>
+    <label for="o-foto">Foto de hoy (opcional)<input id="o-foto" type="file" accept="image/*" capture="environment"></label>
+    ${ALIAS}${LIC}
+    <p class="full muted" id="o-err" style="font-size:.9rem"></p>
+    <div class="full btns"><button class="btn" type="submit">Enviar observación</button></div>
+  </form>`;
+}
+/* Contexto: desde la ficha, sin estar junto a la obra */
+const TCTX=["Historia o testimonio","Dato de autoría","Fuente o documento","Corrección de la ficha"];
+function vContexto(o){
+  return cabObra(o,"Aportar contexto")+`
+  <p class="prose muted" style="margin-top:12px">Lo que sabes de esta obra: cómo se hizo, quién participó, un documento o una foto antigua. Para contar <b>cómo está hoy</b> hay que escanear su QR junto a la obra.</p>
+  <div id="okbox" style="margin-top:20px"></div>
+  <form class="obsf" id="obsf" data-modo="contexto" data-obra="${o.id}" novalidate style="margin-top:20px">
+    <fieldset class="full"><legend>¿Qué aportas?</legend><div class="radios">
+      ${TCTX.map((t,i)=>`<label><input type="radio" name="o-ctx" id="o-ctx-${i}" value="${t}" ${i===0?"checked":""}> ${t}</label>`).join("")}
+    </div></fieldset>
+    <label class="full" for="o-txt">Tu aportación<textarea id="o-txt" required placeholder="Por ejemplo: mi tío ayudó a pintarlo en el verano de 1987; lo organizó el ayuntamiento."></textarea></label>
+    <label for="o-fuente">Fuente o enlace (opcional)<input id="o-fuente" type="text" placeholder="Programa de fiestas de 1987, archivo municipal…"></label>
+    <label for="o-doc">Foto antigua o documento (opcional)<input id="o-doc" type="file" accept="image/*,application/pdf"></label>
+    ${ALIAS}${LIC}
+    <p class="full muted" id="o-err" style="font-size:.9rem"></p>
+    <div class="full btns"><button class="btn" type="submit">Enviar contexto</button></div>
+  </form>`;
+}
+/* Obra nueva: cualquiera, desde cualquier sitio */
+function vAportar(){
+  return `<section class="stack">
+    <p class="eyebrow">Colabora</p>
+    <h1>Proponer una obra nueva</h1>
+    <p class="lede muted">¿Conoces una obra de arte o expresión artística que no está en el archivo? Cuéntanos qué es y dónde está. El equipo la revisa, le da un identificador y, si procede, le coloca su QR.</p>
+    <p class="muted">¿La obra ya tiene ficha? Escanea su QR para contar cómo está, o entra en su ficha para aportar contexto.</p>
+  </section>
+  <div id="okbox" style="margin-top:20px"></div>
+  <form class="obsf" id="obsf" data-modo="nueva" novalidate style="margin-top:20px">
+    <label class="full" for="o-n-tit">Qué es<input id="o-n-tit" type="text" required placeholder="Por ejemplo: mural en la fachada del colegio"></label>
+    <label for="o-n-lug">Dónde está<input id="o-n-lug" type="text" required placeholder="Calle, barrio o paraje"></label>
+    <label for="o-n-mun">Municipio<input id="o-n-mun" type="text" required list="munlist" placeholder="Escribe el municipio"><datalist id="munlist">${MUN_TF.map(m=>`<option value="${m}">`).join("")}</datalist></label>
+    <label class="full" for="o-txt">Lo que sabes de ella (opcional)<textarea id="o-txt" placeholder="Quién la hizo, cuándo, quién la pagó, cómo está."></textarea></label>
+    <label for="o-foto">Foto (opcional)<input id="o-foto" type="file" accept="image/*"></label>
+    ${ALIAS}
+    <label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-sens" style="margin-top:4px"> Puede ser una obra sensible (grabado aborigen, yacimiento, obra sin protección): no publiquéis su ubicación exacta.</label>
+    <p class="full muted" style="font-size:.88rem">La ubicación de una obra nueva no se publica hasta que el equipo la revisa y decide su nivel de protección.</p>
+    ${LIC}
+    <p class="full muted" id="o-err" style="font-size:.9rem"></p>
+    <div class="full btns"><button class="btn" type="submit">Enviar propuesta</button></div>
+  </form>`;
+}
+function enviar(e){
+  e.preventDefault();
+  const f=e.target, modo=f.dataset.modo, err=$("#o-err"), bad=t=>{ err.textContent=t; err.style.color="var(--ph-desg)"; };
+  if(!$("#o-lic").checked) return bad("Marca la casilla de licencia para poder publicar tu aportación.");
+  const txt=$("#o-txt").value.trim(), alias=$("#o-alias").value.trim()||"anónimo";
+  if(modo==="nueva"){
+    if(!$("#o-n-tit").value.trim()||!$("#o-n-lug").value.trim()||!$("#o-n-mun").value.trim()) return bad("Falta decir qué es, dónde está o el municipio.");
+    $("#okbox").innerHTML=`<div class="ok"><h3>Propuesta recibida</h3><p>El equipo la revisará y abrirá una ficha con identificador nuevo. En este prototipo no se envía a ningún sitio.</p></div>`;
+  } else {
+    const id=f.dataset.obra, o=byId(id);
+    if(modo==="contexto"){ if(!txt) return bad("Escribe tu aportación antes de enviarla.");
+      const t=document.querySelector('input[name="o-ctx"]:checked').value, fu=$("#o-fuente").value.trim();
+      LOCAL.push([HOY,alias,"Ficha",null,`${t}: ${txt}${fu?` (Fuente: ${fu})`:""}`,"pendiente",id]); }
+    else LOCAL.push([HOY,alias,"QR",document.querySelector('input[name="o-fase"]:checked').value,txt,"pendiente",id]);
+    saveLocal();
+    $("#okbox").innerHTML=`<div class="ok"><h3>${modo==="qr"?"Observación guardada":"Contexto guardado"}</h3><p>La verás en la <a href="#${slug(id)}">ficha de ${esc(o.t)}</a> como pendiente de revisión. En este prototipo solo se guarda en tu navegador.</p></div>`;
+  }
+  f.reset(); window.scrollTo(0,0);
+}
+
+function vRutas(){
+  return `<section class="stack">
+    <p class="eyebrow">Proyectos curatoriales</p>
+    <h1>Rutas</h1>
+    <p class="lede muted">Cada ruta es un proyecto de curaduría: alguien elige obras ya catalogadas en el archivo y propone una lectura que se recorre a pie.</p>
+    <div class="btns"><a class="btn alt" href="#proponer-ruta">Proponer una ruta</a></div>
+  </section>
+  <section class="routes">${RUTAS.map(r=>{ const isla=MUNIS[r.ms[0]].isla, cur=G.byKey.get("ag:"+r.cur); return `
+    <article class="route" id="ruta-${r.id}">
+      <div class="stack">
+        <p class="eyebrow">${r.ms.map(k=>MUNIS[k].n).join(" · ")} · ${ISLAS[isla]}</p>
+        <h2>${r.n}</h2>
+        <p class="curline">Curaduría: ${cur?nlink(cur):esc(r.cur)} <span class="fake">ficticio</span></p>
+        <blockquote class="tesis">${esc(r.tesis)}</blockquote>
+        <div class="facts"><span>${r.km.toLocaleString("es-ES")} km</span><span>${r.h}</span><span>Dificultad ${r.dif.toLowerCase()}</span><span>${r.stops.length} obras</span></div>
+        <ol class="stops">${r.stops.map(id=>{const o=byId(id);return `<li><span><a href="#${slug(id)}">${esc(o.t)}</a> <span class="muted" style="font-size:.85rem">· ${FASES[o.fase].n}</span>${r.notas[id]?`<br><span class="muted" style="font-size:.9rem">${esc(r.notas[id])}</span>`:""}</span></li>`;}).join("")}</ol>
+        <p style="font-size:.92rem"><b>Salida colectiva:</b> ${isla==="TF"?`fecha por fijar. <a href="#inscripcion">Apúntate</a> y te avisamos.`:"por ahora solo organizamos salidas en Tenerife."}</p>
+      </div>
+      <div>${mapa(OBRAS,{islas:[isla],only:r.stops,route:r.stops})}</div>
+    </article>`;}).join("")}</section>`;
+}
+function vProponerRuta(){
+  return `<p class="eyebrow"><a href="#rutas">← Rutas</a></p>
+  <section class="stack" style="margin-top:14px"><p class="eyebrow">Curaduría</p><h1>Proponer una ruta</h1>
+  <p class="lede muted">Elige obras que ya están en el archivo y explica qué lectura propones. El equipo revisa el recorrido a pie antes de publicarlo.</p></section>
+  <div id="okbox" style="margin-top:20px"></div>
+  <form class="obsf" id="rutaf" novalidate style="margin-top:20px">
+    <label class="full" for="r-tit">Título de la ruta<input id="r-tit" type="text" required></label>
+    <label class="full" for="r-tes">Tesis curatorial<textarea id="r-tes" required placeholder="Qué une a estas obras y qué quieres que vea quien camine la ruta."></textarea></label>
+    <fieldset class="full"><legend>Obras catalogadas (en orden de recorrido)</legend><div class="radios" style="flex-direction:column;gap:6px">
+      ${OBRAS.filter(o=>sensOf(o)==="abierta").map(o=>`<label><input type="checkbox" id="r-o-${o.id}" value="${o.id}"> <span class="mono">${o.id}</span> ${esc(o.t)} <span class="muted">· ${MUNIS[o.m].n}</span></label>`).join("")}
+    </div></fieldset>
+    <label for="r-cur">Curaduría (nombre o colectivo)<input id="r-cur" type="text" required></label>
+    <label for="r-con">Correo o teléfono<input id="r-con" type="text" required></label>
+    <p class="full muted" id="r-err" style="font-size:.9rem"></p>
+    <div class="full btns"><button class="btn" type="submit">Enviar propuesta de ruta</button></div>
+  </form>`;
+}
+function proponerRuta(e){
+  e.preventDefault(); const err=$("#r-err"), sel=[...document.querySelectorAll('#rutaf input[type=checkbox]:checked')];
+  if(!$("#r-tit").value.trim()||!$("#r-tes").value.trim()||!$("#r-cur").value.trim()||!$("#r-con").value.trim()){ err.textContent="Faltan el título, la tesis, la curaduría o un contacto."; err.style.color="var(--ph-desg)"; return; }
+  if(sel.length<2){ err.textContent="Elige al menos dos obras del archivo."; err.style.color="var(--ph-desg)"; return; }
+  $("#okbox").innerHTML=`<div class="ok"><h3>Propuesta recibida</h3><p>${sel.length} obras. El equipo revisará el recorrido. En este prototipo no se envía a ningún sitio.</p></div>`; e.target.reset(); window.scrollTo(0,0);
+}
+
+/* ---------- Red: utilidades ---------- */
+const nhref=n=>n.tipo==="obra"?"#"+slug(n.id):"#nodo-"+n.id.toLowerCase();
+const nlink=n=>`<a href="${nhref(n)}">${esc(n.label)}</a>`;
+const ntag=n=>`<span class="ntag"><i class="sw" style="background:${css(TIPOS[n.tipo].g)}"></i>${TIPOS[n.tipo].n}</span>`;
+function edgesOf(id){ return G.edges.filter(e=>e.de===id||e.a===id); }
+function props(p){ const t=Object.entries(p).filter(([k,v])=>v!==""&&v!=null).map(([k,v])=>`${k}: ${esc(v)}`).join(" · "); return t?`<div class="pp">${t}</div>`:""; }
+function relList(id,skip=[]){
+  const es=edgesOf(id).filter(e=>!skip.includes(e.tipo));
+  if(!es.length) return `<p class="muted">Sin relaciones todavía.</p>`;
+  return `<div class="rels">${es.map(e=>{ const out=e.de===id, other=G.byId.get(out?e.a:e.de), R=RELT[e.tipo];
+    const k=out?`${R.n} →`:`← ${R.n}`;
+    return `<div class="rel"><span class="k">${k}</span><div>${ntag(other)} ${nlink(other)}${props(e.p)}</div></div>`; }).join("")}</div>`;
+}
+function layout(nodes,edges,W,H){
+  const P=new Map(), n=nodes.length, k=Math.sqrt(W*H/Math.max(n,1))*0.5;
+  nodes.forEach((nd,i)=>{ const a=i*2.399963, r=Math.sqrt(i+1)/Math.sqrt(n)*Math.min(W,H)*0.45; P.set(nd.id,{x:W/2+Math.cos(a)*r,y:H/2+Math.sin(a)*r,dx:0,dy:0}); });
+  const E=edges.filter(e=>P.has(e.de)&&P.has(e.a)), L=[...P.values()];
+  let t=Math.min(W,H)/10;
+  for(let it=0;it<400;it++){
+    L.forEach(pa=>{ pa.dx=0; pa.dy=0; L.forEach(pb=>{ if(pa===pb) return; const dx=pa.x-pb.x, dy=pa.y-pb.y, d=Math.hypot(dx,dy)||0.01, f=k*k/d; pa.dx+=dx/d*f; pa.dy+=dy/d*f; }); });
+    E.forEach(e=>{ const a=P.get(e.de), b=P.get(e.a); const dx=a.x-b.x, dy=a.y-b.y, d=Math.hypot(dx,dy)||0.01, f=d*d/k; a.dx-=dx/d*f; a.dy-=dy/d*f; b.dx+=dx/d*f; b.dy+=dy/d*f; });
+    L.forEach(p=>{ p.dx+=(W/2-p.x)*0.12; p.dy+=(H/2-p.y)*0.12*(W/H); const d=Math.hypot(p.dx,p.dy)||1; p.x+=p.dx/d*Math.min(d,t); p.y+=p.dy/d*Math.min(d,t); });
+    t=Math.max(t*0.985,0.5);
+  }
+  /* encajar en el lienzo dejando sitio a las etiquetas */
+  const xs=L.map(p=>p.x), ys=L.map(p=>p.y), x0=Math.min(...xs), x1=Math.max(...xs), y0=Math.min(...ys), y1=Math.max(...ys);
+  const mL=20, mR=130, mY=22;
+  L.forEach(p=>{ p.x=mL+(p.x-x0)/((x1-x0)||1)*(W-mL-mR); p.y=mY+(p.y-y0)/((y1-y0)||1)*(H-2*mY); });
+  return {P,E};
+}
+const LABELED=["obra","agente","entidad","municipio","ruta","convocatoria"];
+function graphSVG(nodes,edges,opt={}){
+  const W=opt.W||900,H=opt.H||560, {P,E}=layout(nodes,edges,W,H);
+  const deg=id=>E.filter(e=>e.de===id||e.a===id).length;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Red de nodos y relaciones">`;
+  E.forEach(e=>{ const a=P.get(e.de), b=P.get(e.a); s+=`<line class="${e.tipo==="dialoga"?"dlg":""}" x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}"><title>${esc(G.byId.get(e.de).label)} ${RELT[e.tipo].n} ${esc(G.byId.get(e.a).label)}</title></line>`; });
+  nodes.forEach(n=>{ const p=P.get(n.id), r=Math.min(4+deg(n.id)*1.1,12)+(n.tipo==="obra"?2:0), lab=LABELED.includes(n.tipo)||opt.allLabels;
+    s+=`<a class="nd${opt.focus===n.id?" focus":""}" href="${nhref(n)}"><title>${TIPOS[n.tipo].n}: ${esc(n.label)}</title><circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r.toFixed(1)}" fill="${css(TIPOS[n.tipo].g)}"/>${lab?`<text x="${(p.x+r+3).toFixed(1)}" y="${(p.y+3.5).toFixed(1)}">${esc(n.label.length>26?n.label.slice(0,25)+"…":n.label)}</text>`:""}</a>`; });
+  return s+`</svg>`;
+}
+function ego(id,W=560,H=380){
+  const es=edgesOf(id), ids=new Set([id,...es.map(e=>e.de),...es.map(e=>e.a)]);
+  const nodes=[...ids].map(i=>G.byId.get(i));
+  return `<div class="graph">${graphSVG(nodes,es,{W,H,focus:id,allLabels:true})}</div>`;
+}
+let REDT=new Set(["obra","agente","entidad","lugar","municipio","ruta"]);
+let REDMODO="red";
+const PLANOS=[["Territorio",["municipio","lugar"]],["Obras",["obra"]],["Personas y financiación",["agente","entidad","convocatoria"]],["Registro",["fuente","observacion","qr"]],["Curaduría y recorridos",["ruta","salida"]]];
+let SIM=null;
+function vRed(){
+  const counts=t=>[...G.byId.values()].filter(n=>n.tipo===t).length;
+  return `<section class="stack">
+    <p class="eyebrow">Arte nodal</p>
+    <h1>Red nodal</h1>
+    <p class="lede muted">La obra no está sola: la conectan personas, financiadores, lugares, fuentes, rutas y otras obras. Cada punto es un nodo con su propia página y cada línea, una relación con nombre. Las líneas amarillas son diálogos entre obras.</p>
+  </section>
+  <div class="redbar">
+    <div class="seg" role="group" aria-label="Vista"><button type="button" data-modo="red" aria-pressed="${REDMODO==="red"}">Red</button><button type="button" data-modo="planos" aria-pressed="${REDMODO==="planos"}">Planos</button></div>
+    <p class="muted" style="font-size:.9rem">Arrastra los nodos para recolocarlos. Toca uno sin arrastrar para abrir su página.</p>
+    <button type="button" class="btn alt" id="red-reset" style="padding:6px 12px;font-size:.9rem">Reordenar</button>
+  </div>
+  <fieldset class="types" id="types"><legend>Tipos de nodo visibles</legend>${Object.entries(TIPOS).map(([k,T])=>`<label><input type="checkbox" id="t-${k}" value="${k}" ${REDT.has(k)?"checked":""}><i class="sw" style="background:${css(T.g)}"></i>${T.n} <span class="count">${counts(k)}</span></label>`).join("")}</fieldset>
+  <div id="gres"></div>`;
+}
+function renderRed(keep){
+  const nodes=[...G.byId.values()].filter(n=>REDT.has(n.tipo)), ids=new Set(nodes.map(n=>n.id));
+  const es=G.edges.filter(e=>ids.has(e.de)&&ids.has(e.a));
+  const narrow=innerWidth<640, LW=narrow?520:960, LH=narrow?720:600;
+  const old=keep&&SIM?SIM.P:null;
+  const {P}=layout(nodes,es,LW,LH);
+  if(old) P.forEach((p,id)=>{ const o=old.get(id); if(o){ p.x=o.x; p.y=o.y; } });
+  const deg=new Map(nodes.map(n=>[n.id,es.filter(e=>e.de===n.id||e.a===n.id).length]));
+  SIM={nodes,es,P,LW,LH,deg,k:Math.sqrt(LW*LH/Math.max(nodes.length,1))*0.5};
+  $("#gres").innerHTML=`<div class="graph"><svg id="gsvg" role="img" aria-label="Red de nodos y relaciones"></svg></div>
+   <p class="count" style="margin-top:10px">${nodes.length} nodos · ${es.length} relaciones visibles · en total ${G.byId.size} nodos y ${G.edges.length} relaciones</p>`;
+  buildSVG(); wireDrag();
+}
+function planesActivos(){ return PLANOS.filter(([,ts])=>ts.some(t=>REDT.has(t))); }
+function geomPlanos(){
+  const pl=planesActivos(), W=SIM.LW, gap=innerWidth<640?190:150, H=pl.length*gap+50;
+  return {pl,W,H,gap,x0:W*0.04,y0:34,Wp:W*0.62,Sx:W*0.22,Hp:gap*0.62};
+}
+function planeOf(tipo){ return planesActivos().findIndex(([,ts])=>ts.includes(tipo)); }
+function uv(p){ return [(p.x-20)/(SIM.LW-150),(p.y-22)/(SIM.LH-44)]; }
+function screen(n){
+  const p=SIM.P.get(n.id); if(REDMODO==="red") return [p.x,p.y];
+  const g=geomPlanos(), k=planeOf(n.tipo), [u,v]=uv(p);
+  return [g.x0+u*g.Wp+v*g.Sx, g.y0+k*g.gap+v*g.Hp];
+}
+function buildSVG(){
+  const svg=$("#gsvg"), g=REDMODO==="red"?{W:SIM.LW,H:SIM.LH}:geomPlanos();
+  svg.setAttribute("viewBox",`0 0 ${g.W} ${g.H}`);
+  let s="";
+  if(REDMODO==="planos") g.pl.forEach(([nom],k)=>{ const y=g.y0+k*g.gap, a=[g.x0,y],b=[g.x0+g.Wp,y],c=[g.x0+g.Wp+g.Sx,y+g.Hp],d=[g.x0+g.Sx,y+g.Hp];
+    s+=`<polygon class="plano" points="${[a,b,c,d].map(q=>q.map(z=>z.toFixed(1)).join(",")).join(" ")}"/><text class="plabel" x="${(g.x0+4).toFixed(1)}" y="${(y-7).toFixed(1)}">${nom}</text>`; });
+  SIM.es.forEach((e,i)=>{ s+=`<line id="ge-${i}" class="${e.tipo==="dialoga"?"dlg":""}${REDMODO==="planos"&&planeOf(G.byId.get(e.de).tipo)!==planeOf(G.byId.get(e.a).tipo)?" cross":""}"><title>${esc(G.byId.get(e.de).label)} ${RELT[e.tipo].n} ${esc(G.byId.get(e.a).label)}</title></line>`; });
+  SIM.nodes.forEach(n=>{ const r=Math.min(4+SIM.deg.get(n.id)*1.1,12)+(n.tipo==="obra"?2:0), lab=LABELED.includes(n.tipo);
+    s+=`<g class="nd" data-id="${n.id}" tabindex="0" role="link" aria-label="${TIPOS[n.tipo].n}: ${esc(n.label)}"><title>${TIPOS[n.tipo].n}: ${esc(n.label)}</title><circle r="${r.toFixed(1)}" fill="${css(TIPOS[n.tipo].g)}"/>${lab?`<text dx="${(r+3).toFixed(1)}" dy="3.5">${esc(n.label.length>26?n.label.slice(0,25)+"…":n.label)}</text>`:""}</g>`; });
+  svg.innerHTML=s; place();
+}
+function place(){
+  const svg=$("#gsvg"); if(!svg) return;
+  SIM.es.forEach((e,i)=>{ const l=svg.querySelector("#ge-"+i), [x1,y1]=screen(G.byId.get(e.de)), [x2,y2]=screen(G.byId.get(e.a)); l.setAttribute("x1",x1.toFixed(1)); l.setAttribute("y1",y1.toFixed(1)); l.setAttribute("x2",x2.toFixed(1)); l.setAttribute("y2",y2.toFixed(1)); });
+  svg.querySelectorAll(".nd").forEach(el=>{ const [x,y]=screen(G.byId.get(el.dataset.id)); el.setAttribute("transform",`translate(${x.toFixed(1)},${y.toFixed(1)})`); });
+}
+function relax(pin,t){
+  const {nodes,es,P,k,LW,LH}=SIM;
+  nodes.forEach(a=>{ const pa=P.get(a.id); pa.dx=0; pa.dy=0; nodes.forEach(b=>{ if(a===b) return; const pb=P.get(b.id), dx=pa.x-pb.x, dy=pa.y-pb.y, d=Math.hypot(dx,dy)||.01, f=k*k/d; pa.dx+=dx/d*f; pa.dy+=dy/d*f; }); });
+  es.forEach(e=>{ const a=P.get(e.de), b=P.get(e.a), dx=a.x-b.x, dy=a.y-b.y, d=Math.hypot(dx,dy)||.01, f=d*d/k; a.dx-=dx/d*f; a.dy-=dy/d*f; b.dx+=dx/d*f; b.dy+=dy/d*f; });
+  nodes.forEach(n=>{ if(n.id===pin) return; const p=P.get(n.id), d=Math.hypot(p.dx,p.dy)||1; p.x=Math.max(20,Math.min(LW-130,p.x+p.dx/d*Math.min(d,t))); p.y=Math.max(22,Math.min(LH-22,p.y+p.dy/d*Math.min(d,t))); });
+}
+let ANIM=0;
+function settle(pin,frames){ cancelAnimationFrame(ANIM); let f=frames; const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const step=()=>{ if(REDMODO!=="red") return; relax(pin,reduce?2:Math.max(.5,f/frames*4)); place(); if(--f>0) ANIM=requestAnimationFrame(step); };
+  if(reduce){ for(let i=0;i<frames;i++) relax(pin,2); place(); } else step(); }
+function wireDrag(){
+  const svg=$("#gsvg"); let drag=null;
+  const pt=e=>{ const q=svg.createSVGPoint(); q.x=e.clientX; q.y=e.clientY; return q.matrixTransform(svg.getScreenCTM().inverse()); };
+  svg.addEventListener("pointerdown",e=>{ const g=e.target.closest(".nd"); if(!g) return; e.preventDefault(); g.setPointerCapture(e.pointerId); drag={id:g.dataset.id,g,sx:e.clientX,sy:e.clientY,moved:false}; g.classList.add("drag"); });
+  svg.addEventListener("pointermove",e=>{ if(!drag) return; if(Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)>4) drag.moved=true; if(!drag.moved) return;
+    const q=pt(e), p=SIM.P.get(drag.id);
+    if(REDMODO==="red"){ p.x=Math.max(20,Math.min(SIM.LW-130,q.x)); p.y=Math.max(22,Math.min(SIM.LH-22,q.y)); relax(drag.id,3); }
+    else { const g=geomPlanos(), k=planeOf(G.byId.get(drag.id).tipo); let v=(q.y-g.y0-k*g.gap)/g.Hp, u; v=Math.max(0,Math.min(1,v)); u=Math.max(0,Math.min(1,(q.x-g.x0-v*g.Sx)/g.Wp)); p.x=20+u*(SIM.LW-150); p.y=22+v*(SIM.LH-44); }
+    place(); });
+  const end=e=>{ if(!drag) return; const d=drag; drag=null; d.g.classList.remove("drag");
+    if(!d.moved){ location.hash=nhref(G.byId.get(d.id)).slice(1); return; }
+    if(REDMODO==="red") settle(d.id,45); };
+  svg.addEventListener("pointerup",end); svg.addEventListener("pointercancel",end);
+  svg.addEventListener("keydown",e=>{ const g=e.target.closest(".nd"); if(g&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); location.hash=nhref(G.byId.get(g.dataset.id)).slice(1); } });
+}
+function wireRed(){
+  renderRed();
+  $("#types").addEventListener("change",e=>{ const v=e.target.value; e.target.checked?REDT.add(v):REDT.delete(v); renderRed(true); });
+  document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{ REDMODO=b.dataset.modo; document.querySelectorAll(".seg button").forEach(o=>o.setAttribute("aria-pressed",String(o===b))); cancelAnimationFrame(ANIM); buildSVG(); }));
+  $("#red-reset").addEventListener("click",()=>renderRed(false));
+}
+function vNodo(n){
+  const T=TIPOS[n.tipo], R=edgesOf(n.id);
+  return `<p class="eyebrow"><a href="#red">← Red nodal</a></p>
+  <section class="stack" style="margin-top:14px">
+    <div class="idline"><span class="idbadge">${n.id}</span>${ntag(n)}<span class="fake">datos ficticios</span></div>
+    <h1>${esc(n.label)}</h1>
+    <p class="lede muted">${T.d}</p>
+  </section>
+  <section class="grid2">
+    <div class="stack">
+      <h2>Atributos</h2>
+      ${n.tipo==="agente"&&canales(n).length?`<div class="stack" style="gap:8px"><h3>Apoya su trabajo</h3>${botonesCanal(n)}<p class="muted" style="font-size:.85rem">Enlaces de ejemplo. canarias.africa no vende ni cobra comisión.</p></div>`:""}
+      <dl class="dl">${Object.entries(n.attrs).filter(([k])=>k!=="canales").map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")||`<dt>—</dt><dd class="muted">Sin atributos propios: este nodo se define por sus relaciones.</dd>`}</dl>
+      <h2 style="margin-top:12px">Relaciones <span class="count">(${R.length})</span></h2>
+      ${relList(n.id)}
+    </div>
+    <div class="stack"><h2>Vecindario</h2>${ego(n.id)}</div>
+  </section>`;
+}
+
+/* ---------- Ayudas: calendario público (datos en convocatorias.json, compartido con el hilo del calendario) ---------- */
+const MESL=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const AMB={canarias:"Canarias",nacional:"Estatal",internacional:"Internacional"};
+const VTXT={ok:["v-ok","✓ Comprobado"],part:["v-part","◐ Parcial"],est:["v-est","◷ Previsto"]};
+const TIPOS_CV=["Ayuda a proyecto","Beca","Residencia","Movilidad","Premio","Open call"];
+let CONV_REV=HOY;
+const HOYC=new Date().toISOString().slice(0,10);
+const daysTo=iso=>Math.round((new Date(iso+"T23:59:00")-new Date(HOYC+"T00:00:00"))/864e5);
+function cstate(x){
+  const cz=x.cierres||[];
+  if(x.evento&&HOYC>=x.evento[0]&&HOYC<=x.evento[1]) return {k:"encurso",l:"En curso"};
+  if(x.evento&&HOYC<x.evento[0]) return {k:"proxima",l:"Próximamente"};
+  const next=cz.find(c=>c>=HOYC);
+  if(next&&(!x.abre||x.abre<=HOYC)) return {k:"abierta",l:"Abierta",next};
+  if(next) return {k:"proxima",l:"Próxima",next};
+  if(x.prox&&x.prox.m>=HOYC.slice(0,7)) return {k:"proxima",l:"Próxima edición"};
+  return {k:"cerrada",l:"Cerrada"};
+}
+const ckey=x=>{const s=cstate(x);return s.next||(x.evento?x.evento[0]:null)||(x.prox?x.prox.m+"-28":"9999")};
+const PILL={abierta:"--ph-plen",encurso:"--ph-plen",proxima:"--ph-inte",cerrada:"--ph-desa"};
+let FA={ambito:"",tipo:"",para:"",estado:"",q:""};
+try{ const v=JSON.parse(localStorage.getItem("ca-filtros")||"null"); if(v) Object.assign(FA,v); }catch(e){}
+function cmatch(x){
+  const s=cstate(x);
+  if(FA.ambito&&x.a!==FA.ambito) return false;
+  if(FA.tipo&&x.t!==FA.tipo) return false;
+  if(FA.para&&!(x.para||[]).includes(FA.para)) return false;
+  if(FA.estado){ const k=s.k==="encurso"?"abierta":s.k; if(k!==FA.estado) return false; }
+  if(FA.q){ const n=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,""); const hay=n([x.n,x.c,x.t,x.req,x.nota,x.imp,AMB[x.a]].join(" ")); if(!n(FA.q).split(/\s+/).every(w=>hay.includes(w))) return false; }
+  return true;
+}
+function ccard(x){
+  const s=cstate(x), [vc,vl]=VTXT[x.v]||VTXT.est; let plazo;
+  if(s.next){ const d=daysTo(s.next), mas=(x.cierres||[]).filter(c=>c>s.next).length; plazo=`<b>${fd(s.next)}</b>${d<=10?` · quedan ${d} día${d===1?"":"s"}`:""}${mas?` <span class="muted">(+${mas} cierres)</span>`:""}`; }
+  else if(x.evento) plazo=`Del ${fd(x.evento[0])} al ${fd(x.evento[1])}`;
+  else if(x.prox) plazo=`${esc(x.prox.txt)} <span class="v-est">(previsto)</span>`;
+  else plazo="Sin fecha anunciada";
+  const soon=s.next&&daysTo(s.next)<=10;
+  return `<article class="cv${soon?" soon":""}" id="cv-${x.id}">
+    <div class="cvrow"><span class="chip" style="color:${css(PILL[s.k])}">${s.l}</span><span class="ntag">${AMB[x.a]||""}</span><span class="ntag">${esc(x.t)}</span></div>
+    <h3>${esc(x.n)}</h3><p class="muted" style="font-size:.92rem">${esc(x.c)}</p>
+    <dl class="dl"><dt>Plazo</dt><dd>${plazo}</dd><dt>Dotación</dt><dd>${esc(x.imp)}</dd>
+    <dt>Para</dt><dd>${(x.para||[]).map(p=>p==="artista"?"artistas":"entidades").join(" y ").replace(/^./,c=>c.toUpperCase())}</dd>
+    ${x.req?`<dt>Requisitos</dt><dd>${esc(x.req)}</dd>`:""}</dl>
+    ${x.nota?`<p class="cvnote">${esc(x.nota)}</p>`:""}
+    <div class="cvfoot">${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">Fuente oficial ↗</a>`:"<span></span>"}<span class="mono ${vc}">${vl} · ${fd(CONV_REV)}</span></div>
+  </article>`;
+}
+function cmonths(list){
+  const st=new Date(HOYC.slice(0,7)+"-01T00:00:00"), cols=[];
+  for(let i=0;i<12;i++){ const d=new Date(st.getFullYear(),st.getMonth()+i,1); cols.push({k:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`,y:d.getFullYear(),m:d.getMonth(),ev:[]}); }
+  const by=Object.fromEntries(cols.map(c=>[c.k,c]));
+  list.forEach(x=>{ const s=cstate(x);
+    (x.cierres||[]).filter(c=>c>=HOYC).forEach(c=>{ const col=by[c.slice(0,7)]; if(col) col.ev.push({x,d:c,cls:s.k==="abierta"?"open":"",lab:`${+c.slice(8)} · ${x.n}`}); });
+    if(x.evento){ const col=by[x.evento[0].slice(0,7)]; if(col) col.ev.push({x,d:x.evento[0],cls:"",lab:`${+x.evento[0].slice(8)} · ${x.n} (inaugura)`}); }
+    if(x.prox&&!(x.cierres||[]).some(c=>c>=HOYC)){ const col=by[x.prox.m]; if(col) col.ev.push({x,d:x.prox.m+"-31",cls:"est",lab:x.n}); } });
+  return `<ol class="months">${cols.map(c=>`<li><div class="mh">${MESL[c.m]} ${c.y}</div><div class="evs">${c.ev.sort((a,b)=>a.d<b.d?-1:1).map(e=>`<button type="button" class="ev" data-id="${e.x.id}"><i class="sw ${e.cls}"></i><span>${esc(e.lab)}</span></button>`).join("")||'<span class="muted">—</span>'}</div></li>`).join("")}</ol>`;
+}
+function vAyudas(){
+  const open=CONV.filter(x=>cstate(x).k==="abierta").sort((a,b)=>ckey(a)<ckey(b)?-1:1);
+  return `<section class="stack">
+    <p class="eyebrow">Para artistas</p>
+    <h1>Ayudas e incentivos</h1>
+    <p class="lede muted">Convocatorias para artistas y colectivos de Canarias: ayudas a proyectos, becas, residencias, movilidad, premios y open calls. Ordenadas por el próximo cierre. Comprueba siempre las bases oficiales antes de presentarte.</p>
+  </section>
+  ${open.length?`<section class="stack"><h2>Abiertas ahora</h2><div class="now">${open.map(x=>{const s=cstate(x),d=daysTo(s.next);return `<a class="nw${d<=10?" soon":""}" href="#ayudas" data-cv="${x.id}"><span class="mono">Cierra el ${fd(s.next)}${d<=10?` · ${d} día${d===1?"":"s"}`:""}</span><b>${esc(x.n)}</b><span class="muted">${esc(x.imp)}</span></a>`;}).join("")}</div></section>`:""}
+  <div class="filters" role="search">
+    <label for="fa-q">Buscar<input id="fa-q" type="search" placeholder="Nombre, organismo, requisito" value="${esc(FA.q)}"></label>
+    <label for="fa-ambito">Ámbito<select id="fa-ambito"><option value="">Todos</option>${Object.entries(AMB).map(([k,v])=>`<option value="${k}" ${FA.ambito===k?"selected":""}>${v}</option>`).join("")}</select></label>
+    <label for="fa-tipo">Tipo<select id="fa-tipo"><option value="">Todos los tipos</option>${TIPOS_CV.map(t=>`<option ${FA.tipo===t?"selected":""}>${t}</option>`).join("")}</select></label>
+    <label for="fa-para">Quién la pide<select id="fa-para"><option value="">Artistas y entidades</option><option value="artista" ${FA.para==="artista"?"selected":""}>Artista (persona física)</option><option value="entidad" ${FA.para==="entidad"?"selected":""}>Entidad o colectivo</option></select></label>
+    <label for="fa-estado">Estado<select id="fa-estado"><option value="">Cualquier estado</option><option value="abierta" ${FA.estado==="abierta"?"selected":""}>Abierta</option><option value="proxima" ${FA.estado==="proxima"?"selected":""}>Próxima edición</option><option value="cerrada" ${FA.estado==="cerrada"?"selected":""}>Cerrada, sin fecha</option></select></label>
+  </div>
+  <div id="cres"></div>`;
+}
+function renderAyudas(){
+  const list=CONV.filter(cmatch).sort((a,b)=>ckey(a)<ckey(b)?-1:1);
+  $("#cres").innerHTML=`<section class="stack"><h2>Próximos 12 meses</h2><div class="mwrap">${cmonths(list)}</div></section>
+   <section class="stack" style="margin-top:36px"><p class="count">${list.length} de ${CONV.length} convocatorias · datos revisados el ${fd(CONV_REV)}</p>
+   <div class="cvgrid">${list.length?list.map(ccard).join(""):`<p class="muted">Ninguna convocatoria coincide con estos filtros. Prueba a quitar alguno.</p>`}</div></section>`;
+  try{ localStorage.setItem("ca-filtros",JSON.stringify(FA)); }catch(e){}
+}
+function wireAyudas(){
+  renderAyudas();
+  ["q","ambito","tipo","para","estado"].forEach(k=>{ const el=$("#fa-"+k); el.addEventListener("input",()=>{ FA[k]=k==="q"?el.value.trim():el.value; renderAyudas(); }); });
+  $("#app").addEventListener("click",e=>{ const b=e.target.closest("[data-cv],.ev"); if(!b) return; e.preventDefault();
+    const c=document.getElementById("cv-"+(b.dataset.cv||b.dataset.id)); if(!c) return;
+    c.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"}); c.classList.add("flash"); setTimeout(()=>c.classList.remove("flash"),1600); });
+}
+async function cargarConvocatorias(){
+  try{ const r=await fetch("convocatorias.json",{cache:"no-store"}); if(!r.ok) return; const j=await r.json();
+    if(Array.isArray(j.convocatorias)&&j.convocatorias.length){ CONV.splice(0,CONV.length,...j.convocatorias); CONV_REV=j.revisado||CONV_REV; if((location.hash||"")==="#ayudas") route(); } }catch(e){ /* se usa la copia incluida en la página */ }
+}
+
+/* ---------- Inscripción a salidas de mapeo (Tenerife) ---------- */
+const MUN_TF=["Adeje","Arafo","Arico","Arona","Buenavista del Norte","Candelaria","El Rosario","El Sauzal","El Tanque","Fasnia","Garachico","Granadilla de Abona","Guía de Isora","Güímar","Icod de los Vinos","La Guancha","La Matanza de Acentejo","La Orotava","La Victoria de Acentejo","Los Realejos","Los Silos","Puerto de la Cruz","San Cristóbal de La Laguna","San Juan de la Rambla","San Miguel de Abona","Santa Cruz de Tenerife","Santa Úrsula","Santiago del Teide","Tacoronte","Tegueste","Vilaflor de Chasna"];
+let INSC=[]; try{ INSC=JSON.parse(localStorage.getItem("ca-insc")||"[]"); }catch(e){}
+function vInscripcion(){
+  return `<section class="stack">
+    <p class="eyebrow">Salidas colectivas de mapeo · Tenerife</p>
+    <h1>Apúntate a una salida en tu municipio</h1>
+    <p class="lede muted">Salimos a pie con vecinas, vecinos y artistas para localizar obras, documentarlas y colocar sus QR. Todavía no hay fechas: fijamos cada salida cuando hay grupo en el municipio, y te avisamos.</p>
+  </section>
+  ${INSC.length?`<div class="ok" style="margin-top:20px"><h3>Ya te has apuntado en: ${INSC.map(i=>esc(i.m)).join(", ")}</h3><p>Te escribiremos cuando haya fecha. En este prototipo la inscripción solo se guarda en tu navegador.</p></div>`:""}
+  <form class="obsf" id="inscf" novalidate style="margin-top:24px">
+    <label for="i-mun">Municipio<select id="i-mun" required><option value="">Elige un municipio de Tenerife</option>${MUN_TF.map(m=>`<option>${m}</option>`).join("")}</select></label>
+    <label for="i-nom">Nombre o alias<input id="i-nom" type="text" required autocomplete="name"></label>
+    <label class="full" for="i-con">Correo o teléfono para avisarte<input id="i-con" type="text" required autocomplete="email" placeholder="Solo lo usaremos para avisarte de la salida"></label>
+    <fieldset class="full"><legend>¿Cómo quieres participar?</legend><div class="radios">
+      ${["Vengo a caminar y mirar","Conozco obras de la zona","Soy artista","Puedo guiar el recorrido","Hago fotografías"].map((t,i)=>`<label><input type="checkbox" id="i-p-${i}" value="${t}"> ${t}</label>`).join("")}
+    </div></fieldset>
+    <fieldset class="full"><legend>¿Cuándo te viene mejor?</legend><div class="radios">
+      ${["Entre semana por la mañana","Entre semana por la tarde","Fin de semana"].map((t,i)=>`<label><input type="radio" name="i-cuando" id="i-c-${i}" value="${t}" ${i===2?"checked":""}> ${t}</label>`).join("")}
+    </div></fieldset>
+    <label class="full" for="i-obs">¿Sabes de alguna obra que debamos visitar? (opcional)<textarea id="i-obs" placeholder="Un mural, una escultura, una inscripción, una fiesta…"></textarea></label>
+    <label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="i-priv" required style="margin-top:4px"> Acepto que canarias.africa guarde estos datos solo para avisarme de las salidas. Puedo pedir que los borren cuando quiera.</label>
+    <p class="full muted" id="i-err" style="font-size:.9rem"></p>
+    <div class="full btns"><button class="btn" type="submit">Apuntarme</button></div>
+  </form>`;
+}
+function inscribir(e){
+  e.preventDefault();
+  const m=$("#i-mun").value, n=$("#i-nom").value.trim(), c=$("#i-con").value.trim(), err=$("#i-err");
+  if(!m||!n||!c){ err.textContent="Falta el municipio, tu nombre o un correo o teléfono para avisarte."; err.style.color="var(--ph-desg)"; return; }
+  if(!$("#i-priv").checked){ err.textContent="Marca la casilla de privacidad para poder apuntarte."; err.style.color="var(--ph-desg)"; return; }
+  INSC.push({m,f:HOY}); try{ localStorage.setItem("ca-insc",JSON.stringify(INSC)); }catch(e){}
+  route();
+}
+
+/* ---------- Apoya a los artistas (derivación, sin venta propia) ---------- */
+function canales(ag){ return ag.attrs.canales||[]; }
+function agentesConCanales(){
+  return [...G.byId.values()].filter(n=>n.tipo==="agente"&&canales(n).length).map(ag=>({ag,obras:G.edges.filter(e=>e.tipo==="autoria"&&e.de===ag.id&&e.p.certeza===CERTEZA.confirmada.n).map(e=>G.byId.get(e.a))})).filter(x=>x.obras.length);
+}
+function botonesCanal(ag){ return `<div class="btns">${canales(ag).map(([t])=>`<span class="btn alt fakelink" title="Enlace de ejemplo">${t} ↗</span>`).join("")}</div>`; }
+function vApoya(){
+  const L=agentesConCanales();
+  return `<section class="stack">
+    <p class="eyebrow">Mecenazgo y souvenirs</p>
+    <h1>Apoya a los artistas</h1>
+    <p class="lede muted">canarias.africa no vende nada ni cobra comisión. Si una obra te ha gustado, aquí te llevamos a los canales de quien la hizo: su tienda, sus encargos o su página de mecenazgo.</p>
+  </section>
+  <section class="stack">
+    <div class="aplist">${L.map(({ag,obras})=>`<article class="ap">
+      <div class="stack" style="gap:4px"><span class="eyebrow">${esc(ag.attrs.clase||"")}</span><h3><a href="${nhref(ag)}">${esc(ag.label)}</a> <span class="fake">ficticio</span></h3>
+      <p class="muted" style="font-size:.92rem">Obra en el museo: ${obras.map(o=>`<a href="${nhref(o)}">${esc(o.label)}</a>`).join(", ")}</p></div>
+      ${botonesCanal(ag)}</article>`).join("")}</div>
+    <div class="slot"><span class="eyebrow">Reglas</span>
+      <p>Solo aparecen artistas con autoría <b>confirmada</b> de al menos una obra del archivo, para no enviar apoyo a quien no corresponde.</p>
+      <p>Cada artista decide qué canales enlazar: tienda, mecenazgo (Patreon, Ko-fi, Verkami…), encargos o web. Los enlaces salen de la web y la relación es directa con el artista.</p>
+      <p><b>Más adelante:</b> canarias.africa podría hacer de intermediario en campañas de micromecenazgo colectivo, por ejemplo para restaurar una obra o producir una nueva.</p>
+      <p>¿Tienes obra en el museo? Escríbenos para añadir tus enlaces.</p></div>
+  </section>`;
+}
+
+/* ---------- Comunidad artística (área privada, solo artistas) ---------- */
+const FORO=[
+ ["Ideas y proyectos","Propuestas, bocetos y proyectos en busca de lugar o de equipo."],
+ ["Colaboraciones","Busco y ofrezco: muralistas, escultoras, fotografía, sonido, ayudantes."],
+ ["Logística","Permisos, andamios, plataformas, transporte, seguros, horarios de trabajo en la calle."],
+ ["Materiales","Qué ha funcionado y qué no: pinturas frente a la sal y el sol, anclajes, barnices, soportes."],
+ ["Entidades","Experiencias trabajando con ayuntamientos, cabildos, fundaciones o empresas: plazos, pagos, contratos."],
+ ["Convocatorias","Dudas y equipos para presentarse a las ayudas del calendario."]];
+const HILOS=[
+ ["Materiales","¿Qué pintura aguanta en primera línea de costa?","Ana R.",14,"hace 2 días",["Material: pintura acrílica exterior"]],
+ ["Entidades","Experiencia con un ayuntamiento del sur: pagos a 90 días","Colectivo Malpaís",9,"hace 5 días",["Entidad: Ayuntamiento (dato ficticio)"]],
+ ["Logística","Alquiler de plataforma elevadora en Tenerife, ¿alguien comparte?","Talleres de verano",6,"hace 1 semana",[]],
+ ["Colaboraciones","Busco persona para registro en vídeo de una acción en Vilaflor","Grupo de danza escolar",3,"hace 1 semana",["Obra: Acción del cráter"]],
+ ["Convocatorias","¿Alguien se presenta a Culture Moves Europe desde Canarias?","Marta Q.",11,"hace 2 semanas",["Convocatoria: Culture Moves Europe"]]];
+function vComunidad(){
+  return `<section class="stack">
+    <p class="eyebrow">Área privada · solo artistas</p>
+    <h1>Comunidad artística</h1>
+    <p class="lede muted">Un foro para compartir ideas, buscar colaboraciones y resolver problemas: logística, materiales que funcionan y experiencias trabajando con entidades. Lo que se escribe aquí no es público.</p>
+  </section>
+  <div class="gate">
+    <div class="stack" style="gap:6px"><h2>Entrar en la comunidad</h2>
+    <p class="muted">Pueden entrar artistas con obra en el archivo o avalados por otra persona de la comunidad. Revisamos cada solicitud a mano.</p></div>
+    <div class="btns"><span class="btn" title="No disponible en el prototipo">Entrar</span><span class="btn alt" title="No disponible en el prototipo">Solicitar acceso</span></div>
+  </div>
+  <section class="stack">
+    <p class="eyebrow">Vista previa del área privada <span class="fake">contenido ficticio</span></p>
+    <div class="foro">${FORO.map(([n,d])=>`<div class="cat"><h3>${n}</h3><p class="muted">${d}</p><span class="count">${HILOS.filter(h=>h[0]===n).length} hilos recientes</span></div>`).join("")}</div>
+    <h2 style="margin-top:12px">Últimos hilos</h2>
+    <div class="hilos">${HILOS.map(([c,t,a,r,w,tags])=>`<div class="hilo"><div class="stack" style="gap:4px"><span class="ntag">${c}</span><b>${esc(t)}</b>
+      <span class="muted" style="font-size:.88rem">${esc(a)} · ${w}</span>${tags.length?`<div class="tags">${tags.map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div>`:""}</div><span class="mono muted">${r} respuestas</span></div>`).join("")}</div>
+  </section>
+  <section class="grid2">
+    <div class="stack"><h2>Conectado con la red</h2><p class="muted">Un hilo puede etiquetar una obra, un material, una entidad o una convocatoria. Así, lo que la comunidad aprende sobre una pintura o sobre cómo paga un ayuntamiento queda unido a esos nodos, pero solo lo ven artistas.</p></div>
+    <div class="stack"><h2>Normas</h2><ul class="normas">
+      <li>Las opiniones sobre entidades se basan en hechos: fechas, importes, plazos.</li>
+      <li>No se publican datos personales de terceros.</li>
+      <li>Lo que se comparte aquí no sale del área privada sin permiso de quien lo escribió.</li>
+      <li>Moderación por la propia comunidad, con apoyo del equipo.</li></ul></div>
+  </section>`;
+}
+
+/* ---------- Derechos de imagen y uso (adaptado del modelo de SAMA) ---------- */
+function vDerechos(){
+  return `<section class="stack">
+    <p class="eyebrow">Derechos de imagen y uso</p>
+    <h1>Derechos, permisos y fotografía</h1>
+    <p class="lede muted">Las obras pertenecen a quien las hizo. Las fotos, a quien las tomó. CANARIAS.AFRICA documenta y enlaza, pero no se queda con los derechos de nadie.</p>
+  </section>
+  <section class="rights">
+    <div><h3>De quién es cada cosa</h3><dl class="dl">
+      <dt>Obras</dt><dd>Los derechos son de sus autoras y autores, o de quien les represente. Documentar una obra no nos da derechos sobre ella.</dd>
+      <dt>Fotografías</dt><dd>Quien aporta una foto conserva sus derechos. Nos autoriza, sin exclusividad, a mostrarla en el archivo y en actividades sin ánimo de lucro, siempre con su crédito. Puede retirarla cuando quiera.</dd>
+      <dt>Textos y datos</dt><dd>Las fichas, textos y relaciones de la red son © CANARIAS.AFRICA y de quienes los escribieron.</dd></dl></div>
+    <div><h3>Qué puedes hacer sin pedir permiso</h3><ul class="normas">
+      <li>Consultar y guardar contenido para uso personal.</li>
+      <li>Usarlo para investigación, estudio, crítica o docencia en un centro educativo.</li>
+      <li>Citar textos breves, indicando la fuente.</li>
+      <li>Compartir en redes personales o en webs informativas sin fin comercial, con el crédito completo.</li></ul>
+      <p class="muted" style="font-size:.9rem">Las obras situadas de forma permanente en la vía pública se pueden fotografiar libremente (art. 35.2 de la Ley de Propiedad Intelectual). Eso no incluye las obras en muros privados, interiores o efímeras.</p></div>
+    <div><h3>Qué necesita permiso</h3><ul class="normas">
+      <li>Cualquier uso comercial: productos, publicidad, publicaciones de pago, cine y televisión, uso por empresas o galerías.</li>
+      <li>Prensa: portadas y reportajes que no hayamos facilitado.</li>
+      <li>Alterar, recortar o atribuir mal una obra, o quitar sus créditos.</li>
+      <li>Descargar el archivo de forma masiva o usarlo para minería de datos.</li></ul>
+      <p class="muted" style="font-size:.9rem">Para usar la imagen de una obra hay que pedir permiso a su autoría. Si está en el archivo, te ponemos en contacto. Para souvenirs, ve a <a href="#apoya">Apoya a los artistas</a>.</p></div>
+    <div><h3>Cómo dar el crédito</h3>
+      <div class="cite">«Título», Autoría, año. Foto: nombre o alias (fecha) / CANARIAS.AFRICA</div>
+      <h3 style="margin-top:16px">Si eres artista</h3>
+      <p>Puedes pedir que corrijamos tu crédito, que retiremos imágenes de tu obra o que no se publique tu nombre. Documentar no es legitimar: que una obra esté en el archivo no significa que estuviera autorizada.</p>
+      <h3 style="margin-top:16px">Personas y lugares sensibles</h3>
+      <p>No publicamos fotos en las que se reconozca a personas sin su permiso. Tampoco las que revelen dónde están obras de ubicación reservada.</p></div>
+  </section>
+  <p class="muted" style="font-size:.88rem">Basado en la política de derechos, permisos y fotografía del Street Art Museum Amsterdam y adaptado a la ley española. Borrador: hay que revisarlo con asesoría jurídica antes de publicarlo.</p>`;
+}
+
+/* ---------- Sistema ---------- */
+function vSistema(){
+  const ej=G.byKey.get("CA-TF-ARI-0001"), es=edgesOf(ej.id);
+  const sub={nodos:[ej,...es.map(e=>G.byId.get(e.de===ej.id?e.a:e.de))].slice(0,5).map(n=>({id:n.id,tipo:n.tipo,etiqueta:n.label,atributos:n.attrs})),
+    relaciones:es.slice(0,4).map(e=>({id:e.id,de:e.de,tipo:e.tipo,a:e.a,propiedades:e.p}))};
+  const reg=`// Añadir una dimensión nueva es registrar un tipo y sus relaciones.
+// Los nodos y relaciones que ya existen no cambian.
+tipos.material = { nombre: "Material", atributos: ["nombre", "origen"] }
+relaciones.hecha_de = { de: "obra", a: "material", propiedades: ["proporción", "fuente"] }`;
+  return `<section class="stack">
+    <p class="eyebrow">Modelo de datos · v0.2</p>
+    <h1>Cómo funciona el sistema</h1>
+    <p class="lede muted">CANARIAS.AFRICA es una red. Hay distintos tipos de nodo, unidos por relaciones que tienen nombre, dirección y propiedades propias como la certeza o la fecha. Una obra nunca se borra: si desaparece, cambia de fase y sigue en la red como memoria.</p>
+  </section>
+
+  <section class="stack">
+    <h2>Tipos de nodo</h2>
+    <p class="muted prose">Cada nodo tiene un identificador permanente con el prefijo de su tipo (las obras usan CA-isla-municipio-número) y su propia página.</p>
+    <div class="ents">${Object.entries(TIPOS).map(([k,T])=>`<div class="ent"><h3><span><i class="sw" style="background:${css(T.g)};margin-right:8px;vertical-align:0"></i>${T.n}</span><small>${T.p}-…</small></h3><p class="desc">${T.d}</p><ul>${T.a.map(a=>`<li><code>${a}</code><span></span></li>`).join("")}</ul></div>`).join("")}</div>
+  </section>
+
+  <section class="stack">
+    <h2>Relaciones</h2>
+    <p class="muted prose">Las relaciones también son datos: llevan su propio identificador, propiedades y fuente. Así se puede decir «este agente es probablemente autor de esta obra, según dos testimonios».</p>
+    <div class="aytable"><table>
+      <thead><tr><th>Relación</th><th>De</th><th>A</th><th>Propiedades</th><th>En uso</th></tr></thead>
+      <tbody>${Object.entries(RELT).map(([k,R])=>`<tr><td><code class="mono">${k}</code><br><span class="muted">${R.n}</span></td><td>${R.de}</td><td>${R.a}</td><td>${R.p}</td><td class="num">${G.edges.filter(e=>e.tipo===k).length}</td></tr>`).join("")}</tbody>
+    </table></div>
+  </section>
+
+  <section class="stack">
+    <h2>Dimensiones nodales previstas</h2>
+    <p class="muted prose">El registro de tipos está abierto. Estas dimensiones se pueden añadir más adelante sin rehacer lo existente.</p>
+    <div class="ents">${FUTURAS.map(([n,d,r])=>`<div class="ent fut"><h3>${n}<small>prevista</small></h3><p class="desc">${d}</p><ul><li><code>${r}</code><span></span></li></ul></div>`).join("")}</div>
+    <pre class="json">${esc(reg)}</pre>
+  </section>
+
+  <section class="stack">
+    <h2>Obras sensibles</h2>
+    <p class="muted prose">Un grabado aborigen o una obra sin protección suficiente pueden sufrir daños si se publica dónde están. Cada obra tiene un nivel de sensibilidad que decide el equipo.</p>
+    <dl class="dl">${Object.entries(SENS).map(([k,v])=>`<dt>${v.n}</dt><dd>${v.d}</dd>`).join("")}</dl>
+    <p class="muted prose" style="font-size:.92rem">La ocultación se hace en el servidor: la web pública nunca recibe las coordenadas exactas. La zona difusa usa una cuadrícula fija, para que no se pueda adivinar el punto real comparando varias visitas. Las obras difusas y reservadas no van en las capas públicas de uMap; sus coordenadas exactas se guardan aparte, con acceso solo para el equipo.</p>
+  </section>
+
+  <section class="stack">
+    <h2>Mapas: OpenStreetMap y uMap</h2>
+    <div class="cycle">
+      <div><b>Fondo del mapa</b>Teselas de OpenStreetMap guardadas en una caché de canarias.africa. La web no depende de servidores ajenos en cada visita.</div>
+      <div><b>Edición de nodos</b>Obras, QR y rutas se dibujan en uMap, una capa por tipo. Cada punto lleva su id permanente.</div>
+      <div><b>Unión con la red</b>La web lee cada capa de uMap en GeoJSON y la une con la red por el id. Personas, fuentes y entidades viven en la red, no en el mapa.</div>
+      <div><b>Sin conexión</b>Las zonas de cada ruta se pueden guardar en el móvil para usarlas en el monte sin cobertura.</div>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="stack">
+      <h2>Fenología de la obra</h2>
+      <p class="muted" style="font-size:.95rem">Los cambios de una obra se registran como los de una planta: con fecha y testigo.</p>
+      <dl class="dl">${Object.values(FASES).map(F=>`<dt><span class="sw" style="background:${css(F.c)};display:inline-block;margin-right:6px;vertical-align:-1px"></span>${F.n}</dt><dd>${F.d}</dd>`).join("")}</dl>
+    </div>
+    <div class="stack">
+      <h2>Certeza de autoría</h2>
+      <dl class="dl">${Object.entries(CERTEZA).map(([k,C])=>`<dt>${cert(k)}${C.n}</dt><dd>${C.d}</dd>`).join("")}</dl>
+      <h2 style="margin-top:20px">Ciclo del QR</h2>
+      <div class="cycle">
+        <div><b>Instalación</b>En la primera salida de mapeo</div>
+        <div><b>Escaneo</b>Cada visita puede dejar una observación</div>
+        <div><b>Revisión cada 6 meses</b>Si vence, la obra aparece como pendiente</div>
+        <div><b>Reposición</b>Si alguien lo reporta dañado</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stack">
+    <h2>Ejemplo en datos</h2>
+    <p class="muted" style="font-size:.95rem">Un fragmento de la red alrededor de la obra ficticia <a href="#${slug(ej.id)}">${ej.id}</a>. Formato abierto y exportable. Las condiciones de uso están en <a href="#derechos">Derechos de imagen</a>.</p>
+    <pre class="json">${esc(JSON.stringify(sub,null,2))}</pre>
+  </section>`;
+}
+
+/* ---------- Router ---------- */
+function route(){
+  const h=(location.hash||"#inicio").slice(1)||"inicio", app=$("#app");
+  let sec=h, html;
+  if(h.startsWith("qr-")){ const o=OBRAS.find(x=>h===qrHash(x)&&x.qr.st==="activo"); sec="archivo"; html=o?vQR(o):`<h1>Este QR no es válido</h1><p class="muted">Puede que el código se haya sustituido o que la obra no tenga QR activo. <a href="#archivo">Volver al archivo</a></p>`; }
+  else if(h.startsWith("contexto-")){ const o=OBRAS.find(x=>"contexto-"+x.id.toLowerCase()===h); sec="archivo"; html=o?vContexto(o):`<h1>Ficha no encontrada</h1>`; }
+  else if(h.startsWith("obra-")){ const o=OBRAS.find(x=>slug(x.id)===h); sec="archivo"; html=o?vObra(o):`<h1>Ficha no encontrada</h1><p><a href="#archivo">Volver al archivo</a></p>`; }
+  else if(h.startsWith("nodo-")){ const n=G.byId.get(h.slice(5).toUpperCase()); sec="red"; html=n?vNodo(n):`<h1>Nodo no encontrado</h1><p><a href="#red">Volver a la red</a></p>`; }
+  else html=({inicio:vInicio,archivo:vArchivo,red:vRed,aportar:vAportar,inscripcion:vInscripcion,"proponer-ruta":vProponerRuta,apoya:vApoya,rutas:vRutas,ayudas:vAyudas,sistema:vSistema,comunidad:vComunidad,derechos:vDerechos}[h]||vInicio)();
+  app.innerHTML=`<div class="view">${html}</div>`;
+  document.querySelectorAll("nav.main a").forEach(a=>a.removeAttribute("aria-current"));
+  document.querySelectorAll("nav.main a").forEach(a=>{ if(a.getAttribute("href")==="#"+sec) a.setAttribute("aria-current","page"); });
+  window.scrollTo(0,0);
+  if(h==="archivo"){ renderCerca(); renderRes(); ["q","m","f","c"].forEach(k=>{ const el=$("#f-"+k); el.addEventListener("input",()=>{FILT[k]=el.value;renderRes();}); }); }
+  if(h.startsWith("obra-")&&$("#qr")) drawQR($("#qr"),h);
+  initMaps();
+  if(h==="red") wireRed();
+  if(h==="ayudas") wireAyudas();
+  if(h==="inscripcion") $("#inscf").addEventListener("submit",inscribir);
+  if($("#obsf")) $("#obsf").addEventListener("submit",enviar);
+  if($("#rutaf")) $("#rutaf").addEventListener("submit",proponerRuta);
+}
+document.addEventListener("click",e=>{
+  const a=e.target.closest("[data-obra]"); if(a) PRESEL=a.dataset.obra;
+  const m=e.target.closest("[data-muni]"); if(m){ FILT={m:m.dataset.muni,f:"",c:"",q:""}; }
+});
+addEventListener("hashchange",route);
+buildGraph();
+route();
+cargarUMap();
+cargarConvocatorias();
+</script>

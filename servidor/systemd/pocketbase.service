@@ -1,0 +1,15 @@
+[Unit]
+Description=PocketBase de canarias.africa (API, base de datos y formularios)
+After=network.target
+
+[Service]
+Type=simple
+User=canarias
+Group=canarias
+WorkingDirectory=/srv/canarias.africa/pocketbase
+ExecStart=/srv/canarias.africa/pocketbase/pocketbase serve --http=127.0.0.1:8090 --dir=/srv/canarias.africa/pocketbase/pb_data --hooksDir=/srv/canarias.africa/pocketbase/pb_hooks
+Restart=on-failure
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

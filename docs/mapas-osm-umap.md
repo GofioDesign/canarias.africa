@@ -60,9 +60,17 @@ Crear un mapa en https://umap.openstreetmap.fr con estas capas:
 - Una obra desaparecida no se borra de uMap: se cambia su `fase` a `desaparicion` o `memoria`.
 - Para empezar, importa en uMap los ficheros de ejemplo ([umap-obras-ejemplo.geojson](umap-obras-ejemplo.geojson) y [umap-rutas-ejemplo.geojson](umap-rutas-ejemplo.geojson)), cada uno en su capa. Son datos ficticios: bórralos cuando empieces a meter obras reales.
 
-## 4. Sincronización
+## 4. Arquitectura y sincronización (decisión del 27/10/2026)
 
-En `canarias-africa.html`, el bloque `MAPA.umap` recoge el id del mapa y los de sus capas. Al rellenarlo, la web pide cada capa como GeoJSON a uMap y actualiza las coordenadas por `id`. En producción conviene que sea el servidor quien descargue las capas cada cierto tiempo (por ejemplo, cada hora) y las guarde, para que la web no dependa de que uMap responda en cada visita. Hay que comprobar la URL exacta de exportación de capas en la versión de uMap que se use.
+La web y las fichas se sirven como estáticas desde GitHub Pages (`canarias.africa`, repo público). Todo lo dinámico vive en el hosting PHP, en `https://api.canarias.africa` (constante `API_BASE` en el HTML).
+
+- **Teselas:** `https://api.canarias.africa/teselas/osm/{z}/{x}/{y}.png`. Es la caché del apartado 2, pero en el hosting PHP.
+- **Catálogo de obras:** `/datos/obras.geojson`, estático y en el repo. Las obras difusas llegan con el centro de su celda de 0,02° y las reservadas sin `geometry`. Una acción de GitHub bloquea la publicación si una obra sensible lleva coordenadas exactas. Como el repo es público, ni el HTML ni el catálogo llevan nunca coordenadas reales de obras sensibles.
+- **Ficha:** la descripción y las relaciones salen del catálogo. Las observaciones aprobadas se piden a `GET https://api.canarias.africa/api/publico/obras/<código>`.
+- **uMap:** el servidor copia cada hora `qr.geojson` y `rutas.geojson` a `https://api.canarias.africa/datos/umap/`.
+- **QR impresos:** apuntan a `https://api.canarias.africa/q/<código>`, que redirige a `https://canarias.africa/#/observar/<obra>?qr=<código>`.
+- **Envíos:** se hacen en multipart a las colecciones de PocketBase en `https://api.canarias.africa/api/collections/<colección>/records` (observaciones, contexto, propuestas_obra, propuestas_ruta e inscripciones). Todos llevan `acepta_privacidad`. El servidor solo acepta peticiones (CORS) de `https://canarias.africa`.
+- Si el catálogo no carga, como en la vista previa, la web funciona con los datos de ejemplo.
 
 ## 5. Mapa según la ubicación del usuario
 

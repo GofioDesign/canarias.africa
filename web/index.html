@@ -1084,7 +1084,7 @@ const OBRAS = [
   fen:[["2017","creacion",""],["2018","plenitud",""],["2025","desgaste","Grafitis encima en la parte derecha."]],
   qr:{st:"activo",inst:"2026-06-04",rev:"2026-10-05"},
   obs:[["2026-10-05","surf_ls","QR","desgaste","Yo participé en el taller con 12 años.","pendiente"]]},
- {id:"CA-TF-ARI-0003",t:"Grabados de la ladera",tipo:"Grabado rupestre aborigen",m:"ARI",lugar:"Ubicación reservada",lon:-16.47,lat:28.21,
+ {id:"CA-TF-ARI-0003",t:"Grabados de la ladera",tipo:"Grabado rupestre aborigen",m:"ARI",lugar:"Ubicación reservada",lon:null,lat:null, // reservada: el código público nunca lleva sus coordenadas
   fecha:{v:"Época prehispánica",p:"estimada"},aut:[{n:"Población aborigen de Tenerife",rol:"Autoría",c:"atribuida",f:"Inventario arqueológico (ficticio)"}],
   fin:{t:"desconocida",e:""},fase:"desgaste",sens:{n:"reservada",m:"Arte rupestre: Bien de Interés Cultural por ley (Ley 16/1985, art. 40.2)"},
   fen:[["prehispánica","creacion","Motivos geométricos grabados en basalto."],["2024","desgaste","Erosión y pisadas junto al panel."]],
@@ -1353,18 +1353,22 @@ function mapa(obras,opt={}){ const islas=opt.islas||["TF","LZ"]; return `<div cl
 /* Mapas: Leaflet + teselas de OpenStreetMap servidas desde la caché propia de canarias.africa.
    Los nodos geográficos (obras, QR, rutas) se dibujan y editan en uMap; la web lee sus capas en GeoJSON
    y las une con la red por la propiedad "id". Si las teselas no cargan, se dibuja el contorno de la isla. */
+/* La web y las fichas se sirven estáticas desde GitHub Pages (canarias.africa); lo dinámico vive en api.canarias.africa (hosting PHP). */
+const API_BASE = "https://api.canarias.africa";
 const MAPA = {
-  teselas: "/teselas/osm/{z}/{x}/{y}.png",
+  teselas: API_BASE+"/teselas/osm/{z}/{x}/{y}.png",
   atribucion: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
-  umap: "/datos/umap/" // copia horaria de las capas de uMap que hace el servidor: obras.geojson, qr.geojson, rutas.geojson
+  umap: API_BASE+"/datos/umap/" // copia horaria de las capas de uMap que hace el servidor: qr.geojson, rutas.geojson
 };
-/* Conexión con el servidor de canarias.africa. Si la API no responde (vista previa), la web funciona con los datos de ejemplo. */
+/* Si el catálogo no carga (vista previa), la web funciona con los datos de ejemplo. */
 const API = {
-  obras: "/api/publico/obras", // FeatureCollection pública; las coordenadas de obras sensibles llegan ya ocultadas
-  qr: "https://canarias.africa/q/", // cada QR físico apunta a /q/<código>; el servidor redirige a #/observar/<obra>?qr=<código>
-  envios: { qr: "/api/collections/observaciones/records", contexto: "/api/collections/contexto/records", nueva: "/api/collections/propuestas_obra/records", ruta: "/api/collections/propuestas_ruta/records", inscripcion: "/api/collections/inscripciones/records" } // colecciones de PocketBase
+  obras: "/datos/obras.geojson", // catálogo estático en el repo; difusas ya en el centro de su celda de 0,02°, reservadas sin geometry
+  ficha: API_BASE+"/api/publico/obras/", // + <código>: solo las observaciones aprobadas
+  qr: API_BASE+"/q/", // cada QR impreso apunta aquí; redirige a canarias.africa/#/observar/<obra>?qr=<código>
+  envios: Object.fromEntries(Object.entries({ qr: "observaciones", contexto: "contexto", nueva: "propuestas_obra", ruta: "propuestas_ruta", inscripcion: "inscripciones" })
+    .map(([k,c])=>[k,`${API_BASE}/api/collections/${c}/records`])) // PocketBase, multipart
 };
-let DEMO = true; // pasa a false cuando /api/publico/obras responde
+let DEMO = true; // pasa a false cuando carga el catálogo
 async function cargarObrasPublicas(){
   try{
     const r=await fetch(API.obras,{headers:{Accept:"application/geo+json, application/json"}}); if(!r.ok) return;
@@ -1373,21 +1377,21 @@ async function cargarObrasPublicas(){
     gj.features.forEach(f=>{ const p=f.properties||{}, o=byId(p.id); if(!o) return;
       if(FASES[p.fase]) o.fase=p.fase;
       if(SENS[p.sensibilidad]) o.sens={...(o.sens||{}),n:p.sensibilidad};
+      if(p.descripcion) o.desc=p.descripcion;
+      if(Array.isArray(p.relaciones)) o.rels=p.relaciones;
       o.precision=p.precision; // exacta | zona | municipio: el servidor ya ha ocultado; aquí no se recalcula nada
       if(f.geometry&&f.geometry.type==="Point") [o.lon,o.lat]=f.geometry.coordinates;
       else { o.lat=MUNIS[o.m].lat; o.lon=MUNIS[o.m].lon; } });
     route();
   }catch(e){ /* vista previa: datos de ejemplo */ }
 }
-/* Ficha completa: GET /api/publico/obras/<código> → Feature con descripcion, relaciones y observaciones aprobadas */
+/* Ficha: descripción y relaciones vienen del catálogo estático; las observaciones aprobadas, de la API */
 async function cargarFicha(o){
   if(DEMO||o._ficha) return false;
   try{
-    const r=await fetch(API.obras+"/"+encodeURIComponent(o.id)); if(!r.ok) return false;
+    const r=await fetch(API.ficha+encodeURIComponent(o.id)); if(!r.ok) return false;
     const p=(await r.json()).properties||{};
-    if(p.descripcion) o.desc=p.descripcion;
     if(Array.isArray(p.observaciones)) o.obs=p.observaciones.map(x=>[x.fecha,x.alias||"anónimo",x.fase?"QR":"Ficha",FASES[x.fase]?x.fase:null,x.texto||"","validada"]);
-    if(Array.isArray(p.relaciones)) o.rels=p.relaciones;
     o._ficha=true; return true;
   }catch(e){ return false; }
 }

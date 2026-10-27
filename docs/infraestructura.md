@@ -37,7 +37,7 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 ## Puesta en marcha
 
 1. **GitHub Pages:** en *Settings → Pages*, poner *Source: GitHub Actions* y el dominio `canarias.africa` con *Enforce HTTPS*. La acción `.github/workflows/publicar-web.yml` publica `web/` cada vez que cambia `main`.
-2. **DNS** (en Regery, donde está registrado el dominio; caduca el 2 de octubre de 2028 (renovado en octubre de 2026) y el .africa no tiene periodo de gracia, así que hay que activar la renovación automática):
+2. **DNS** (en Porkbun, que gestiona la zona DNS; el dominio está registrado en Regery, caduca el 2 de octubre de 2028 (renovado en octubre de 2026) y el .africa no tiene periodo de gracia, así que hay que activar la renovación automática en Regery):
 
    | Nombre | Tipo | Valor |
    |---|---|---|

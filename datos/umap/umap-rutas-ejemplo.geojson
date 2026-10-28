@@ -29,7 +29,7 @@
     "tipo": "ruta",
     "name": "Del barranco a la era",
     "description": "9.2 km · 3 h 30 min · dificultad media. Trazado provisional entre paradas. DATO FICTICIO.",
-    "paradas": "CA-TF-ARI-0002,CA-TF-ARI-0001,CA-TF-FAS-0002,CA-TF-FAS-0001",
+    "paradas": "b05eca29-3b55-4955-bcc0-6abf1d11e57e,24c6bc64-b62d-4e3f-be2b-3c4a62a16a4e,ca0fab1b-8810-4099-a9ad-6134dcec5aa0,dbf12703-5acb-47ee-a6bc-dd731e4e9709",
     "ficticio": true
    }
   },
@@ -53,7 +53,7 @@
     "tipo": "ruta",
     "name": "Teno, palabras y fachadas",
     "description": "6.5 km · 2 h 30 min · dificultad media. Trazado provisional entre paradas. DATO FICTICIO.",
-    "paradas": "CA-TF-BUE-0001,CA-TF-BUE-0002",
+    "paradas": "5a22f14c-03da-4c42-a7b9-d56bc954ddbb,90cebcbc-aa61-4b46-959e-f2c038599ff7",
     "ficticio": true
    }
   },
@@ -77,7 +77,7 @@
     "tipo": "ruta",
     "name": "Vilaflor, pinos y cráter",
     "description": "4.1 km · 1 h 45 min · dificultad fácil. Trazado provisional entre paradas. DATO FICTICIO.",
-    "paradas": "CA-TF-VIL-0001,CA-TF-VIL-0002",
+    "paradas": "d0b447c0-cd66-47fe-b295-4221d18e633c,37de1bf1-3851-4eea-83dc-fa8b01a5fd63",
     "ficticio": true
    }
   },
@@ -101,7 +101,7 @@
     "tipo": "ruta",
     "name": "Norte de Lanzarote: molino y palmeral",
     "description": "5.3 km · 2 h · dificultad fácil. Trazado provisional entre paradas. DATO FICTICIO.",
-    "paradas": "CA-LZ-HAR-0001,CA-LZ-HAR-0002",
+    "paradas": "f89e8eb0-b995-4f0b-94af-36097f8a24d2,430175f8-3b98-4337-95a8-c6bcc6eb0895",
     "ficticio": true
    }
   },
@@ -125,7 +125,7 @@
     "tipo": "ruta",
     "name": "Tinajo, de la lava al puerto",
     "description": "7.8 km · 2 h 45 min · dificultad media. Trazado provisional entre paradas. DATO FICTICIO.",
-    "paradas": "CA-LZ-TIN-0001,CA-LZ-TIN-0002",
+    "paradas": "d9003675-685a-4fa8-b436-76169cf2e4d6,ed35d309-ae15-427c-8ea7-ed89582727c1",
     "ficticio": true
    }
   }

@@ -45,11 +45,11 @@ p{margin:0}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ink);color:var(--bg)}
 .top .wrap{display:flex;align-items:center;gap:20px;padding-block:10px;flex-wrap:wrap}
 .brand{font-family:var(--f-display);font-weight:800;font-size:1.15rem;color:var(--bg);text-decoration:none;letter-spacing:.01em;display:flex;align-items:center;gap:8px}
-.brand i{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--lichen);flex:none}
+.brand i{display:inline-block;width:14px;height:14px;flex:none;border:2.5px solid var(--lichen);box-shadow:inset 0 0 0 2px var(--ink),inset 0 0 0 6px var(--lichen)}
 .brand .acr{display:inline-flex;flex-wrap:wrap;align-items:baseline;row-gap:2px}
-.brand .l{display:inline-flex;align-items:baseline;transition:color .3s,margin .45s ease}
+.brand .l{display:inline-flex;align-items:baseline;color:var(--lichen);transition:margin .45s ease}
 .brand .x{display:inline-block;max-width:0;opacity:0;overflow:hidden;white-space:nowrap;vertical-align:bottom;font-weight:500;transition:max-width .45s ease,opacity .3s ease}
-.brand:hover .l,.brand:focus-visible .l{color:var(--lichen);margin-right:.32em}
+.brand:hover .l,.brand:focus-visible .l{margin-right:.32em}
 .brand:hover .l.n,.brand:focus-visible .l.n{margin-right:.8em}
 .brand:hover .x,.brand:focus-visible .x{max-width:9em;opacity:1;color:var(--bg)}
 .brand:hover .dom,.brand:focus-visible .dom{margin-left:.2em}
@@ -914,7 +914,17 @@ a.of:hover h3{text-decoration:underline}
 #gsvg .nd:focus-visible circle{stroke:var(--lichen);stroke-width:3}
 #gsvg line.cross{stroke-opacity:.45}
 .plano{fill:var(--bg);fill-opacity:.55;stroke:var(--land-edge);stroke-width:1}
-.plabel{font-family:var(--f-mono);font-size:11px;fill:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.plabel{font-family:var(--f-mono);font-size:11px;fill:var(--ink);text-transform:uppercase;letter-spacing:.06em;paint-order:stroke;stroke:var(--surface);stroke-width:3px}
+.plabel .pcount{fill:var(--muted)}
+.plano{fill-opacity:.13;stroke-width:1.2;stroke-opacity:.8;cursor:pointer;transition:fill-opacity .2s}
+.plano:hover,.plano:focus-visible{fill-opacity:.24;outline:none}
+g.pl.sel .plano{fill-opacity:.3;stroke-width:2.2}
+g.pl.sel .plabel{font-weight:700}
+#gsvg.con-sel g.pl:not(.sel) .nd{opacity:.5}
+#gsvg.con-sel .lineas line{stroke-opacity:.18}
+#gsvg.con-sel .lineas line.on{stroke-opacity:.9}
+.cota,.cota-eje{stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4;opacity:.7}
+.cota-eje{stroke-dasharray:none;opacity:.5}
 .redbar{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;margin-top:20px}
 .seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:4px;overflow:hidden}
 .seg button{font:inherit;font-family:var(--f-display);font-weight:700;background:transparent;color:var(--ink);border:0;padding:7px 14px;cursor:pointer}
@@ -953,6 +963,46 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
   .view{animation:in .25s ease-out}
   @keyframes in{from{transform:translateY(6px)}to{transform:none}}
 }
+
+/* ---------- Estética de etiquetadora (cinta en relieve) y QR ---------- */
+:root{--tape:#1B201E;--tape-ink:#F3F1EA;--tape-hi:rgba(255,255,255,.28);--tape-lo:rgba(0,0,0,.55)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--tape:#E9E6DC;--tape-ink:#1B201E;--tape-hi:rgba(255,255,255,.7);--tape-lo:rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--tape:#E9E6DC;--tape-ink:#1B201E;--tape-hi:rgba(255,255,255,.7);--tape-lo:rgba(0,0,0,.35)}
+/* Cinta: letras en relieve, mayúsculas espaciadas y cortes en bisel en los extremos */
+.eyebrow:not(:has(> a:only-child)),.of .st,.idbadge,.fake,nav.main a[aria-current="page"],.cinta{
+  font-family:var(--f-display);font-weight:700;text-transform:uppercase;letter-spacing:.14em;
+  background:linear-gradient(180deg,var(--tape-hi) 0,transparent 30%,transparent 70%,var(--tape-lo) 140%),var(--tape);color:var(--tape-ink);
+  text-shadow:0 1px 0 var(--tape-lo),0 -1px 0 var(--tape-hi);
+  clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 50%,calc(100% - 4px) 100%,4px 100%,0 50%);border-radius:0}
+.eyebrow:not(:has(> a:only-child)){display:inline-block;width:fit-content;align-self:flex-start;padding:4px 12px 3px;font-size:.68rem}
+.eyebrow:not(:has(> a:only-child)) a{color:inherit}
+.of .st{display:inline-block;width:fit-content;padding:3px 10px 2px;font-size:.6rem;color:var(--tape-ink)!important}
+.of.off .st{--tape:#8C8F86}
+.idbadge{padding:4px 12px 3px;font-size:.78rem;letter-spacing:.1em}
+.fake{--tape:var(--lichen);color:#1B201E;text-shadow:0 1px 0 rgba(255,255,255,.35);padding:3px 10px 2px}
+nav.main a[aria-current="page"]{--tape:var(--lichen);color:#1B201E;text-shadow:0 1px 0 rgba(255,255,255,.35),0 -1px 0 rgba(0,0,0,.25);font-size:.82rem;padding:6px 14px 5px}
+/* Etiqueta física: placa con cintas de etiquetadora y el QR, la cara del museo en la calle */
+.etiqueta{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 12px 12px;background:var(--surface);border:1px solid var(--line);box-shadow:0 1px 0 var(--line),0 8px 18px -12px rgba(0,0,0,.35);transform:rotate(-1.2deg)}
+.etiqueta .qr{border:0;padding:6px}
+.cinta{display:inline-block;padding:5px 12px 4px;font-size:.72rem;white-space:nowrap;max-width:100%}
+.cinta.id{--tape:var(--lichen);color:#1B201E;text-shadow:0 1px 0 rgba(255,255,255,.35),0 -1px 0 rgba(0,0,0,.25);font-size:.8rem;transform:rotate(1.5deg)}
+.cinta.mini{font-size:.56rem;letter-spacing:.1em;transform:rotate(-.8deg)}
+@media (prefers-reduced-motion:no-preference){.etiqueta{transition:transform .3s}.etiqueta:hover{transform:rotate(0)}}
+.ciclo{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:14px;counter-reset:c}
+.ciclo li{border:1px solid var(--line);background:var(--surface);padding:14px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.ciclo li p{font-size:.95rem;color:var(--muted)}
+.traza{margin-top:12px;font-size:.85rem}
+.traza summary{cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:6px;color:var(--muted)}
+.traza summary .cinta{font-size:.58rem}
+.traza ol{list-style:none;margin:8px 0 0;padding:0 0 0 10px;border-left:2px solid var(--lichen);display:flex;flex-direction:column;gap:6px}
+.traza li .mono{display:block;color:var(--muted)}
+/* QR: marcas de posición en las esquinas de las tarjetas y trama de módulos */
+.of{position:relative}
+.of::after{content:"";position:absolute;top:10px;right:10px;width:13px;height:13px;border:2px solid var(--ink);box-shadow:inset 0 0 0 2px var(--surface),inset 0 0 0 5px var(--ink);opacity:.22;transition:opacity .2s}
+a.of:hover::after{opacity:.9}
+.qrband{height:14px;margin:8px 0 0;opacity:.18;background:
+  conic-gradient(var(--ink) 25%,transparent 0 50%,var(--ink) 0 75%,transparent 0) 0 0/14px 14px,
+  conic-gradient(transparent 25%,var(--ink) 0 50%,transparent 0 75%,var(--ink) 0) 7px 0/21px 7px}
 </style>
 
 <header class="top">
@@ -971,7 +1021,7 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
     </nav>
   </div>
 </header>
-<div class="proto"><div class="wrap">PROTOTIPO · Las obras, personas, fechas y observaciones son ficticias y sirven para probar el sistema. Las convocatorias de «Ayudas a artistas» son reales.</div></div>
+<div class="qrband" aria-hidden="true" style="margin:0;opacity:.9;background-color:var(--ink);height:6px;--ink:var(--lichen)"></div><div class="proto"><div class="wrap">PROTOTIPO · Las obras, personas, fechas y observaciones son ficticias y sirven para probar el sistema. Las convocatorias de «Ayudas a artistas» son reales.</div></div>
 
 <main class="wrap" id="app" tabindex="-1"></main>
 
@@ -1012,85 +1062,101 @@ const ISLAS = {TF:"Tenerife",LZ:"Lanzarote"};
 
 /* ---------- Datos de ejemplo (FICTICIOS) ---------- */
 const OBRAS = [
- {id:"CA-TF-ARI-0001",t:"Mural del lavadero",tipo:"Mural",m:"ARI",lugar:"Lavadero viejo, Villa de Arico",lon:-16.497,lat:28.205,
+ {id:"24c6bc64-b62d-4e3f-be2b-3c4a62a16a4e",t:"Mural del lavadero",tipo:"Mural",m:"ARI",lugar:"Lavadero viejo, Villa de Arico",lon:-16.497,lat:28.205,
   fecha:{v:"1987",p:"aprox."},aut:[{n:"Taller juvenil municipal",rol:"Ejecución",c:"probable",f:"Dos testimonios vecinales"}],
   fin:{t:"publica",e:"Ayuntamiento (dato ficticio)"},fase:"desgaste",
   fen:[["1987","creacion","Pintado en verano, según testimonios."],["1998","plenitud","Aparece completo en una foto de fiestas."],["2019","desgaste","La parte baja pierde pigmento por humedad."]],
   qr:{st:"activo",inst:"2026-05-14",rev:"2026-09-20"},
   obs:[["2026-09-20","Rosa_A.","QR","desgaste","El azul del cielo casi ha desaparecido. Adjunto foto.","validada"],["2026-06-02","anónimo","QR · salida colectiva","desgaste","Mi abuela dice que lo pintaron chicos del instituto de Granadilla.","pendiente"]]},
- {id:"CA-TF-ARI-0002",t:"Señales en el barranco",tipo:"Intervención en paisaje",m:"ARI",lugar:"Cauce del barranco, cerca de Poris",lon:-16.445,lat:28.168,
+ {id:"b05eca29-3b55-4955-bcc0-6abf1d11e57e",t:"Señales en el barranco",tipo:"Intervención en paisaje",m:"ARI",lugar:"Cauce del barranco, cerca de Poris",lon:-16.445,lat:28.168,
   fecha:{v:"2019",p:"exacta"},aut:[{n:"Colectivo Malpaís",rol:"Autoría",c:"confirmada",f:"Declaración del colectivo"}],
   fin:{t:"altruista",e:"Autofinanciada"},fase:"plenitud",
   fen:[["2019-03","creacion","Montaje en tres jornadas."],["2019-04","plenitud",""]],
   qr:{st:"activo",inst:"2026-05-14",rev:"2026-09-21"},
   obs:[["2026-09-21","pedro.g","QR","plenitud","Sigue completa. Alguien ha añadido piedras al círculo.","validada"]]},
- {id:"CA-TF-FAS-0001",t:"Banco de picón",tipo:"Escultura",m:"FAS",lugar:"Plaza de la iglesia, Fasnia",lon:-16.452,lat:28.238,
+ {id:"dbf12703-5acb-47ee-a6bc-dd731e4e9709",t:"Banco de picón",tipo:"Escultura",m:"FAS",lugar:"Plaza de la iglesia, Fasnia",lon:-16.452,lat:28.238,
   fecha:{v:"2008",p:"aprox."},aut:[{n:"Desconocida",rol:"",c:"desconocida",f:""}],
   fin:{t:"desconocida",e:""},fase:"transformacion",
   fen:[["2008","creacion","Fecha estimada por el material."],["2021","transformacion","Se le añade un respaldo de madera municipal."]],
   qr:{st:"pendiente",inst:"",rev:""},
   obs:[["2026-07-11","M.Luz","Ficha",null,"¿Alguien sabe quién lo hizo? Yo creo que fue un cantero de Arafo.","pendiente"]]},
- {id:"CA-TF-FAS-0002",t:"Inscripción de la era",tipo:"Inscripción",m:"FAS",lugar:"Era alta, camino de Los Roques",lon:-16.442,lat:28.228,
+ {id:"ca0fab1b-8810-4099-a9ad-6134dcec5aa0",t:"Inscripción de la era",tipo:"Inscripción",m:"FAS",lugar:"Era alta, camino de Los Roques",lon:-16.442,lat:28.228,
   fecha:{v:"1950–1959",p:"década"},aut:[{n:"Trabajadores de la era",rol:"Grabado",c:"atribuida",f:"Un testimonio oral"}],
   fin:{t:"altruista",e:""},fase:"desgaste",
   fen:[["1950s","creacion","Iniciales y una fecha grabadas en la piedra."],["2010","desgaste","El liquen cubre la mitad de las letras."]],
   qr:{st:"activo",inst:"2026-05-15",rev:"2026-05-15"},
   obs:[]},
- {id:"CA-TF-VIL-0001",t:"Pinos de chapa",tipo:"Escultura",m:"VIL",lugar:"Entrada al pueblo, Vilaflor",lon:-16.633,lat:28.162,
+ {id:"d0b447c0-cd66-47fe-b295-4221d18e633c",t:"Pinos de chapa",tipo:"Escultura",m:"VIL",lugar:"Entrada al pueblo, Vilaflor",lon:-16.633,lat:28.162,
   fecha:{v:"2001",p:"exacta"},aut:[{n:"Ana R.",rol:"Autoría",c:"confirmada",f:"Placa y contrato"},{n:"Herrería local",rol:"Fabricación",c:"probable",f:"Factura parcial"}],
   fin:{t:"privada",e:"Bodega patrocinadora (ficticia)"},fase:"plenitud",
   fen:[["2001","creacion",""],["2001","plenitud",""],["2016","intervencion","Repintado antióxido."],["2017","plenitud",""]],
   qr:{st:"activo",inst:"2026-05-16",rev:"2026-10-02"},
   obs:[["2026-10-02","javi_v","QR","plenitud","Bien. Óxido leve en la base del pino pequeño.","validada"]]},
- {id:"CA-TF-VIL-0002",t:"Acción del cráter",tipo:"Acción efímera",m:"VIL",lugar:"Ladera sobre el pueblo",lon:-16.62,lat:28.185,
+ {id:"37de1bf1-3851-4eea-83dc-fa8b01a5fd63",t:"Acción del cráter",tipo:"Acción efímera",m:"VIL",lugar:"Ladera sobre el pueblo",lon:-16.62,lat:28.185,
   fecha:{v:"2015-06-21",p:"exacta"},aut:[{n:"Grupo de danza escolar",rol:"Acción",c:"probable",f:"Vídeo y cartel"}],
   fin:{t:"altruista",e:""},fase:"memoria",
   fen:[["2015-06-21","creacion","Acción de una tarde en el solsticio."],["2015-06-21","desaparicion","Efímera por diseño."],["2015","memoria","Se conserva un vídeo de 4 minutos."]],
   qr:{st:"no aplica",inst:"",rev:""},
   obs:[["2026-08-30","anónimo","Ficha",null,"Tengo fotos en papel de ese día, puedo escanearlas.","pendiente"]]},
- {id:"CA-TF-BUE-0001",t:"Mural de la cooperativa",tipo:"Mural",m:"BUE",lugar:"Fachada de la antigua cooperativa",lon:-16.858,lat:28.368,
+ {id:"5a22f14c-03da-4c42-a7b9-d56bc954ddbb",t:"Mural de la cooperativa",tipo:"Mural",m:"BUE",lugar:"Fachada de la antigua cooperativa",lon:-16.858,lat:28.368,
   fecha:{v:"1979",p:"aprox."},aut:[{n:"Pintor itinerante sin identificar",rol:"Autoría",c:"atribuida",f:"Comparación con un mural de Garachico"}],
   fin:{t:"publica",e:"Cabildo (dato ficticio)"},fase:"intervencion",
   fen:[["1979","creacion",""],["1990","plenitud",""],["2012","desgaste",""],["2024","intervencion","Restauración con vecinos."]],
   qr:{st:"activo",inst:"2026-05-20",rev:"2026-09-28"},
   obs:[["2026-09-28","lola.b","QR","intervencion","La restauración ha cambiado el color del mar. Antes era verde.","validada"],["2026-04-10","anónimo","QR","desgaste","","descartada"]]},
- {id:"CA-TF-BUE-0002",t:"Palabras en Teno",tipo:"Instalación",m:"BUE",lugar:"Camino de Teno Alto",lon:-16.872,lat:28.348,
+ {id:"90cebcbc-aa61-4b46-959e-f2c038599ff7",t:"Palabras en Teno",tipo:"Instalación",m:"BUE",lugar:"Camino de Teno Alto",lon:-16.872,lat:28.348,
   fecha:{v:"2021",p:"exacta"},aut:[{n:"Colectivo Malpaís",rol:"Autoría",c:"confirmada",f:"Declaración del colectivo"}],
   fin:{t:"mixta",e:"Ayuntamiento + aportaciones vecinales (ficticio)"},fase:"plenitud",
   fen:[["2021","creacion",""],["2021","plenitud",""]],
   qr:{st:"dañado",inst:"2026-05-20",rev:"2026-10-12"},
   obs:[["2026-10-12","ruta_teno","QR · salida colectiva","plenitud","Obra bien. El QR está despegado por el viento.","validada"]]},
- {id:"CA-LZ-HAR-0001",t:"Molino pintado",tipo:"Mural",m:"HAR",lugar:"Molino de Máguez",lon:-13.51,lat:29.158,
+ {id:"f89e8eb0-b995-4f0b-94af-36097f8a24d2",t:"Molino pintado",tipo:"Mural",m:"HAR",lugar:"Molino de Máguez",lon:-13.51,lat:29.158,
   fecha:{v:"1995",p:"aprox."},aut:[{n:"Familia propietaria",rol:"Encargo",c:"probable",f:"Dos testimonios"}],
   fin:{t:"privada",e:"Particular"},fase:"desgaste",
   fen:[["1995","creacion",""],["2008","desgaste","La pintura se cuartea por la sal."]],
   qr:{st:"activo",inst:"2026-06-03",rev:"2026-06-03"},
   obs:[["2026-06-03","nieves","QR","desgaste","Se lee la fecha 1995 en una esquina.","validada"]]},
- {id:"CA-LZ-HAR-0002",t:"Huella del palmeral",tipo:"Instalación",m:"HAR",lugar:"Palmeral, salida hacia Arrieta",lon:-13.492,lat:29.135,
+ {id:"430175f8-3b98-4337-95a8-c6bcc6eb0895",t:"Huella del palmeral",tipo:"Instalación",m:"HAR",lugar:"Palmeral, salida hacia Arrieta",lon:-13.492,lat:29.135,
   fecha:{v:"2012",p:"exacta"},aut:[{n:"Desconocida",rol:"",c:"desconocida",f:""}],
   fin:{t:"desconocida",e:""},fase:"desaparicion",
   fen:[["2012","creacion",""],["2014","plenitud",""],["2022","desaparicion","Retirada sin aviso. Solo quedan anclajes."]],
   qr:{st:"retirado",inst:"",rev:""},
   obs:[["2026-07-19","anónimo","QR","desaparicion","Quedan cuatro tornillos en la piedra donde estaba.","validada"]]},
- {id:"CA-LZ-TIN-0001",t:"Caracolas de lava",tipo:"Escultura",m:"TIN",lugar:"Rotonda de Mancha Blanca",lon:-13.684,lat:29.042,
+ {id:"d9003675-685a-4fa8-b436-76169cf2e4d6",t:"Caracolas de lava",tipo:"Escultura",m:"TIN",lugar:"Rotonda de Mancha Blanca",lon:-13.684,lat:29.042,
   fecha:{v:"1990–1999",p:"década"},aut:[{n:"Escultor de Tinajo",rol:"Autoría",c:"atribuida",f:"Un testimonio"}],
   fin:{t:"publica",e:"Ayuntamiento (dato ficticio)"},fase:"plenitud",
   fen:[["1990s","creacion",""],["1990s","plenitud",""]],
   qr:{st:"activo",inst:"2026-06-04",rev:"2026-10-05"},
   obs:[]},
- {id:"CA-LZ-TIN-0002",t:"Muro de La Santa",tipo:"Mural",m:"TIN",lugar:"Muro del puerto, La Santa",lon:-13.665,lat:29.092,
+ {id:"ed35d309-ae15-427c-8ea7-ed89582727c1",t:"Muro de La Santa",tipo:"Mural",m:"TIN",lugar:"Muro del puerto, La Santa",lon:-13.665,lat:29.092,
   fecha:{v:"2017",p:"exacta"},aut:[{n:"Talleres de verano",rol:"Ejecución",c:"confirmada",f:"Cartel del taller"}],
   fin:{t:"altruista",e:""},fase:"desgaste",
   fen:[["2017","creacion",""],["2018","plenitud",""],["2025","desgaste","Grafitis encima en la parte derecha."]],
   qr:{st:"activo",inst:"2026-06-04",rev:"2026-10-05"},
   obs:[["2026-10-05","surf_ls","QR","desgaste","Yo participé en el taller con 12 años.","pendiente"]]},
- {id:"CA-TF-ARI-0003",t:"Grabados de la ladera",tipo:"Grabado rupestre aborigen",m:"ARI",lugar:"Ubicación reservada",lon:null,lat:null, // reservada: el código público nunca lleva sus coordenadas
+ {id:"e680f382-4ea3-42e4-8da0-c906ce4c2f86",t:"Grabados de la ladera",tipo:"Grabado rupestre aborigen",m:"ARI",lugar:"Ubicación reservada",lon:null,lat:null, // reservada: el código público nunca lleva sus coordenadas
   fecha:{v:"Época prehispánica",p:"estimada"},aut:[{n:"Población aborigen de Tenerife",rol:"Autoría",c:"atribuida",f:"Inventario arqueológico (ficticio)"}],
   fin:{t:"desconocida",e:""},fase:"desgaste",sens:{n:"reservada",m:"Arte rupestre: Bien de Interés Cultural por ley (Ley 16/1985, art. 40.2)"},
   fen:[["prehispánica","creacion","Motivos geométricos grabados en basalto."],["2024","desgaste","Erosión y pisadas junto al panel."]],
   qr:{st:"no aplica",inst:"",rev:""},
   obs:[["2026-09-02","equipo","Revisión con patrimonio","desgaste","Se recomienda no señalizar el acceso.","validada"]]}
 ];
+/* Cada obra tiene un UUID permanente. Cada QR impreso tiene otro UUID propio (canarias.africa/<uuid-del-QR>), que sale de un pool:
+   se asigna en cupos a colaboradores y, si no confirman que lo han colocado, vuelve al pool. El código del QR no se publica en la web,
+   para que solo quien lo escanea junto a la obra pueda contar cómo está. (Códigos ficticios.) */
+const QR_COD={"f89e8eb0-b995-4f0b-94af-36097f8a24d2":"184ce826-3514-4473-b634-e604cebd878e","430175f8-3b98-4337-95a8-c6bcc6eb0895":"ce00181f-43aa-40b3-9ed1-20957bd172df","d9003675-685a-4fa8-b436-76169cf2e4d6":"944c8aa2-e030-41ae-ba14-2f8ce257a9bc","ed35d309-ae15-427c-8ea7-ed89582727c1":"fc97af85-7276-4301-a328-035b7db5cb72","24c6bc64-b62d-4e3f-be2b-3c4a62a16a4e":"2dbd722e-76c1-4ee4-90da-0ced798105af","b05eca29-3b55-4955-bcc0-6abf1d11e57e":"22810c54-ebdb-44c7-99e6-d5db7f056af0","e680f382-4ea3-42e4-8da0-c906ce4c2f86":"74f58356-457a-407f-9f1c-4ce8b415c6f8","5a22f14c-03da-4c42-a7b9-d56bc954ddbb":"30182012-df63-4463-8965-93171b0a5c85","90cebcbc-aa61-4b46-959e-f2c038599ff7":"cd2530a6-4a53-4477-bd9f-185b77cf6d8b","dbf12703-5acb-47ee-a6bc-dd731e4e9709":"aa46b98d-9d83-43a3-8ede-8d9429fc5853","ca0fab1b-8810-4099-a9ad-6134dcec5aa0":"71d891c4-5457-40c6-a34e-21b38929d182","d0b447c0-cd66-47fe-b295-4221d18e633c":"560a6a4b-4245-45bd-b926-75b8ac8ddcfa","37de1bf1-3851-4eea-83dc-fa8b01a5fd63":"d7035927-af2f-4066-8cd1-67cabc00a7c5"};
+OBRAS.forEach(o=>{ o.qr.cod=o.qr.st==="activo"?QR_COD[o.id]:null; });
+const corto=id=>id.slice(0,8);
+/* Trazabilidad de la etiqueta: colocación + verificaciones independientes (escaneos de otras personas). Ficticio en el prototipo. */
+function trazaEtiqueta(o){
+  if(!o.qr.inst) return "";
+  const ver=o.obs.filter(b=>/QR/.test(b[2])).map((b,i)=>({f:b[0],a:b[1],d:[12,31,8,22][i%4]})).sort((x,y)=>x.f<y.f?1:-1);
+  const ult=ver[0]?ver[0].f:o.qr.inst, estado=o.qr.st!=="activo"?"—":ver.length>=2?"Confirmada":"Pendiente de verificar";
+  return `<details class="traza"><summary><span class="cinta${ver.length>=2?" id":""}">${estado}</span> ${ver.length} verificaciones · última ${fd(ult)}</summary>
+    <ol>${ver.map(v=>`<li><span class="mono">${fd(v.f)}</span> Verificada por ${esc(v.a)} · a ${v.d} m</li>`).join("")}
+    <li><span class="mono">${fd(o.qr.inst)}</span> Colocada con GPS y foto</li></ol>
+    <p class="qrnote">Cada escaneo de otra persona a menos de 50 m atestigua que la etiqueta sigue ahí. ${DEMO?"Datos ficticios.":""}</p></details>`;
+}
 /* Obras sensibles: la web pública nunca recibe sus coordenadas exactas.
    difusa: punto ajustado a una cuadrícula fija de ~2 km (no se puede promediar); reservada: solo el municipio. */
 const SENS={abierta:{n:"Abierta",d:"Ubicación exacta pública, QR en el sitio."},
@@ -1105,19 +1171,19 @@ const enMapa=o=>sensOf(o)!=="reservada";
 const RUTAS = [
  {id:"barranco",n:"Del barranco a la era",cur:"Marta Q.",ms:["ARI","FAS"],km:9.2,h:"3 h 30 min",dif:"Media",
   tesis:"El agua y el trabajo agrícola como origen de la expresión artística del sureste. La ruta sube por donde bajaba el agua y une obras hechas por quienes la trabajaban.",
-  stops:[["CA-TF-ARI-0002","Empieza en la costa: una intervención reciente que vuelve a señalar el cauce."],["CA-TF-ARI-0001","El lavadero, lugar de reunión de mujeres, pintado por jóvenes en los ochenta."],["CA-TF-FAS-0002","La inscripción de la era: firma colectiva de un trabajo que ya no existe."],["CA-TF-FAS-0001","Cierra con una obra hecha con piedra de la propia era."]],sal:[]},
+  stops:[["b05eca29-3b55-4955-bcc0-6abf1d11e57e","Empieza en la costa: una intervención reciente que vuelve a señalar el cauce."],["24c6bc64-b62d-4e3f-be2b-3c4a62a16a4e","El lavadero, lugar de reunión de mujeres, pintado por jóvenes en los ochenta."],["ca0fab1b-8810-4099-a9ad-6134dcec5aa0","La inscripción de la era: firma colectiva de un trabajo que ya no existe."],["dbf12703-5acb-47ee-a6bc-dd731e4e9709","Cierra con una obra hecha con piedra de la propia era."]],sal:[]},
  {id:"teno",n:"Teno, palabras y fachadas",cur:"Colectivo Malpaís",ms:["BUE"],km:6.5,h:"2 h 30 min",dif:"Media",
   tesis:"Cómo se escribe sobre el paisaje: de la fachada cooperativa a las palabras en el camino.",
-  stops:[["CA-TF-BUE-0001","Un mural restaurado con vecinos: la memoria corregida."],["CA-TF-BUE-0002","Palabras que dialogan con la serie «Señales» del sur."]],sal:[]},
+  stops:[["5a22f14c-03da-4c42-a7b9-d56bc954ddbb","Un mural restaurado con vecinos: la memoria corregida."],["90cebcbc-aa61-4b46-959e-f2c038599ff7","Palabras que dialogan con la serie «Señales» del sur."]],sal:[]},
  {id:"cumbre",n:"Vilaflor, pinos y cráter",cur:"Marta Q.",ms:["VIL"],km:4.1,h:"1 h 45 min",dif:"Fácil",
   tesis:"Lo que permanece y lo que fue efímero: una escultura de chapa y una acción que solo existe en vídeo.",
-  stops:[["CA-TF-VIL-0001","La obra encargada, con placa y contrato."],["CA-TF-VIL-0002","El lugar vacío de una acción de un solo día."]],sal:[]},
+  stops:[["d0b447c0-cd66-47fe-b295-4221d18e633c","La obra encargada, con placa y contrato."],["37de1bf1-3851-4eea-83dc-fa8b01a5fd63","El lugar vacío de una acción de un solo día."]],sal:[]},
  {id:"norte-lz",n:"Norte de Lanzarote: molino y palmeral",cur:"Nieves R.",ms:["HAR"],km:5.3,h:"2 h",dif:"Fácil",
   tesis:"Arqueología de lo desaparecido: seguir una obra por sus restos.",
-  stops:[["CA-LZ-HAR-0001","Un molino pintado que se cuartea con la sal."],["CA-LZ-HAR-0002","Cuatro tornillos en la piedra: lo que queda de una instalación."]],sal:[]},
+  stops:[["f89e8eb0-b995-4f0b-94af-36097f8a24d2","Un molino pintado que se cuartea con la sal."],["430175f8-3b98-4337-95a8-c6bcc6eb0895","Cuatro tornillos en la piedra: lo que queda de una instalación."]],sal:[]},
  {id:"tinajo",n:"Tinajo, de la lava al puerto",cur:"Nieves R.",ms:["TIN"],km:7.8,h:"2 h 45 min",dif:"Media",
   tesis:"Un motivo que viaja: de una escultura pública a un mural de taller que copia el molino de Haría.",
-  stops:[["CA-LZ-TIN-0001","La escultura de la rotonda."],["CA-LZ-TIN-0002","El muro del taller de verano."]],sal:[]}
+  stops:[["d9003675-685a-4fa8-b436-76169cf2e4d6","La escultura de la rotonda."],["ed35d309-ae15-427c-8ea7-ed89582727c1","El muro del taller de verano."]],sal:[]}
 ];
 RUTAS.forEach(r=>{ r.notas=Object.fromEntries(r.stops); r.stops=r.stops.map(x=>x[0]); });
 
@@ -1266,9 +1332,9 @@ const FUTURAS = [
 ];
 /* Relaciones entre obras (ficticias) */
 const DIALOGOS = [
- ["CA-TF-BUE-0002","continúa","CA-TF-ARI-0002","Segunda pieza de la serie «Señales» del mismo colectivo."],
- ["CA-LZ-TIN-0002","responde a","CA-LZ-HAR-0001","El taller de 2017 copió el motivo del molino."],
- ["CA-TF-FAS-0001","se superpone a","CA-TF-FAS-0002","El banco se hizo con piedra retirada de la era."]
+ ["90cebcbc-aa61-4b46-959e-f2c038599ff7","continúa","b05eca29-3b55-4955-bcc0-6abf1d11e57e","Segunda pieza de la serie «Señales» del mismo colectivo."],
+ ["ed35d309-ae15-427c-8ea7-ed89582727c1","responde a","f89e8eb0-b995-4f0b-94af-36097f8a24d2","El taller de 2017 copió el motivo del molino."],
+ ["dbf12703-5acb-47ee-a6bc-dd731e4e9709","se superpone a","ca0fab1b-8810-4099-a9ad-6134dcec5aa0","El banco se hizo con piedra retirada de la era."]
 ];
 
 /* Canales propios de cada artista (ficticios). canarias.africa solo enlaza; no vende. */
@@ -1364,7 +1430,8 @@ const MAPA = {
 const API = {
   obras: "/datos/obras.geojson", // catálogo estático en el repo; difusas ya en el centro de su celda de 0,02°, reservadas sin geometry
   ficha: API_BASE+"/api/publico/obras/", // + <código>: solo las observaciones aprobadas
-  qr: API_BASE+"/q/", // cada QR impreso apunta aquí; redirige a canarias.africa/#/observar/<obra>?qr=<código>
+  qr: "https://canarias.africa/", // cada QR impreso apunta a canarias.africa/<uuid-del-QR>; la página 404 de GitHub Pages lo pasa a #/q/<uuid>
+  qrResolver: API_BASE+"/api/qr/", // + <uuid-del-QR> → {obra, estado}
   envios: Object.fromEntries(Object.entries({ qr: "observaciones", contexto: "contexto", nueva: "propuestas_obra", ruta: "propuestas_ruta", inscripcion: "inscripciones" })
     .map(([k,c])=>[k,`${API_BASE}/api/collections/${c}/records`])) // PocketBase, multipart
 };
@@ -1394,6 +1461,13 @@ async function cargarFicha(o){
     if(Array.isArray(p.observaciones)) o.obs=p.observaciones.map(x=>[x.fecha,x.alias||"anónimo",x.fase?"QR":"Ficha",FASES[x.fase]?x.fase:null,x.texto||"","validada"]);
     o._ficha=true; return true;
   }catch(e){ return false; }
+}
+/* QR → obra: en producción lo resuelve el servidor (el código del QR no está en el catálogo público) */
+const QRRES=new Map();
+async function resolverQR(cod){
+  try{ const r=await fetch(API.qrResolver+encodeURIComponent(cod)); const j=r.ok?await r.json():null; QRRES.set(cod,j&&j.estado==="colocado"?j.obra:null); }
+  catch(e){ QRRES.set(cod,null); }
+  route();
 }
 async function cargarUMap(){
   const capa=async c=>{ const r=await fetch(MAPA.umap+c+".geojson"); if(!r.ok) throw new Error(c); return (await r.json()).features||[]; };
@@ -1439,14 +1513,19 @@ function initMaps(){
 function leyenda(){ return `<div class="legend">${["plenitud","desgaste","intervencion","transformacion","desaparicion","memoria"].map(f=>`<span><i class="sw" style="background:${css(FASES[f].c)}"></i>${FASES[f].n}</span>`).join("")}</div>`; }
 
 /* ---------- QR ilustrativo ---------- */
+/* QR de canarias.africa: negro y blanco como base y el ocre solo en el centro de las tres marcas de posición
+   (y en el sello central), para que siga leyéndose bien con cualquier móvil. */
 function drawQR(canvas,text){
-  const N=25,c=canvas.getContext("2d"); canvas.width=canvas.height=N*8;
+  const N=25,M=8,c=canvas.getContext("2d"), OCRE="#D6A300", NEGRO="#111", BLANCO="#fff"; canvas.width=canvas.height=N*M;
   let h=2166136261; for(const ch of text){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); }
   const rnd=()=>{ h^=h<<13; h^=h>>>17; h^=h<<5; return (h>>>0)/4294967296; };
-  c.fillStyle="#fff"; c.fillRect(0,0,N*8,N*8); c.fillStyle="#111";
-  const finder=(x,y)=>{ c.fillRect(x*8,y*8,56,56); c.fillStyle="#fff"; c.fillRect(x*8+8,y*8+8,40,40); c.fillStyle="#111"; c.fillRect(x*8+16,y*8+16,24,24); };
-  for(let y=0;y<N;y++)for(let x=0;x<N;x++){ const inF=(x<8&&y<8)||(x>N-9&&y<8)||(x<8&&y>N-9); if(!inF&&rnd()>.52) c.fillRect(x*8,y*8,8,8); }
+  const sq=(x,y,w,col)=>{ c.fillStyle=col; c.fillRect(x*M,y*M,w*M,w*M); };
+  sq(0,0,N,BLANCO);
+  const ctr=k=>k>=10&&k<=14;
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){ const inF=(x<8&&y<8)||(x>N-9&&y<8)||(x<8&&y>N-9); if(!inF&&!(ctr(x)&&ctr(y))&&rnd()>.52) sq(x,y,1,NEGRO); }
+  const finder=(x,y)=>{ sq(x,y,7,NEGRO); sq(x+1,y+1,5,BLANCO); sq(x+2,y+2,3,OCRE); };
   finder(0,0); finder(N-7,0); finder(0,N-7);
+  sq(10,10,5,BLANCO); sq(11,11,3,NEGRO); sq(12,12,1,OCRE); // sello central
 }
 
 /* ---------- Vistas ---------- */
@@ -1573,7 +1652,7 @@ function renderRes(){
   const r=OBRAS.filter(o=>(!FILT.m||o.m===FILT.m)&&(!FILT.f||o.fase===FILT.f)&&(!FILT.c||o.aut[0].c===FILT.c)&&(!q||(o.t+o.lugar+o.aut.map(a=>a.n).join(" ")).toLowerCase().includes(q)));
   $("#res").innerHTML = mapa(OBRAS,{only:r.map(o=>o.id)})+leyenda()+
    `<p class="count" style="margin-top:18px">${r.length} de ${OBRAS.length} obras</p><div class="list">${r.map(o=>`
-    <a class="item" href="#${slug(o.id)}"><span class="mono">${o.id}</span>
+    <a class="item" href="#${slug(o.id)}"><span class="mono" title="${o.id}">${corto(o.id)}</span>
     <span><span class="t">${esc(o.t)}</span> <span class="fake">ficticia</span>${sensOf(o)!=="abierta"?` <span class="sens">ubicación ${sensOf(o)}</span>`:""}<br><span class="s">${o.tipo} · ${esc(o.lugar)} · ${MUNIS[o.m].n}</span></span>${chip(o.fase)}</a>`).join("")||`<p class="muted" style="padding:16px 0">Ninguna obra cumple estos filtros. Prueba a quitar alguno.</p>`}</div>`;
   initMaps();
 }
@@ -1586,7 +1665,7 @@ function vObra(o){
   return `<p class="eyebrow"><a href="#archivo">← Archivo</a></p>
   <section class="ficha-head" style="margin-top:14px">
     <div class="stack">
-      <div class="idline"><span class="idbadge">${o.id}</span>${chip(o.fase)}${DEMO?`<span class="fake">datos ficticios</span>`:""}</div>
+      <div class="idline"><span class="idbadge" title="${o.id}">${corto(o.id)}</span>${chip(o.fase)}${DEMO?`<span class="fake">datos ficticios</span>`:""}</div>
       <h1>${esc(o.t)}</h1>
       <p class="lede muted">${o.tipo} · ${esc(o.lugar)} · ${M.n}, ${ISLAS[M.isla]}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}
       <div class="btns"><a class="btn lichen" href="#contexto-${o.id.toLowerCase()}">Aportar contexto</a></div>
@@ -1595,7 +1674,7 @@ function vObra(o){
         :`<p class="muted">Esta obra no tiene un QR activo (${esc(o.qr.st)}), así que ahora no se puede observar su estado. Lo revisaremos en la próxima salida de mapeo.</p>`}</div>
       ${(()=>{ const ags=o.aut.filter(a=>a.c==="confirmada").map(a=>G.byKey.get("ag:"+a.n)).filter(ag=>ag&&canales(ag).length); return ags.length?`<div class="apoya"><span class="eyebrow">Apoya a la autoría</span>${ags.map(ag=>`<div><b>${esc(ag.label)}</b>${botonesCanal(ag)}</div>`).join("")}</div>`:""; })()}
     </div>
-    <aside ${sensOf(o)==="reservada"?"hidden":""}><div class="qr"><canvas id="qr" aria-label="Código QR ilustrativo de la ficha"></canvas></div><p class="qrnote">QR ilustrativo, no escaneable · canarias.africa/${o.id.toLowerCase()}</p></aside>
+    <aside ${sensOf(o)==="reservada"?"hidden":""}><div class="etiqueta" aria-label="Etiqueta QR que se coloca junto a la obra"><span class="cinta">CANARIAS.AFRICA</span><div class="qr"><canvas id="qr" aria-label="Código QR ilustrativo de la obra"></canvas></div><span class="cinta id" title="${o.id}">${corto(o.id)}</span><span class="cinta mini">Escanéame</span></div><p class="qrnote">Así es la etiqueta junto a la obra. QR ilustrativo, no escaneable. Apunta a canarias.africa/ seguido del código propio del QR, que no se publica en la web.</p>${trazaEtiqueta(o)}</aside>
   </section>
 
   <section class="grid2">
@@ -1634,21 +1713,20 @@ function vObra(o){
 
   <section class="stack">
     <h3>Cómo citar esta ficha</h3>
-    <div class="cite">CANARIAS.AFRICA. «${esc(o.t)}». Ficha ${o.id}, versión ${o.fen.length+o.obs.length}. canarias.africa/${o.id.toLowerCase()}. Consultado el ${fd(HOY)}. Para imágenes: «Título», Autoría, año. Foto: nombre o alias (fecha) / CANARIAS.AFRICA.</div>
+    <div class="cite">CANARIAS.AFRICA. «${esc(o.t)}». Ficha ${o.id}, versión ${o.fen.length+o.obs.length}. canarias.africa/#${slug(o.id)}. Consultado el ${fd(HOY)}. Para imágenes: «Título», Autoría, año. Foto: nombre o alias (fecha) / CANARIAS.AFRICA.</div>
   </section>`;
 }
 
 let PRESEL="";
 /* Token de cada QR físico: se renueva cuando se repone el código. Sin token válido no se puede observar el estado. */
-function qrTok(id){ let h=2166136261; for(const ch of id+":v1"){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); } return (h>>>0).toString(36).slice(0,5); }
-const qrHash=o=>`/observar/${o.id}?qr=${qrTok(o.id)}`;
+const qrHash=o=>`/q/${o.qr.cod}`;
 /* En producción el código lo valida el servidor al redirigir y al recibir la observación. En la vista previa se compara con el token de ejemplo. */
-const qrValido=(o,c)=>!!c&&o.qr.st==="activo"&&(!DEMO||c===qrTok(o.id));
+const qrValido=(o,c)=>!!c&&o.qr.st==="activo"&&(!DEMO||c===o.qr.cod);
 const LIC=`<label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-lic" required style="margin-top:4px"> Confirmo que las fotos o documentos son míos o puedo compartirlos. Conservo mis derechos y autorizo, sin exclusividad, a mostrarlos con mi crédito en el archivo (<a href="#derechos">derechos de imagen</a>).</label>`;
 const PRIV=`<label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-priv" name="acepta_privacidad" value="1" required style="margin-top:4px"> He leído la <a href="#privacidad">política de privacidad</a> y acepto que canarias.africa guarde estos datos para revisar y publicar mi aportación.</label>`;
 const ALIAS=`<label for="o-alias">Tu nombre o alias (opcional)<input id="o-alias" type="text" placeholder="Se mostrará en la ficha" autocomplete="nickname"></label>`;
 function cabObra(o,eyebrow){ return `<p class="eyebrow"><a href="#${slug(o.id)}">← Ficha de la obra</a></p>
-  <section class="stack" style="margin-top:14px"><div class="idline"><span class="idbadge">${o.id}</span>${chip(o.fase)}</div>
+  <section class="stack" style="margin-top:14px"><div class="idline"><span class="idbadge" title="${o.id}">${corto(o.id)}</span>${chip(o.fase)}</div>
   <p class="eyebrow">${eyebrow}</p><h1>${esc(o.t)}</h1><p class="lede muted">${esc(o.lugar)} · ${MUNIS[o.m].n}</p></section>`; }
 
 /* Observación del estado: solo al escanear el QR junto a la obra */
@@ -1772,7 +1850,7 @@ function vProponerRuta(){
     <label class="full" for="r-tit">Título de la ruta<input id="r-tit" type="text" required></label>
     <label class="full" for="r-tes">Tesis curatorial<textarea id="r-tes" required placeholder="Qué une a estas obras y qué quieres que vea quien camine la ruta."></textarea></label>
     <fieldset class="full"><legend>Obras catalogadas (en orden de recorrido)</legend><div class="radios" style="flex-direction:column;gap:6px">
-      ${OBRAS.filter(o=>sensOf(o)==="abierta").map(o=>`<label><input type="checkbox" id="r-o-${o.id}" value="${o.id}"> <span class="mono">${o.id}</span> ${esc(o.t)} <span class="muted">· ${MUNIS[o.m].n}</span></label>`).join("")}
+      ${OBRAS.filter(o=>sensOf(o)==="abierta").map(o=>`<label><input type="checkbox" id="r-o-${o.id}" value="${o.id}"> <span class="mono">${corto(o.id)}</span> ${esc(o.t)} <span class="muted">· ${MUNIS[o.m].n}</span></label>`).join("")}
     </div></fieldset>
     <label for="r-cur">Curaduría (nombre o colectivo)<input id="r-cur" type="text" required></label>
     <label for="r-con">Correo o teléfono<input id="r-con" type="text" required></label>
@@ -1837,7 +1915,10 @@ function ego(id,W=560,H=380){
 }
 let REDT=new Set(["obra","agente","entidad","lugar","municipio","ruta"]);
 let REDMODO="red";
-const PLANOS=[["Territorio",["municipio","lugar"]],["Obras",["obra"]],["Personas y financiación",["agente","entidad","convocatoria"]],["Registro",["fuente","observacion","qr"]],["Curaduría y recorridos",["ruta","salida"]]];
+/* Vista por planos, como un sistema de planos acotados: un plano por tipo de nodo, apilados de abajo (territorio, cota 0) arriba.
+   Un tipo nuevo del registro TIPOS aparece solo, en el plano más alto. */
+const ORDEN_PLANOS=["salida","ruta","qr","observacion","fuente","convocatoria","entidad","agente","obra","lugar","municipio"];
+const PLANOS=[...Object.keys(TIPOS).filter(t=>!ORDEN_PLANOS.includes(t)),...ORDEN_PLANOS.filter(t=>TIPOS[t])].map(t=>[TIPOS[t].n,[t]]);
 let SIM=null;
 function vRed(){
   const counts=t=>[...G.byId.values()].filter(n=>n.tipo===t).length;
@@ -1848,7 +1929,7 @@ function vRed(){
   </section>
   <div class="redbar">
     <div class="seg" role="group" aria-label="Vista"><button type="button" data-modo="red" aria-pressed="${REDMODO==="red"}">Red</button><button type="button" data-modo="planos" aria-pressed="${REDMODO==="planos"}">Planos</button></div>
-    <p class="muted" style="font-size:.9rem">Arrastra los nodos para recolocarlos. Toca uno sin arrastrar para abrir su página.</p>
+    <p class="muted" style="font-size:.9rem">Arrastra los nodos para recolocarlos. Toca uno sin arrastrar para abrir su página. En «Planos», pulsa un plano para subirlo arriba.</p>
     <button type="button" class="btn alt" id="red-reset" style="padding:6px 12px;font-size:.9rem">Reordenar</button>
   </div>
   <fieldset class="types" id="types"><legend>Tipos de nodo visibles</legend>${Object.entries(TIPOS).map(([k,T])=>`<label><input type="checkbox" id="t-${k}" value="${k}" ${REDT.has(k)?"checked":""}><i class="sw" style="background:${css(T.g)}"></i>${T.n} <span class="count">${counts(k)}</span></label>`).join("")}</fieldset>
@@ -1867,33 +1948,64 @@ function renderRed(keep){
    <p class="count" style="margin-top:10px">${nodes.length} nodos · ${es.length} relaciones visibles · en total ${G.byId.size} nodos y ${G.edges.length} relaciones</p>`;
   buildSVG(); wireDrag();
 }
-function planesActivos(){ return PLANOS.filter(([,ts])=>ts.some(t=>REDT.has(t))); }
+let PSEL=null; const KPOS=new Map(); // plano seleccionado (pasa arriba) y cota animada de cada plano
+function planesActivos(){ const pl=PLANOS.filter(([,ts])=>ts.some(t=>REDT.has(t)));
+  const i=pl.findIndex(([,ts])=>ts[0]===PSEL); if(i>0) pl.unshift(pl.splice(i,1)[0]); return pl; }
 function geomPlanos(){
-  const pl=planesActivos(), W=SIM.LW, gap=innerWidth<640?190:150, H=pl.length*gap+50;
-  return {pl,W,H,gap,x0:W*0.04,y0:34,Wp:W*0.62,Sx:W*0.22,Hp:gap*0.62};
+  const pl=planesActivos(), W=SIM.LW, narrow=innerWidth<640, n=pl.length;
+  const Hp=narrow?120:130, gap=Math.max(narrow?62:56,Math.min(Hp*0.95,(narrow?900:760)/Math.max(n,1))), y0=24;
+  return {pl,W,H:y0+(n-1)*gap+Hp+24,gap,x0:W*(narrow?0.3:0.19),y0,Wp:W*(narrow?0.46:0.55),Sx:W*(narrow?0.2:0.2),Hp};
 }
 function planeOf(tipo){ return planesActivos().findIndex(([,ts])=>ts.includes(tipo)); }
 function uv(p){ return [(p.x-20)/(SIM.LW-150),(p.y-22)/(SIM.LH-44)]; }
 function screen(n){
   const p=SIM.P.get(n.id); if(REDMODO==="red") return [p.x,p.y];
-  const g=geomPlanos(), k=planeOf(n.tipo), [u,v]=uv(p);
+  const g=geomPlanos(), k=KPOS.has(n.tipo)?KPOS.get(n.tipo):planeOf(n.tipo), [u,v]=uv(p);
   return [g.x0+u*g.Wp+v*g.Sx, g.y0+k*g.gap+v*g.Hp];
 }
+function nodoSVG(n){ const r=Math.min(4+SIM.deg.get(n.id)*1.1,12)+(n.tipo==="obra"?2:0), lab=LABELED.includes(n.tipo);
+  return `<g class="nd" data-id="${n.id}" tabindex="0" role="link" aria-label="${TIPOS[n.tipo].n}: ${esc(n.label)}"><title>${TIPOS[n.tipo].n}: ${esc(n.label)}</title><circle r="${r.toFixed(1)}" fill="${css(TIPOS[n.tipo].g)}"/>${lab?`<text dx="${(r+3).toFixed(1)}" dy="3.5">${esc(n.label.length>26?n.label.slice(0,25)+"…":n.label)}</text>`:""}</g>`; }
 function buildSVG(){
   const svg=$("#gsvg"), g=REDMODO==="red"?{W:SIM.LW,H:SIM.LH}:geomPlanos();
   svg.setAttribute("viewBox",`0 0 ${g.W} ${g.H}`);
+  svg.classList.toggle("planos",REDMODO==="planos"); svg.classList.toggle("con-sel",REDMODO==="planos"&&!!PSEL);
   let s="";
-  if(REDMODO==="planos") g.pl.forEach(([nom],k)=>{ const y=g.y0+k*g.gap, a=[g.x0,y],b=[g.x0+g.Wp,y],c=[g.x0+g.Wp+g.Sx,y+g.Hp],d=[g.x0+g.Sx,y+g.Hp];
-    s+=`<polygon class="plano" points="${[a,b,c,d].map(q=>q.map(z=>z.toFixed(1)).join(",")).join(" ")}"/><text class="plabel" x="${(g.x0+4).toFixed(1)}" y="${(y-7).toFixed(1)}">${nom}</text>`; });
-  SIM.es.forEach((e,i)=>{ s+=`<line id="ge-${i}" class="${e.tipo==="dialoga"?"dlg":""}${REDMODO==="planos"&&planeOf(G.byId.get(e.de).tipo)!==planeOf(G.byId.get(e.a).tipo)?" cross":""}"><title>${esc(G.byId.get(e.de).label)} ${RELT[e.tipo].n} ${esc(G.byId.get(e.a).label)}</title></line>`; });
-  SIM.nodes.forEach(n=>{ const r=Math.min(4+SIM.deg.get(n.id)*1.1,12)+(n.tipo==="obra"?2:0), lab=LABELED.includes(n.tipo);
-    s+=`<g class="nd" data-id="${n.id}" tabindex="0" role="link" aria-label="${TIPOS[n.tipo].n}: ${esc(n.label)}"><title>${TIPOS[n.tipo].n}: ${esc(n.label)}</title><circle r="${r.toFixed(1)}" fill="${css(TIPOS[n.tipo].g)}"/>${lab?`<text dx="${(r+3).toFixed(1)}" dy="3.5">${esc(n.label.length>26?n.label.slice(0,25)+"…":n.label)}</text>`:""}</g>`; });
+  const lineas=SIM.es.map((e,i)=>{ const ta=G.byId.get(e.de).tipo, tb=G.byId.get(e.a).tipo, cross=REDMODO==="planos"&&ta!==tb, on=PSEL&&(ta===PSEL||tb===PSEL);
+    return `<line id="ge-${i}" class="${e.tipo==="dialoga"?"dlg":""}${cross?" cross":""}${on?" on":""}"><title>${esc(G.byId.get(e.de).label)} ${RELT[e.tipo].n} ${esc(G.byId.get(e.a).label)}</title></line>`; }).join("");
+  if(REDMODO==="red") s=lineas+SIM.nodes.map(nodoSVG).join("");
+  else {
+    s=`<line class="cota-eje" id="cota-eje"/><g class="lineas">${lineas}</g>`;
+    // de abajo arriba: el plano de arriba se dibuja el último y tapa, translúcido, a los de debajo
+    [...g.pl].reverse().forEach(([nom,[t]])=>{ const col=css(TIPOS[t].g), cnt=SIM.nodes.filter(x=>x.tipo===t).length;
+      s+=`<g class="pl${t===PSEL?" sel":""}" data-t="${t}"><polygon class="plano" style="fill:${col};stroke:${col}" tabindex="0" role="button" aria-label="Subir el plano ${nom}"><title>${nom}: pulsa para subirlo arriba</title></polygon>`+
+        `<line class="cota"/><circle class="cota-p" r="3" fill="${col}"/><text class="plabel">${nom}<tspan class="pcount"> · ${cnt}</tspan></text>`+
+        SIM.nodes.filter(n=>n.tipo===t).map(nodoSVG).join("")+`</g>`; });
+  }
   svg.innerHTML=s; place();
 }
 function place(){
   const svg=$("#gsvg"); if(!svg) return;
+  if(REDMODO==="planos"){ const g=geomPlanos(), ax=8, n=g.pl.length, f=v=>v.toFixed(1);
+    const eje=svg.querySelector("#cota-eje"); if(eje){ eje.setAttribute("x1",ax); eje.setAttribute("x2",ax); eje.setAttribute("y1",g.y0-8); eje.setAttribute("y2",f(g.y0+(n-1)*g.gap+g.Hp*0.5)); }
+    svg.querySelectorAll("g.pl").forEach(el=>{ const t=el.dataset.t, k=KPOS.has(t)?KPOS.get(t):planeOf(t), y=g.y0+k*g.gap, ym=y+g.Hp*0.5, xm=g.x0+g.Sx*0.5;
+      el.querySelector("polygon").setAttribute("points",[[g.x0,y],[g.x0+g.Wp,y],[g.x0+g.Wp+g.Sx,y+g.Hp],[g.x0+g.Sx,y+g.Hp]].map(q=>q.map(f).join(",")).join(" "));
+      const l=el.querySelector(".cota"); l.setAttribute("x1",ax); l.setAttribute("x2",f(xm)); l.setAttribute("y1",f(ym)); l.setAttribute("y2",f(ym));
+      const c=el.querySelector(".cota-p"); c.setAttribute("cx",ax); c.setAttribute("cy",f(ym));
+      const tx=el.querySelector(".plabel"); tx.setAttribute("x",ax+8); tx.setAttribute("y",f(ym-5)); }); }
   SIM.es.forEach((e,i)=>{ const l=svg.querySelector("#ge-"+i), [x1,y1]=screen(G.byId.get(e.de)), [x2,y2]=screen(G.byId.get(e.a)); l.setAttribute("x1",x1.toFixed(1)); l.setAttribute("y1",y1.toFixed(1)); l.setAttribute("x2",x2.toFixed(1)); l.setAttribute("y2",y2.toFixed(1)); });
   svg.querySelectorAll(".nd").forEach(el=>{ const [x,y]=screen(G.byId.get(el.dataset.id)); el.setAttribute("transform",`translate(${x.toFixed(1)},${y.toFixed(1)})`); });
+}
+/* Seleccionar un plano lo sube arriba de la pila; volver a pulsarlo lo devuelve a su cota */
+function subirPlano(t){
+  const antes=new Map(planesActivos().map(([,[x]],k)=>[x,KPOS.has(x)?KPOS.get(x):k]));
+  PSEL=PSEL===t?null:t; buildSVG();
+  const despues=new Map(planesActivos().map(([,[x]],k)=>[x,k]));
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ KPOS.clear(); place(); return; }
+  const t0=performance.now(), D=420;
+  const step=now=>{ const q=Math.min(1,(now-t0)/D), e=1-Math.pow(1-q,3);
+    despues.forEach((k1,x)=>{ const k0=antes.has(x)?antes.get(x):k1; KPOS.set(x,k0+(k1-k0)*e); }); place();
+    if(q<1) requestAnimationFrame(step); else { KPOS.clear(); place(); } };
+  requestAnimationFrame(step);
 }
 function relax(pin,t){
   const {nodes,es,P,k,LW,LH}=SIM;
@@ -1918,7 +2030,9 @@ function wireDrag(){
     if(!d.moved){ location.hash=nhref(G.byId.get(d.id)).slice(1); return; }
     if(REDMODO==="red") settle(d.id,45); };
   svg.addEventListener("pointerup",end); svg.addEventListener("pointercancel",end);
-  svg.addEventListener("keydown",e=>{ const g=e.target.closest(".nd"); if(g&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); location.hash=nhref(G.byId.get(g.dataset.id)).slice(1); } });
+  svg.addEventListener("click",e=>{ const pl=!e.target.closest(".nd")&&e.target.closest("g.pl"); if(pl&&REDMODO==="planos") subirPlano(pl.dataset.t); });
+  svg.addEventListener("keydown",e=>{ const pl=e.target.matches("polygon.plano")&&e.target.closest("g.pl"); if(pl&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); subirPlano(pl.dataset.t); setTimeout(()=>{ const q=$(`#gsvg g.pl[data-t="${pl.dataset.t}"] polygon`); if(q) q.focus(); },0); return; }
+    const g=e.target.closest(".nd"); if(g&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); location.hash=nhref(G.byId.get(g.dataset.id)).slice(1); } });
 }
 function wireRed(){
   renderRed();
@@ -1930,7 +2044,7 @@ function vNodo(n){
   const T=TIPOS[n.tipo], R=edgesOf(n.id);
   return `<p class="eyebrow"><a href="#red">← Red nodal</a></p>
   <section class="stack" style="margin-top:14px">
-    <div class="idline"><span class="idbadge">${n.id}</span>${ntag(n)}<span class="fake">datos ficticios</span></div>
+    <div class="idline"><span class="idbadge" title="${n.id}">${n.tipo==="obra"?corto(n.id):n.id}</span>${ntag(n)}<span class="fake">datos ficticios</span></div>
     <h1>${esc(n.label)}</h1>
     <p class="lede muted">${T.d}</p>
   </section>
@@ -2200,7 +2314,7 @@ function vPrivacidad(){
 
 /* ---------- Sistema ---------- */
 function vSistema(){
-  const ej=G.byKey.get("CA-TF-ARI-0001"), es=edgesOf(ej.id);
+  const ej=G.byKey.get("24c6bc64-b62d-4e3f-be2b-3c4a62a16a4e"), es=edgesOf(ej.id);
   const sub={nodos:[ej,...es.map(e=>G.byId.get(e.de===ej.id?e.a:e.de))].slice(0,5).map(n=>({id:n.id,tipo:n.tipo,etiqueta:n.label,atributos:n.attrs})),
     relaciones:es.slice(0,4).map(e=>({id:e.id,de:e.de,tipo:e.tipo,a:e.a,propiedades:e.p}))};
   const reg=`// Añadir una dimensión nueva es registrar un tipo y sus relaciones.
@@ -2215,8 +2329,21 @@ relaciones.hecha_de = { de: "obra", a: "material", propiedades: ["proporción", 
 
   <section class="stack">
     <h2>Tipos de nodo</h2>
-    <p class="muted prose">Cada nodo tiene un identificador permanente con el prefijo de su tipo (las obras usan CA-isla-municipio-número) y su propia página.</p>
-    <div class="ents">${Object.entries(TIPOS).map(([k,T])=>`<div class="ent"><h3><span><i class="sw" style="background:${css(T.g)};margin-right:8px;vertical-align:0"></i>${T.n}</span><small>${T.p}-…</small></h3><p class="desc">${T.d}</p><ul>${T.a.map(a=>`<li><code>${a}</code><span></span></li>`).join("")}</ul></div>`).join("")}</div>
+    <p class="muted prose">Cada nodo tiene un identificador permanente y su propia página. Las obras usan un UUID que no depende de la isla ni del municipio, y en pantalla se muestran sus 8 primeros caracteres. Los demás nodos llevan el prefijo de su tipo.</p>
+    <div class="ents">${Object.entries(TIPOS).map(([k,T])=>`<div class="ent"><h3><span><i class="sw" style="background:${css(T.g)};margin-right:8px;vertical-align:0"></i>${T.n}</span><small>${k==="obra"?"UUID":T.p+"-…"}</small></h3><p class="desc">${T.d}</p><ul>${T.a.map(a=>`<li><code>${a}</code><span></span></li>`).join("")}</ul></div>`).join("")}</div>
+  </section>
+
+  <section class="stack">
+    <h2>Etiquetas QR: colaboración abierta y por méritos</h2>
+    <p class="muted prose">Funciona como una wiki: cualquiera puede colaborar y los permisos crecen con lo que la comunidad verifica. Cada etiqueta lleva su propio UUID, impreso y no publicado, que apunta a <span class="mono">canarias.africa/&lt;uuid&gt;</span>. Todo queda registrado en el historial público de la etiqueta.</p>
+    <ol class="ciclo">
+      <li><span class="cinta">1 · Pool</span><p>Generamos los UUID por adelantado. Están libres y no apuntan a ninguna obra.</p></li>
+      <li><span class="cinta">2 · Cupo</span><p>Con alias y correo verificado recibes 3 etiquetas para imprimir. Con colocaciones confirmadas subes a 10 y a 25. Tienes un plazo para colocarlas.</p></li>
+      <li><span class="cinta id">3 · Colocada</span><p>Junto a la obra, escaneas la etiqueta, eliges la obra o propones una nueva y envías GPS (25 m o mejor) y una foto. El UUID queda unido a ese punto.</p></li>
+      <li><span class="cinta id">4 · Confirmada</span><p>Bastan dos verificaciones de otras personas a menos de 50 m. La etiqueta aparece en el mapa y quien la colocó gana méritos.</p></li>
+      <li><span class="cinta">5 · Trazabilidad</span><p>Cada escaneo de otra persona atestigua que la etiqueta sigue ahí. Sin verificaciones en 6 meses, pasa a «sin verificar».</p></li>
+      <li><span class="cinta">↺ Vuelve al pool</span><p>Si el plazo vence sin colocarla, el UUID se libera para otra persona.</p></li>
+    </ol>
   </section>
 
   <section class="stack">
@@ -2282,7 +2409,11 @@ relaciones.hecha_de = { de: "obra", a: "material", propiedades: ["proporción", 
 function route(){
   const h=(location.hash||"#inicio").slice(1)||"inicio", app=$("#app");
   let sec=h, html;
-  if(h.startsWith("/observar/")){ const [ruta,qs]=h.split("?"), o=byId(decodeURIComponent(ruta.slice(10))), cod=new URLSearchParams(qs||"").get("qr"); sec="archivo"; html=o&&qrValido(o,cod)?vQR(o,cod):`<h1>Este QR no es válido</h1><p class="muted">Puede que el código se haya sustituido o que la obra no tenga QR activo. <a href="#archivo">Volver al archivo</a></p>`; }
+  if(h.startsWith("/q/")){ const cod=decodeURIComponent(h.slice(3)).toLowerCase(); sec="archivo";
+    const o=DEMO?OBRAS.find(x=>x.qr.cod===cod&&x.qr.st==="activo"):(QRRES.get(cod)?byId(QRRES.get(cod)):null);
+    if(!o&&!DEMO&&!QRRES.has(cod)){ html=`<p class="muted">Comprobando el código…</p>`; resolverQR(cod); }
+    else html=o&&qrValido(o,cod)?vQR(o,cod):`<h1>Este QR no es válido</h1><p class="muted">Puede que el código se haya sustituido, que todavía no esté colocado o que haya vuelto al pool. <a href="#archivo">Volver al archivo</a></p>`; }
+  else if(h.startsWith("/observar/")){ const [ruta,qs]=h.split("?"), o=byId(decodeURIComponent(ruta.slice(10))), cod=new URLSearchParams(qs||"").get("qr"); sec="archivo"; html=o&&qrValido(o,cod)?vQR(o,cod):`<h1>Este QR no es válido</h1><p class="muted">Puede que el código se haya sustituido o que la obra no tenga QR activo. <a href="#archivo">Volver al archivo</a></p>`; }
   else if(h.startsWith("contexto-")){ const o=OBRAS.find(x=>"contexto-"+x.id.toLowerCase()===h); sec="archivo"; html=o?vContexto(o):`<h1>Ficha no encontrada</h1>`; }
   else if(h.startsWith("obra-")){ const o=OBRAS.find(x=>slug(x.id)===h); sec="archivo"; html=o?vObra(o):`<h1>Ficha no encontrada</h1><p><a href="#archivo">Volver al archivo</a></p>`; }
   else if(h.startsWith("nodo-")){ const n=G.byId.get(h.slice(5).toUpperCase()); sec="red"; html=n?vNodo(n):`<h1>Nodo no encontrado</h1><p><a href="#red">Volver a la red</a></p>`; }
@@ -2293,7 +2424,7 @@ function route(){
   window.scrollTo(0,0);
   if(h==="archivo"){ renderCerca(); renderRes(); ["q","m","f","c"].forEach(k=>{ const el=$("#f-"+k); el.addEventListener("input",()=>{FILT[k]=el.value;renderRes();}); }); }
   if(h.startsWith("obra-")){ const o=OBRAS.find(x=>slug(x.id)===h);
-    if(o&&$("#qr")) drawQR($("#qr"),API.qr+qrTok(o.id));
+    if(o&&$("#qr")) drawQR($("#qr"),API.qr+(o.qr.cod||o.id));
     if(o) cargarFicha(o).then(n=>{ if(n&&(location.hash||"").slice(1)===h) route(); }); }
   initMaps();
   if(h==="red") wireRed();

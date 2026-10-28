@@ -9,7 +9,7 @@ Centro de Arte No Ubicado (Acciones, Relaciones, Investigaciones y Articulacione
 ```
 web/          La web (GitHub Pages): HTML único con rutas por hash, convocatorias.json y sellos de marca
 servidor-php/ api.canarias.africa en el hosting PHP: formularios, QR, moderación, caché de teselas, copia de uMap
-servidor/     Plan B para un VPS propio (nginx + PocketBase)
+servidor/     Plan B para un VPS propio (nginx + PocketBase), anterior al sistema de etiquetas del 28-10-2026
 scripts/      Comprobación de que el catálogo no publica ubicaciones sensibles
 datos/        GeoJSON de ejemplo para importar en uMap
 docs/         Infraestructura, mapas (OSM y uMap) y formato de convocatorias.json

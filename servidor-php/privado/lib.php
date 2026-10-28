@@ -2,6 +2,8 @@
 // Funciones compartidas del servidor PHP de canarias.africa.
 
 const PRIVADO = __DIR__;
+require __DIR__ . '/cuentas.php';
+require __DIR__ . '/etiquetas.php';
 
 function config(): array {
   static $c = null;
@@ -40,23 +42,9 @@ function cors(): void {
     header("Access-Control-Allow-Origin: $web");
     header('Vary: Origin');
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization');
     header('Access-Control-Max-Age: 86400');
   }
-}
-
-function qr_activo(string $codigo): ?array {
-  $st = db()->prepare('SELECT codigo, obra FROM qr WHERE codigo = ? AND activo = 1');
-  $st->execute([$codigo]);
-  return $st->fetch() ?: null;
-}
-
-// Código de QR difícil de adivinar: 10 caracteres sin letras que se confundan.
-function nuevo_codigo_qr(): string {
-  $abc = '23456789abcdefghjkmnpqrstuvwxyz';
-  $c = '';
-  for ($i = 0; $i < 10; $i++) $c .= $abc[random_int(0, strlen($abc) - 1)];
-  return $c;
 }
 
 // Reduce la foto a JPEG de como mucho foto_lado_max px de lado, sin metadatos (quita la ubicación GPS).

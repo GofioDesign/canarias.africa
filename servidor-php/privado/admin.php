@@ -1,5 +1,5 @@
 <?php
-// Moderación de envíos y gestión de QR: https://api.canarias.africa/admin
+// Moderación de envíos, pool de etiquetas QR, personas colaboradoras y obras propuestas: https://api.canarias.africa/admin
 declare(strict_types=1);
 
 session_set_cookie_params(['httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/admin']);
@@ -44,20 +44,32 @@ if (preg_match('#^/foto/(\d{4}-\d{2}/[0-9a-f]{24}\.jpg)$#', $sub, $m)) {
   exit;
 }
 
-if ($sub === '/qr/nuevo' && $metodo === 'POST') {
-  $obra = trim((string) $_POST['obra']);
-  if (preg_match('/^[\w-]{3,40}$/', $obra)) {
-    // Rotar: el código anterior de la obra deja de valer y se crea uno nuevo para reimprimir.
-    $db->prepare('UPDATE qr SET activo = 0 WHERE obra = ?')->execute([$obra]);
-    $db->prepare('INSERT INTO qr (codigo, obra) VALUES (?, ?)')->execute([nuevo_codigo_qr(), $obra]);
+if ($sub === '/qr/lote' && $metodo === 'POST') {
+  // Genera un lote de UUID libres para el pool. No apuntan a ninguna obra hasta que alguien los coloca.
+  $n = max(1, min(500, (int) $_POST['cantidad']));
+  $lote = date('Y-m-d-His');
+  $db->beginTransaction();
+  for ($i = 0; $i < $n; $i++) {
+    $u = uuid4();
+    $db->prepare('INSERT INTO qr_codigos (uuid, lote) VALUES (?, ?)')->execute([$u, $lote]);
+    evento_qr($u, 'libre', null, ['lote' => $lote]);
   }
+  $db->commit();
   header('Location: /admin/qr', true, 303);
   exit;
 }
 
-if ($sub === '/qr/baja' && $metodo === 'POST') {
-  $db->prepare('UPDATE qr SET activo = 0 WHERE codigo = ?')->execute([(string) $_POST['codigo']]);
-  header('Location: /admin/qr', true, 303);
+if ($sub === '/custodia' && $metodo === 'POST') {
+  $db->prepare('UPDATE colaboradores SET custodia = ? WHERE id = ?')->execute([(int) $_POST['valor'] ? 1 : 0, (int) $_POST['id']]);
+  header('Location: /admin/personas', true, 303);
+  exit;
+}
+
+if ($sub === '/propuesta' && $metodo === 'POST') {
+  if (in_array($_POST['estado'], ['aceptada', 'rechazada', 'pendiente'], true)) {
+    $db->prepare('UPDATE obras_propuestas SET estado = ? WHERE uuid = ?')->execute([$_POST['estado'], (string) $_POST['uuid']]);
+  }
+  header('Location: /admin/obras', true, 303);
   exit;
 }
 
@@ -76,18 +88,38 @@ $csrf = $_SESSION['csrf'];
 $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES);
 
 if ($sub === '/qr') {
-  $base = 'https://' . $_SERVER['HTTP_HOST'] . '/q/';
-  $filas = $db->query('SELECT * FROM qr ORDER BY activo DESC, obra, creado DESC')->fetchAll();
-  $html = "<form method=post action=/admin/qr/nuevo><input type=hidden name=csrf value=$csrf>
-    <label>Código de la obra <input name=obra placeholder=CA-TF-ARI-0001 required></label> <button>Crear o rotar QR</button></form>
-    <p class=meta>Al rotar, el QR anterior de esa obra deja de aceptar observaciones. Hay que imprimir y colocar el nuevo.</p><table>
-    <tr><th>Obra</th><th>Enlace del QR</th><th>Estado</th><th></th></tr>";
-  foreach ($filas as $q) {
-    $html .= "<tr><td>{$h($q['obra'])}</td><td><code>{$h($base . $q['codigo'])}</code></td><td>" . ($q['activo'] ? 'activo' : 'retirado') . "</td><td>"
-      . ($q['activo'] ? "<form method=post action=/admin/qr/baja><input type=hidden name=csrf value=$csrf><input type=hidden name=codigo value={$h($q['codigo'])}><button>Retirar</button></form>" : '')
-      . "</td></tr>";
+  $cuentas = $db->query('SELECT estado, COUNT(*) n FROM qr_codigos GROUP BY estado ORDER BY estado')->fetchAll(PDO::FETCH_KEY_PAIR);
+  $html = "<form method=post action=/admin/qr/lote><input type=hidden name=csrf value=$csrf>
+    <label>Generar <input type=number name=cantidad value=50 min=1 max=500 style='width:6em'> UUID libres</label> <button>Añadir al pool</button></form>
+    <p>" . ($cuentas ? implode(' · ', array_map(fn($e, $n) => "{$h($e)}: $n", array_keys($cuentas), $cuentas)) : 'El pool está vacío.') . "</p><table>
+    <tr><th>Etiqueta</th><th>Estado</th><th>Obra</th><th>Última verificación</th></tr>";
+  foreach ($db->query("SELECT * FROM qr_codigos WHERE estado != 'libre' ORDER BY creado DESC LIMIT 300") as $q) {
+    $html .= "<tr><td><code>{$h($q['uuid'])}</code></td><td>{$h($q['estado'])}</td><td><code>{$h($q['obra'])}</code></td><td>{$h($q['ultima_verificacion'])}</td></tr>";
   }
-  pagina('Códigos QR', $html . '</table>');
+  pagina('Etiquetas QR', $html . '</table>');
+}
+
+if ($sub === '/personas') {
+  $html = '<table><tr><th>Alias</th><th>Correo</th><th>Nivel</th><th>Méritos</th><th></th></tr>';
+  foreach ($db->query('SELECT * FROM colaboradores ORDER BY meritos DESC, alias') as $c) {
+    $html .= "<tr><td>{$h($c['alias'])}</td><td>{$h($c['correo'])}</td><td>{$h(nivel($c))}" . ($c['verificado'] ? '' : ' (sin verificar)') . "</td><td>{$c['meritos']}</td><td>
+      <form method=post action=/admin/custodia><input type=hidden name=csrf value=$csrf><input type=hidden name=id value={$c['id']}><input type=hidden name=valor value=" . ($c['custodia'] ? 0 : 1) . "><button>" . ($c['custodia'] ? 'Quitar custodia' : 'Dar custodia') . "</button></form></td></tr>";
+  }
+  pagina('Personas colaboradoras', $html . '</table>');
+}
+
+if ($sub === '/obras') {
+  $html = '<p class=meta>Obras nuevas propuestas al colocar una etiqueta. Al aceptarlas hay que añadirlas al catálogo de GitHub con este mismo UUID.</p>';
+  foreach ($db->query("SELECT p.*, c.alias FROM obras_propuestas p JOIN colaboradores c ON c.id = p.colaborador ORDER BY p.estado = 'pendiente' DESC, p.creado DESC") as $p) {
+    $html .= "<article><strong>{$h(json_decode($p['datos'], true)['titulo'] ?? 'Sin título')}</strong> <span class=meta>{$h($p['estado'])} · {$h($p['alias'])} · {$h($p['creado'])}</span><p><code>{$h($p['uuid'])}</code></p><dl>";
+    foreach (json_decode($p['datos'], true) as $k => $v) $html .= "<dt>{$h($k)}</dt><dd>{$h($v)}</dd>";
+    $html .= '</dl>';
+    foreach (['aceptada' => 'Aceptar', 'rechazada' => 'Rechazar'] as $e => $t) {
+      if ($e !== $p['estado']) $html .= "<form method=post action=/admin/propuesta class=inline><input type=hidden name=csrf value=$csrf><input type=hidden name=uuid value={$h($p['uuid'])}><input type=hidden name=estado value=$e><button class=" . ($e === 'aceptada' ? 'aprobada' : 'rechazada') . ">$t</button></form> ";
+    }
+    $html .= '</article>';
+  }
+  pagina('Obras propuestas', $html);
 }
 
 $nombres = ['observacion' => 'Observación (QR)', 'contexto' => 'Contexto', 'obra_nueva' => 'Obra nueva', 'ruta' => 'Ruta propuesta', 'inscripcion' => 'Inscripción a salida'];
@@ -110,7 +142,7 @@ foreach ($envios as $e) {
 pagina('Moderación', $html);
 
 function pagina(string $titulo, string $cuerpo): never {
-  $menu = empty($_SESSION['admin']) ? '' : "<p class=meta><a href=/admin>Envíos</a> · <a href=/admin/qr>Códigos QR</a> · <a href=/admin/copia>Descargar copia de la base de datos</a> · <a href=/admin/salir>Salir</a></p>";
+  $menu = empty($_SESSION['admin']) ? '' : "<p class=meta><a href=/admin>Envíos</a> · <a href=/admin/qr>Etiquetas QR</a> · <a href=/admin/personas>Personas</a> · <a href=/admin/obras>Obras propuestas</a> · <a href=/admin/copia>Descargar copia de la base de datos</a> · <a href=/admin/salir>Salir</a></p>";
   header('Content-Type: text/html; charset=utf-8');
   echo <<<HTML
 <!doctype html><html lang=es><head><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1"><meta name=robots content=noindex>

@@ -10,7 +10,7 @@ Nota técnica del prototipo, 27 de octubre de 2026.
 | Nodos geográficos (obras, QR, rutas) | Un mapa de uMap con una capa por tipo | El equipo, en uMap |
 | Nodos no geográficos (agentes, entidades, fuentes, observaciones) y todas las relaciones | Base de datos de la web | La web, el equipo y las aportaciones validadas |
 
-La unión entre uMap y la red se hace por la propiedad `id` de cada elemento de uMap (por ejemplo `CA-TF-ARI-0001`). Las coordenadas oficiales salen de uMap y todo lo demás de la red.
+La unión entre uMap y la red se hace por la propiedad `id` de cada elemento de uMap, que es el UUID de la obra. Las coordenadas oficiales salen de uMap y todo lo demás de la red.
 
 ## 2. Caché de teselas en la propia web
 
@@ -52,8 +52,8 @@ Crear un mapa en https://umap.openstreetmap.fr con estas capas:
 
 | Capa | Geometría | Propiedades obligatorias |
 |---|---|---|
-| Obras | Punto | `id` (CA-isla-municipio-nnnn), `name`, `tipo=obra`, `fase` |
-| QR | Punto | `id` (QR-nnnn), `obra` (id de la obra), `estado` |
+| Obras | Punto | `id` (UUID de la obra), `name`, `tipo=obra`, `fase` |
+| QR | Punto | `obra` (UUID de la obra), `estado`. El UUID del QR **no** va en uMap porque las capas son públicas: lo guarda el servidor. |
 | Rutas | Línea | `id` (RU-…), `name`, `paradas` (ids de obra separados por comas) |
 
 - El `id` no se cambia nunca, aunque la obra se mueva o desaparezca.
@@ -68,7 +68,7 @@ La web y las fichas se sirven como estáticas desde GitHub Pages (`canarias.afri
 - **Catálogo de obras:** `/datos/obras.geojson`, estático y en el repo. Las obras difusas llegan con el centro de su celda de 0,02° y las reservadas sin `geometry`. Una acción de GitHub bloquea la publicación si una obra sensible lleva coordenadas exactas. Como el repo es público, ni el HTML ni el catálogo llevan nunca coordenadas reales de obras sensibles.
 - **Ficha:** la descripción y las relaciones salen del catálogo. Las observaciones aprobadas se piden a `GET https://api.canarias.africa/api/publico/obras/<código>`.
 - **uMap:** el servidor copia cada hora `qr.geojson` y `rutas.geojson` a `https://api.canarias.africa/datos/umap/`.
-- **QR impresos:** apuntan a `https://api.canarias.africa/q/<código>`, que redirige a `https://canarias.africa/#/observar/<obra>?qr=<código>`.
+- **QR impresos (decisión del usuario, 28/10/2026):** cada QR tiene su propio UUID y apunta a `https://canarias.africa/<uuid-del-QR>`. La página 404 de GitHub Pages lo convierte en `#/q/<uuid>`, y la web pregunta a `GET https://api.canarias.africa/api/qr/<uuid>` a qué obra corresponde y si está colocado. Los códigos salen de un pool y se asignan en cupos a colaboradores (por ejemplo, 10). Si no confirman la colocación dentro del plazo, el código vuelve al pool. El UUID del QR es distinto del de la obra y no se publica.
 - **Envíos:** se hacen en multipart a las colecciones de PocketBase en `https://api.canarias.africa/api/collections/<colección>/records` (observaciones, contexto, propuestas_obra, propuestas_ruta e inscripciones). Todos llevan `acepta_privacidad`. El servidor solo acepta peticiones (CORS) de `https://canarias.africa`.
 - Si el catálogo no carga, como en la vista previa, la web funciona con los datos de ejemplo.
 

@@ -21,7 +21,29 @@ if ($c['umap']['mapa']) {
   }
 }
 
-// 2. Recortar la caché de teselas: si pasa del límite, se borran primero las menos usadas recientemente.
+// 2. Copia del catálogo público de GitHub: qué obras existen y con qué sensibilidad.
+$ch = curl_init($c['catalogo']);
+curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30, CURLOPT_USERAGENT => 'canarias.africa catalogo']);
+$cat = json_decode((string) curl_exec($ch), true);
+if (curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200 && is_array($cat['features'] ?? null)) {
+  $db = db();
+  $db->beginTransaction();
+  $st = $db->prepare('INSERT INTO obras (uuid, titulo, sensibilidad) VALUES (?, ?, ?)
+                      ON CONFLICT(uuid) DO UPDATE SET titulo = excluded.titulo, sensibilidad = excluded.sensibilidad');
+  foreach ($cat['features'] as $f) {
+    $p = $f['properties'] ?? [];
+    if (!empty($p['id'])) $st->execute([strtolower($p['id']), $p['name'] ?? null, $p['sensibilidad'] ?? 'reservada']);
+  }
+  $db->commit();
+} else {
+  fwrite(STDERR, "Catálogo: no se pudo descargar {$c['catalogo']}\n");
+}
+
+// 3. Etiquetas: plazos de las asignaciones y continuidad de las verificaciones.
+caducar_asignaciones();
+envejecer_etiquetas();
+
+// 4. Recortar la caché de teselas: si pasa del límite, se borran primero las menos usadas recientemente.
 $dir = PRIVADO . '/cache/teselas';
 if (is_dir($dir)) {
   $ficheros = [];
@@ -41,7 +63,7 @@ if (is_dir($dir)) {
   }
 }
 
-// 3. Una vez al día: copia de la base de datos (se guardan 7) y borrado de las huellas de IP antiguas.
+// 5. Una vez al día: copia de la base de datos (se guardan 7) y borrado de las huellas de IP antiguas.
 if ((int) date('G') === 4) {
   $db = db();
   @mkdir(PRIVADO . '/copias', 0700, true);

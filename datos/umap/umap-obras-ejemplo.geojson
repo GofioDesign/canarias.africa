@@ -11,7 +11,7 @@
     ]
    },
    "properties": {
-    "id": "CA-TF-ARI-0001",
+    "id": "24c6bc64-b62d-4e3f-be2b-3c4a62a16a4e",
     "tipo": "obra",
     "name": "Mural del lavadero",
     "description": "Mural · Lavadero viejo, Villa de Arico · Arico. DATO FICTICIO.",
@@ -32,7 +32,7 @@
     ]
    },
    "properties": {
-    "id": "CA-TF-ARI-0002",
+    "id": "b05eca29-3b55-4955-bcc0-6abf1d11e57e",
     "tipo": "obra",
     "name": "Señales en el barranco",
     "description": "Intervención en paisaje · Cauce del barranco, cerca de Poris · Arico. DATO FICTICIO.",
@@ -53,7 +53,7 @@
     ]
    },
    "properties": {
-    "id": "CA-TF-FAS-0001",
+    "id": "dbf12703-5acb-47ee-a6bc-dd731e4e9709",
     "tipo": "obra",
     "name": "Banco de picón",
     "description": "Escultura · Plaza de la iglesia, Fasnia · Fasnia. DATO FICTICIO.",
@@ -74,7 +74,7 @@
     ]
    },
    "properties": {
-    "id": "CA-TF-FAS-0002",
+    "id": "ca0fab1b-8810-4099-a9ad-6134dcec5aa0",
     "tipo": "obra",
     "name": "Inscripción de la era",
     "description": "Inscripción · Era alta, camino de Los Roques · Fasnia. DATO FICTICIO.",
@@ -95,7 +95,7 @@
     ]
    },
    "properties": {
-    "id": "CA-TF-VIL-0001",
+    "id": "d0b447c0-cd66-47fe-b295-4221d18e633c",
     "tipo": "obra",
     "name": "Pinos de chapa",
     "description": "Escultura · Entrada al pueblo, Vilaflor · Vilaflor. DATO FICTICIO.",
@@ -116,7 +116,7 @@
     ]
    },
    "properties": {
-    "id": "CA-TF-VIL-0002",
+    "id": "37de1bf1-3851-4eea-83dc-fa8b01a5fd63",
     "tipo": "obra",
     "name": "Acción del cráter",
     "description": "Acción efímera · Ladera sobre el pueblo · Vilaflor. DATO FICTICIO.",
@@ -137,7 +137,7 @@
     ]
    },
    "properties": {
-    "id": "CA-TF-BUE-0001",
+    "id": "5a22f14c-03da-4c42-a7b9-d56bc954ddbb",
     "tipo": "obra",
     "name": "Mural de la cooperativa",
     "description": "Mural · Fachada de la antigua cooperativa · Buenavista del Norte. DATO FICTICIO.",
@@ -158,7 +158,7 @@
     ]
    },
    "properties": {
-    "id": "CA-TF-BUE-0002",
+    "id": "90cebcbc-aa61-4b46-959e-f2c038599ff7",
     "tipo": "obra",
     "name": "Palabras en Teno",
     "description": "Instalación · Camino de Teno Alto · Buenavista del Norte. DATO FICTICIO.",
@@ -179,7 +179,7 @@
     ]
    },
    "properties": {
-    "id": "CA-LZ-HAR-0001",
+    "id": "f89e8eb0-b995-4f0b-94af-36097f8a24d2",
     "tipo": "obra",
     "name": "Molino pintado",
     "description": "Mural · Molino de Máguez · Haría. DATO FICTICIO.",
@@ -200,7 +200,7 @@
     ]
    },
    "properties": {
-    "id": "CA-LZ-HAR-0002",
+    "id": "430175f8-3b98-4337-95a8-c6bcc6eb0895",
     "tipo": "obra",
     "name": "Huella del palmeral",
     "description": "Instalación · Palmeral, salida hacia Arrieta · Haría. DATO FICTICIO.",
@@ -221,7 +221,7 @@
     ]
    },
    "properties": {
-    "id": "CA-LZ-TIN-0001",
+    "id": "d9003675-685a-4fa8-b436-76169cf2e4d6",
     "tipo": "obra",
     "name": "Caracolas de lava",
     "description": "Escultura · Rotonda de Mancha Blanca · Tinajo. DATO FICTICIO.",
@@ -242,7 +242,7 @@
     ]
    },
    "properties": {
-    "id": "CA-LZ-TIN-0002",
+    "id": "ed35d309-ae15-427c-8ea7-ed89582727c1",
     "tipo": "obra",
     "name": "Muro de La Santa",
     "description": "Mural · Muro del puerto, La Santa · Tinajo. DATO FICTICIO.",

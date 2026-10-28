@@ -7,7 +7,7 @@ Decidido el 27 de octubre de 2026: empezar sin coste nuevo, con GitHub Pages y e
 | Pieza | Dónde | Coste |
 |---|---|---|
 | Web y fichas de obras (catálogo público) | GitHub Pages, desde `web/` de este repositorio (`canarias.africa`) | 0 € |
-| Formularios, QR, observaciones aprobadas, moderación | Hosting PHP actual, en `api.canarias.africa` (`servidor-php/`) | Ya pagado |
+| Cuentas, etiquetas QR, formularios, observaciones aprobadas, moderación | Hosting PHP actual, en `api.canarias.africa` (`servidor-php/`) | Ya pagado |
 | Caché de teselas OSM | Hosting PHP: `api.canarias.africa/teselas/osm/{z}/{x}/{y}.png` (máx. 300 MB) | Ya pagado |
 | Capas de uMap (QR, rutas) | uMap público; el cron del hosting las copia cada hora a `api.canarias.africa/datos/umap/` | 0 € |
 | Correo saliente (avisos) | `mail()` del hosting; Brevo si hace falta más | 0 € |
@@ -19,7 +19,8 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 ## Reglas que no se pueden saltar
 
 - **El repositorio es público.** Las coordenadas exactas de obras «difusa» o «reservada» no se suben nunca a GitHub. En el catálogo, una obra difusa lleva el centro de su celda de 0,02° (`floor(v / 0.02) * 0.02 + 0.01`) y una reservada no lleva geometría. La acción de GitHub `scripts/comprobar-catalogo.py` bloquea la publicación si alguna lo incumple.
-- **Los códigos de los QR no van en GitHub.** Viven solo en la base de datos del hosting y se crean, rotan y retiran desde `/admin/qr`. Si fueran públicos, cualquiera podría enviar observaciones sin estar delante de la obra.
+- **Los UUID de las etiquetas QR no van en GitHub ni se publican en la web.** Viven solo en la base de datos del hosting. El UUID de la obra sí es público. Si el de la etiqueta fuera público, cualquiera podría observar o verificar sin estar delante de la obra. El ciclo completo (pool, cupos, colocación con GPS, verificaciones, méritos) está en [procedimiento-colaboradores-qr.md](procedimiento-colaboradores-qr.md).
+- Cada etiqueta lleva impreso `https://canarias.africa/<uuid-de-la-etiqueta>`. GitHub Pages sirve `web/404.html`, que lo pasa a `#/q/<uuid>`, y la web pregunta a la API qué obra es.
 - Todo envío entra como pendiente, exige aceptar el aviso de privacidad y las fotos se reducen a 1600 px y pierden los metadatos (incluida la ubicación GPS).
 - Solo `https://canarias.africa` puede enviar formularios (CORS y comprobación de origen), con un máximo de 20 envíos por hora y por IP.
 
@@ -27,12 +28,21 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 
 | Ruta | Qué hace |
 |---|---|
-| `GET /q/<código>` | Lo que lleva impreso cada QR: redirige a `canarias.africa/#/observar/<obra>?qr=<código>` si está activo |
-| `POST /api/collections/<colección>/records` | Formularios: `observaciones`, `contexto`, `propuestas_obra`, `propuestas_ruta`, `inscripciones` |
-| `GET /api/publico/obras/<código>` | Observaciones aprobadas de esa obra |
+| `POST /api/cuenta/alta`, `/api/cuenta/entrar` | Alta con alias y correo, o entrada: envía un enlace por correo (sin contraseñas) |
+| `POST /api/cuenta/sesion` | Canjea el enlace del correo (`#/entrar?t=…`) por un token de sesión de 90 días (`Authorization: Bearer`) |
+| `GET /api/cuenta/yo` | Alias, nivel, méritos, cupo y etiquetas asignadas |
+| `GET /api/qr/<uuid>` | Al escanear: `{obra, estado}` |
+| `POST /api/qr/asignar`, `GET /api/qr/mis-etiquetas` | Pedir etiquetas del pool hasta el cupo y descargarlas para imprimir |
+| `POST /api/qr/<uuid>/ampliar`, `POST /api/qr/<uuid>/aviso` | Ampliar el plazo una vez; avisar de etiqueta dañada, desaparecida o retirada |
+| `POST /api/collections/colocaciones/records` | Colocar: etiqueta, obra (o obra nueva), GPS con 25 m o mejor y foto |
+| `POST /api/collections/verificaciones/records` | Verificar: GPS a 50 m o menos del punto; solo se guarda la distancia |
+| `POST /api/collections/<colección>/records` | Formularios: `observaciones` (exige el UUID de la etiqueta), `contexto`, `propuestas_obra`, `propuestas_ruta`, `inscripciones` |
+| `GET /api/publico/obras/<uuid>` | Observaciones aprobadas de esa obra |
+| `GET /api/publico/qr/<uuid-obra>/historial` | Historial público de las etiquetas de una obra (sin UUID de etiqueta ni coordenadas de personas) |
+| `GET /api/publico/etiquetas.geojson` | Etiquetas confirmadas para el mapa (difusas en su celda de 0,02°) |
 | `GET /teselas/osm/{z}/{x}/{y}.png` | Teselas de OSM desde la caché |
 | `GET /datos/umap/{qr,rutas}.geojson` | Última copia de las capas de uMap |
-| `/admin` | Moderación, códigos QR y descarga de la base de datos (con contraseña) |
+| `/admin` | Moderación, pool de etiquetas, personas (nivel Custodia), obras propuestas y descarga de la base de datos (con contraseña) |
 
 ## Puesta en marcha
 

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>canarias.africa</title>
+<script>
+  // Las etiquetas QR apuntan a https://canarias.africa/<uuid-de-la-etiqueta>. GitHub Pages no tiene esa ruta,
+  // así que sirve esta página, que pasa el UUID a la web: /#/q/<uuid>. Cualquier otra ruta va a la portada.
+  (function () {
+    var m = location.pathname.match(/^\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/?$/i);
+    location.replace("/" + (m ? "#/q/" + m[1].toLowerCase() : ""));
+  })();
+</script>
+<style>
+  :root { --bg:#faf6ee; --fg:#16130f; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#12100d; --fg:#f4eee2; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; padding:24px 16px; }
+  a { color:inherit; }
+</style>
+</head>
+<body>
+<p>Abriendo canarias.africa… Si no pasa nada, <a href="/">entra por la portada</a>.</p>
+</body>
+</html>

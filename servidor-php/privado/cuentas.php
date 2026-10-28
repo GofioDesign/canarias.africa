@@ -108,7 +108,7 @@ function perfil(int $id): array {
   $st->execute([$id]);
   $c = $st->fetch();
   $nivel = nivel($c);
-  $st = db()->prepare("SELECT a.qr, a.vence, a.descargada, q.estado FROM asignaciones a JOIN qr_codigos q ON q.uuid = a.qr
+  $st = db()->prepare("SELECT a.qr, a.vence, a.descargada, q.estado FROM asignaciones a JOIN qr_codigos q ON q.codigo = a.qr
                        WHERE a.colaborador = ? AND (a.resultado IS NULL OR (a.resultado = 'caducado' AND q.estado = 'caducado')) ORDER BY a.vence");
   $st->execute([$id]);
   $abiertas = $st->fetchAll();

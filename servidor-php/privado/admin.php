@@ -45,13 +45,14 @@ if (preg_match('#^/foto/(\d{4}-\d{2}/[0-9a-f]{24}\.jpg)$#', $sub, $m)) {
 }
 
 if ($sub === '/qr/lote' && $metodo === 'POST') {
-  // Genera un lote de UUID libres para el pool. No apuntan a ninguna obra hasta que alguien los coloca.
+  // Genera un lote de códigos libres para el pool. No apuntan a ninguna obra hasta que alguien los coloca.
   $n = max(1, min(500, (int) $_POST['cantidad']));
+  $largo = max(8, min(16, (int) ($_POST['largo'] ?? 8)));
   $lote = date('Y-m-d-His');
   $db->beginTransaction();
   for ($i = 0; $i < $n; $i++) {
-    $u = uuid4();
-    $db->prepare('INSERT INTO qr_codigos (uuid, lote) VALUES (?, ?)')->execute([$u, $lote]);
+    do { $u = nuevo_codigo($largo); } while (etiqueta($u));
+    $db->prepare('INSERT INTO qr_codigos (codigo, lote) VALUES (?, ?)')->execute([$u, $lote]);
     evento_qr($u, 'libre', null, ['lote' => $lote]);
   }
   $db->commit();
@@ -90,11 +91,11 @@ $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES);
 if ($sub === '/qr') {
   $cuentas = $db->query('SELECT estado, COUNT(*) n FROM qr_codigos GROUP BY estado ORDER BY estado')->fetchAll(PDO::FETCH_KEY_PAIR);
   $html = "<form method=post action=/admin/qr/lote><input type=hidden name=csrf value=$csrf>
-    <label>Generar <input type=number name=cantidad value=50 min=1 max=500 style='width:6em'> UUID libres</label> <button>Añadir al pool</button></form>
+    <label>Generar <input type=number name=cantidad value=50 min=1 max=500 style='width:6em'> códigos libres de <input type=number name=largo value=8 min=8 max=16 style='width:4em'> caracteres</label> <button>Añadir al pool</button></form>
     <p>" . ($cuentas ? implode(' · ', array_map(fn($e, $n) => "{$h($e)}: $n", array_keys($cuentas), $cuentas)) : 'El pool está vacío.') . "</p><table>
     <tr><th>Etiqueta</th><th>Estado</th><th>Obra</th><th>Última verificación</th></tr>";
   foreach ($db->query("SELECT * FROM qr_codigos WHERE estado != 'libre' ORDER BY creado DESC LIMIT 300") as $q) {
-    $html .= "<tr><td><code>{$h($q['uuid'])}</code></td><td>{$h($q['estado'])}</td><td><code>{$h($q['obra'])}</code></td><td>{$h($q['ultima_verificacion'])}</td></tr>";
+    $html .= "<tr><td><code>{$h($q['codigo'])}</code></td><td>{$h($q['estado'])}</td><td><code>{$h($q['obra'])}</code></td><td>{$h($q['ultima_verificacion'])}</td></tr>";
   }
   pagina('Etiquetas QR', $html . '</table>');
 }

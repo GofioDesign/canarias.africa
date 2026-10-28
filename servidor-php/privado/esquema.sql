@@ -1,5 +1,5 @@
 -- Base de datos SQLite del servidor PHP (api.canarias.africa). Solo guarda lo que no puede ir en GitHub:
--- etiquetas QR (su UUID no se publica), cuentas de colaboradores y todo lo que envía el público.
+-- etiquetas QR (su código no se publica), cuentas de colaboradores y todo lo que envía el público.
 -- Las tablas de hechos (asignaciones, colocaciones, verificaciones, qr_eventos, eventos_merito) son de solo añadir;
 -- qr_codigos.estado y colaboradores.meritos son resúmenes que se pueden recalcular desde ellas.
 
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS obras_propuestas (
 );
 
 CREATE TABLE IF NOT EXISTS qr_codigos (
-  uuid        TEXT PRIMARY KEY,
+  codigo      TEXT PRIMARY KEY,                -- base32 de Crockford, 8 caracteres al empezar (ampliable)
   lote        TEXT NOT NULL,
   estado      TEXT NOT NULL DEFAULT 'libre' CHECK (estado IN
                 ('libre','asignado','caducado','colocado','confirmado','sin_verificar','desaparecida','danado','retirado','sustituido')),
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS qr_codigos (
   lat         REAL,                            -- punto exacto de la etiqueta: nunca se publica para obras difusas
   lon         REAL,
   precision   REAL,
-  sustituye   TEXT REFERENCES qr_codigos(uuid),
+  sustituye   TEXT REFERENCES qr_codigos(codigo),
   ultima_verificacion TEXT,
   creado      TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -56,7 +56,7 @@ CREATE INDEX IF NOT EXISTS qr_obra ON qr_codigos(obra);
 
 CREATE TABLE IF NOT EXISTS asignaciones (
   id           INTEGER PRIMARY KEY,
-  qr           TEXT NOT NULL REFERENCES qr_codigos(uuid),
+  qr           TEXT NOT NULL REFERENCES qr_codigos(codigo),
   colaborador  INTEGER NOT NULL REFERENCES colaboradores(id),
   fecha        TEXT NOT NULL DEFAULT (datetime('now')),
   vence        TEXT NOT NULL,
@@ -68,7 +68,7 @@ CREATE INDEX IF NOT EXISTS asignaciones_abiertas ON asignaciones(colaborador, re
 
 CREATE TABLE IF NOT EXISTS colocaciones (
   id           INTEGER PRIMARY KEY,
-  qr           TEXT NOT NULL REFERENCES qr_codigos(uuid),
+  qr           TEXT NOT NULL REFERENCES qr_codigos(codigo),
   obra         TEXT NOT NULL,
   colaborador  INTEGER NOT NULL REFERENCES colaboradores(id),
   lat          REAL NOT NULL,
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS colocaciones (
 
 CREATE TABLE IF NOT EXISTS verificaciones (
   id           INTEGER PRIMARY KEY,
-  qr           TEXT NOT NULL REFERENCES qr_codigos(uuid),
+  qr           TEXT NOT NULL REFERENCES qr_codigos(codigo),
   colaborador  INTEGER REFERENCES colaboradores(id),   -- NULL si es un visitante sin cuenta
   dispositivo  TEXT NOT NULL,                          -- identificador aleatorio que guarda el navegador
   distancia    REAL NOT NULL,                          -- metros al punto de la etiqueta; las coordenadas de la persona no se guardan
@@ -96,7 +96,7 @@ CREATE INDEX IF NOT EXISTS verificaciones_qr ON verificaciones(qr, fecha);
 -- Historial público de cada etiqueta: un evento por cambio (asignada, colocada, verificada, confirmada, dañada…).
 CREATE TABLE IF NOT EXISTS qr_eventos (
   id           INTEGER PRIMARY KEY,
-  qr           TEXT NOT NULL REFERENCES qr_codigos(uuid),
+  qr           TEXT NOT NULL REFERENCES qr_codigos(codigo),
   tipo         TEXT NOT NULL,
   colaborador  INTEGER REFERENCES colaboradores(id),
   datos        TEXT NOT NULL DEFAULT '{}',

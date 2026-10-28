@@ -19,8 +19,8 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 ## Reglas que no se pueden saltar
 
 - **El repositorio es público.** Las coordenadas exactas de obras «difusa» o «reservada» no se suben nunca a GitHub. En el catálogo, una obra difusa lleva el centro de su celda de 0,02° (`floor(v / 0.02) * 0.02 + 0.01`) y una reservada no lleva geometría. La acción de GitHub `scripts/comprobar-catalogo.py` bloquea la publicación si alguna lo incumple.
-- **Los UUID de las etiquetas QR no van en GitHub ni se publican en la web.** Viven solo en la base de datos del hosting. El UUID de la obra sí es público. Si el de la etiqueta fuera público, cualquiera podría observar o verificar sin estar delante de la obra. El ciclo completo (pool, cupos, colocación con GPS, verificaciones, méritos) está en [procedimiento-colaboradores-qr.md](procedimiento-colaboradores-qr.md).
-- Cada etiqueta lleva impreso `https://canarias.africa/<uuid-de-la-etiqueta>`. GitHub Pages sirve `web/404.html`, que lo pasa a `#/q/<uuid>`, y la web pregunta a la API qué obra es.
+- **Los códigos de las etiquetas no van en GitHub ni se publican en la web.** Son 8 caracteres en base32 de Crockford (p. ej. `7KQ2M9XD`), ampliables más adelante. Viven solo en la base de datos del hosting. El UUID de la obra sí es público. Si el código de la etiqueta fuera público, cualquiera podría observar o verificar sin estar delante de la obra. El ciclo completo (pool, cupos, colocación con GPS, verificaciones, méritos) está en [procedimiento-colaboradores-qr.md](procedimiento-colaboradores-qr.md).
+- Cada azulejo lleva un glifo propio con su código y un QR común a `https://canarias.africa/scan` (`web/scan/index.html` → `#scan`), donde la web lee el glifo con la cámara. El código también se puede teclear como `canarias.africa/<código>`: GitHub Pages sirve `web/404.html`, que lo pasa a `#/q/<código>`.
 - Todo envío entra como pendiente, exige aceptar el aviso de privacidad y las fotos se reducen a 1600 px y pierden los metadatos (incluida la ubicación GPS).
 - Solo `https://canarias.africa` puede enviar formularios (CORS y comprobación de origen), con un máximo de 20 envíos por hora y por IP.
 
@@ -31,14 +31,14 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 | `POST /api/cuenta/alta`, `/api/cuenta/entrar` | Alta con alias y correo, o entrada: envía un enlace por correo (sin contraseñas) |
 | `POST /api/cuenta/sesion` | Canjea el enlace del correo (`#/entrar?t=…`) por un token de sesión de 90 días (`Authorization: Bearer`) |
 | `GET /api/cuenta/yo` | Alias, nivel, méritos, cupo y etiquetas asignadas |
-| `GET /api/qr/<uuid>` | Al escanear: `{obra, estado}` |
+| `GET /api/qr/<código>` | Al leer la etiqueta: `{obra, estado}` |
 | `POST /api/qr/asignar`, `GET /api/qr/mis-etiquetas` | Pedir etiquetas del pool hasta el cupo y descargarlas para imprimir |
-| `POST /api/qr/<uuid>/ampliar`, `POST /api/qr/<uuid>/aviso` | Ampliar el plazo una vez; avisar de etiqueta dañada, desaparecida o retirada |
+| `POST /api/qr/<código>/ampliar`, `POST /api/qr/<código>/aviso` | Ampliar el plazo una vez; avisar de etiqueta dañada, desaparecida o retirada |
 | `POST /api/collections/colocaciones/records` | Colocar: etiqueta, obra (o obra nueva), GPS con 25 m o mejor y foto |
 | `POST /api/collections/verificaciones/records` | Verificar: GPS a 50 m o menos del punto; solo se guarda la distancia |
-| `POST /api/collections/<colección>/records` | Formularios: `observaciones` (exige el UUID de la etiqueta), `contexto`, `propuestas_obra`, `propuestas_ruta`, `inscripciones` |
+| `POST /api/collections/<colección>/records` | Formularios: `observaciones` (exige el código de la etiqueta), `contexto`, `propuestas_obra`, `propuestas_ruta`, `inscripciones` |
 | `GET /api/publico/obras/<uuid>` | Observaciones aprobadas de esa obra |
-| `GET /api/publico/qr/<uuid-obra>/historial` | Historial público de las etiquetas de una obra (sin UUID de etiqueta ni coordenadas de personas) |
+| `GET /api/publico/qr/<uuid-obra>/historial` | Historial público de las etiquetas de una obra (sin códigos de etiqueta ni coordenadas de personas) |
 | `GET /api/publico/etiquetas.geojson` | Etiquetas confirmadas para el mapa (difusas en su celda de 0,02°) |
 | `GET /teselas/osm/{z}/{x}/{y}.png` | Teselas de OSM desde la caché |
 | `GET /datos/umap/{qr,rutas}.geojson` | Última copia de las capas de uMap |

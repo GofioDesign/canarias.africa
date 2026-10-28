@@ -20,11 +20,12 @@ try {
   if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)$#', $ruta, $m)) observaciones_publicas($m[1]);
   if ($metodo === 'GET' && preg_match('#^/api/publico/qr/(' . RE_UUID . ')/historial$#', $ruta, $m)) qr_historial($m[1]);
   if ($metodo === 'GET' && $ruta === '/api/publico/etiquetas.geojson') qr_mapa();
-  if ($metodo === 'GET' && preg_match('#^/api/qr/(' . RE_UUID . ')$#', $ruta, $m)) qr_resolver($m[1]);
   if ($metodo === 'POST' && $ruta === '/api/qr/asignar') qr_asignar();
   if ($metodo === 'GET' && $ruta === '/api/qr/mis-etiquetas') qr_mis_etiquetas();
-  if ($metodo === 'POST' && preg_match('#^/api/qr/(' . RE_UUID . ')/ampliar$#', $ruta, $m)) qr_ampliar($m[1]);
-  if ($metodo === 'POST' && preg_match('#^/api/qr/(' . RE_UUID . ')/aviso$#', $ruta, $m)) qr_aviso($m[1]);
+  // Después de las rutas fijas de /api/qr/ (mis-etiquetas también encaja en el patrón de un código).
+  if ($metodo === 'GET' && preg_match('#^/api/qr/(' . RE_CODIGO . ')$#i', $ruta, $m)) qr_resolver($m[1]);
+  if ($metodo === 'POST' && preg_match('#^/api/qr/(' . RE_CODIGO . ')/ampliar$#i', $ruta, $m)) qr_ampliar($m[1]);
+  if ($metodo === 'POST' && preg_match('#^/api/qr/(' . RE_CODIGO . ')/aviso$#i', $ruta, $m)) qr_aviso($m[1]);
   if ($metodo === 'POST' && $ruta === '/api/cuenta/alta') cuenta_alta();
   if ($metodo === 'POST' && $ruta === '/api/cuenta/entrar') cuenta_entrar();
   if ($metodo === 'POST' && $ruta === '/api/cuenta/sesion') cuenta_sesion();

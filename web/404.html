@@ -6,11 +6,14 @@
 <meta name="robots" content="noindex">
 <title>canarias.africa</title>
 <script>
-  // Las etiquetas QR apuntan a https://canarias.africa/<uuid-de-la-etiqueta>. GitHub Pages no tiene esa ruta,
-  // así que sirve esta página, que pasa el UUID a la web: /#/q/<uuid>. Cualquier otra ruta va a la portada.
+  // Cada etiqueta tiene un código corto en base32 de Crockford (p. ej. 7KQ2M9XD) que se puede teclear como
+  // canarias.africa/<código>. GitHub Pages no tiene esa ruta y sirve esta página, que lo pasa a la web: /#/q/<código>.
+  // /scan (el QR común de los azulejos) tiene su propia página; cualquier otra ruta va a la portada.
   (function () {
-    var m = location.pathname.match(/^\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/?$/i);
-    location.replace("/" + (m ? "#/q/" + m[1].toLowerCase() : ""));
+    var p = location.pathname.replace(/^\/|\/$/g, "");
+    if (/^scan$/i.test(p)) { location.replace("/#scan"); return; }
+    var c = p.replace(/-/g, "").toUpperCase().replace(/O/g, "0").replace(/[IL]/g, "1");
+    location.replace("/" + (/^[0-9A-HJKMNP-TV-Z]{8,16}$/.test(c) ? "#/q/" + c : ""));
   })();
 </script>
 <style>

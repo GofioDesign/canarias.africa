@@ -1,8 +1,23 @@
 <?php
-// Etiquetas QR: pool de UUID, cupos, colocación con GPS y foto, verificaciones independientes y trazabilidad.
+// Etiquetas QR: pool de códigos, cupos, colocación con GPS y foto, verificaciones independientes y trazabilidad.
 // Procedimiento: /mnt/project-files/sistema-qr/procedimiento-colaboradores-qr.md (borrador del 28-10-2026).
 
-const RE_UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+const RE_UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';  // obras
+// Código de etiqueta: base32 de Crockford en mayúsculas (sin I, L, O, U, para que no se confundan al leerlo), p. ej. 7KQ2M9XD.
+// Se empieza con 8 caracteres (40 bits, ~1 billón de códigos); se pueden emitir lotes más largos sin tocar nada más.
+const ALFABETO_CODIGO = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+const RE_CODIGO = '[0-9A-Za-z-]{8,20}';  // la ruta acepta guiones y minúsculas; normalizar_codigo() hace el resto
+
+function nuevo_codigo(int $largo = 8): string {
+  $c = '';
+  for ($i = 0; $i < $largo; $i++) $c .= ALFABETO_CODIGO[random_int(0, 31)];
+  return $c;
+}
+
+// Lo que se teclea o se lee del glifo: en mayúsculas, sin espacios ni guiones, y con O→0, I/L→1 (regla de Crockford).
+function normalizar_codigo(string $c): string {
+  return strtr(preg_replace('/[\s-]+/', '', strtoupper($c)), ['O' => '0', 'I' => '1', 'L' => '1']);
+}
 const ESTADOS_EN_SITIO = ['colocado', 'confirmado', 'sin_verificar', 'desaparecida'];
 
 function uuid4(): string {
@@ -20,9 +35,9 @@ function distancia_m(float $lat1, float $lon1, float $lat2, float $lon2): float 
   return 2 * $r * asin(min(1, sqrt($a)));
 }
 
-function etiqueta(string $uuid): ?array {
-  $st = db()->prepare('SELECT * FROM qr_codigos WHERE uuid = ?');
-  $st->execute([strtolower($uuid)]);
+function etiqueta(string $codigo): ?array {
+  $st = db()->prepare('SELECT * FROM qr_codigos WHERE codigo = ?');
+  $st->execute([normalizar_codigo($codigo)]);
   return $st->fetch() ?: null;
 }
 
@@ -32,7 +47,7 @@ function evento_qr(string $qr, string $tipo, ?int $colaborador = null, array $da
 }
 
 function cambiar_estado(string $qr, string $estado, ?int $colaborador = null, array $datos = []): void {
-  db()->prepare('UPDATE qr_codigos SET estado = ? WHERE uuid = ?')->execute([$estado, $qr]);
+  db()->prepare('UPDATE qr_codigos SET estado = ? WHERE codigo = ?')->execute([$estado, $qr]);
   evento_qr($qr, $estado, $colaborador, $datos);
 }
 
@@ -56,9 +71,9 @@ function foto_subida(bool $obligatoria): ?string {
   return guardar_foto($f['tmp_name'], mime_content_type($f['tmp_name']) ?: '');
 }
 
-// GET /api/qr/<uuid> → {obra, estado}. Es lo que pide la web al escanear una etiqueta.
-function qr_resolver(string $uuid): never {
-  $q = etiqueta($uuid);
+// GET /api/qr/<código> → {obra, estado}. Es lo que pide la web al leer el glifo de una etiqueta.
+function qr_resolver(string $codigo): never {
+  $q = etiqueta($codigo);
   if (!$q) json_respuesta(['obra' => null, 'estado' => 'desconocido'], 404);
   json_respuesta(['obra' => $q['obra'], 'estado' => $q['estado']]);
 }
@@ -71,7 +86,7 @@ function qr_asignar(): never {
   if ($n < 1) error_publico('Ya tienes todo tu cupo asignado. Coloca alguna etiqueta para pedir más.', 409);
   $db = db();
   $db->beginTransaction();
-  $libres = $db->query("SELECT uuid FROM qr_codigos WHERE estado = 'libre' ORDER BY creado, uuid LIMIT $n")->fetchAll(PDO::FETCH_COLUMN);
+  $libres = $db->query("SELECT codigo FROM qr_codigos WHERE estado = 'libre' ORDER BY creado, codigo LIMIT $n")->fetchAll(PDO::FETCH_COLUMN);
   if (!$libres) { $db->rollBack(); error_publico('No quedan etiquetas libres ahora mismo. Avisaremos cuando haya un lote nuevo.', 503); }
   $dias = (int) config()['qr']['dias_plazo'];
   foreach ($libres as $u) {
@@ -87,23 +102,23 @@ function qr_asignar(): never {
 function qr_mis_etiquetas(): never {
   $c = exigir_colaborador();
   $db = db();
-  $st = $db->prepare("SELECT a.id, a.qr, a.vence FROM asignaciones a JOIN qr_codigos q ON q.uuid = a.qr
+  $st = $db->prepare("SELECT a.id, a.qr, a.vence FROM asignaciones a JOIN qr_codigos q ON q.codigo = a.qr
                       WHERE a.colaborador = ? AND a.resultado IS NULL AND q.estado = 'asignado'");
   $st->execute([$c['id']]);
   $filas = $st->fetchAll();
   $db->prepare('UPDATE asignaciones SET descargada = 1 WHERE colaborador = ? AND resultado IS NULL')->execute([$c['id']]);
-  json_respuesta(array_map(fn($a) => ['uuid' => $a['qr'], 'url' => config()['web'] . '/' . $a['qr'], 'vence' => $a['vence']], $filas));
+  json_respuesta(array_map(fn($a) => ['codigo' => $a['qr'], 'url' => config()['web'] . '/' . $a['qr'], 'vence' => $a['vence']], $filas));
 }
 
-// POST /api/qr/<uuid>/ampliar: una sola ampliación del plazo por asignación.
-function qr_ampliar(string $uuid): never {
+// POST /api/qr/<código>/ampliar: una sola ampliación del plazo por asignación.
+function qr_ampliar(string $codigo): never {
   $c = exigir_colaborador();
   $dias = (int) config()['qr']['dias_plazo'];
   $st = db()->prepare("UPDATE asignaciones SET vence = datetime(vence, ?), ampliada = 1
                        WHERE qr = ? AND colaborador = ? AND resultado IS NULL AND ampliada = 0");
-  $st->execute(["+$dias days", strtolower($uuid), $c['id']]);
+  $st->execute(["+$dias days", normalizar_codigo($codigo), $c['id']]);
   if (!$st->rowCount()) error_publico('Esta etiqueta no es tuya o su plazo ya se amplió una vez.', 409);
-  evento_qr(strtolower($uuid), 'plazo_ampliado', (int) $c['id']);
+  evento_qr(normalizar_codigo($codigo), 'plazo_ampliado', (int) $c['id']);
   json_respuesta(perfil((int) $c['id']));
 }
 
@@ -113,7 +128,7 @@ function qr_colocar(): never {
   $db = db();
   $q = etiqueta((string) ($_POST['qr'] ?? '')) ?? error_publico('Esa etiqueta no existe.', 404);
   $st = $db->prepare("SELECT * FROM asignaciones WHERE qr = ? AND colaborador = ? ORDER BY id DESC LIMIT 1");
-  $st->execute([$q['uuid'], $c['id']]);
+  $st->execute([$q['codigo'], $c['id']]);
   $a = $st->fetch();
   $abierta = $a && $a['resultado'] === null && $q['estado'] === 'asignado';
   $reactivable = $a && $a['resultado'] === 'caducado' && $a['descargada'] && $q['estado'] === 'caducado';
@@ -143,16 +158,16 @@ function qr_colocar(): never {
 
   $db->beginTransaction();
   // Si la obra tenía una etiqueta dañada, retirada o desaparecida, esta la sustituye.
-  $st = $db->prepare("SELECT uuid FROM qr_codigos WHERE obra = ? AND estado IN ('danado','retirado','desaparecida') AND uuid != ?");
-  $st->execute([$obra_uuid, $q['uuid']]);
+  $st = $db->prepare("SELECT codigo FROM qr_codigos WHERE obra = ? AND estado IN ('danado','retirado','desaparecida') AND codigo != ?");
+  $st->execute([$obra_uuid, $q['codigo']]);
   $sustituida = $st->fetchColumn() ?: null;
   if ($sustituida) cambiar_estado($sustituida, 'sustituido', (int) $c['id'], ['por' => 'nueva etiqueta']);
   $db->prepare('INSERT INTO colocaciones (qr, obra, colaborador, lat, lon, precision, foto) VALUES (?, ?, ?, ?, ?, ?, ?)')
-     ->execute([$q['uuid'], $obra_uuid, $c['id'], $lat, $lon, $pre, $foto]);
-  $db->prepare('UPDATE qr_codigos SET obra = ?, lat = ?, lon = ?, precision = ?, sustituye = ? WHERE uuid = ?')
-     ->execute([$obra_uuid, $lat, $lon, $pre, $sustituida, $q['uuid']]);
+     ->execute([$q['codigo'], $obra_uuid, $c['id'], $lat, $lon, $pre, $foto]);
+  $db->prepare('UPDATE qr_codigos SET obra = ?, lat = ?, lon = ?, precision = ?, sustituye = ? WHERE codigo = ?')
+     ->execute([$obra_uuid, $lat, $lon, $pre, $sustituida, $q['codigo']]);
   $db->prepare("UPDATE asignaciones SET resultado = 'colocado' WHERE id = ?")->execute([$a['id']]);
-  cambiar_estado($q['uuid'], 'colocado', (int) $c['id'], ['precision_m' => round($pre)]);
+  cambiar_estado($q['codigo'], 'colocado', (int) $c['id'], ['precision_m' => round($pre)]);
   $db->commit();
   json_respuesta(['ok' => true, 'obra' => $obra_uuid, 'estado' => 'colocado'], 201);
 }
@@ -171,12 +186,12 @@ function qr_verificar(): never {
   [$lat, $lon, $pre] = gps();
 
   $st = $db->prepare('SELECT colaborador FROM colocaciones WHERE qr = ? ORDER BY id DESC LIMIT 1');
-  $st->execute([$q['uuid']]);
+  $st->execute([$q['codigo']]);
   $coloco = (int) $st->fetchColumn();
   if ($c && (int) $c['id'] === $coloco) error_publico('Quien coloca una etiqueta no puede verificarla.', 403);
   $st = $db->prepare("SELECT COUNT(*) FROM verificaciones WHERE qr = ? AND (dispositivo = ? OR (colaborador IS NOT NULL AND colaborador = ?))
                       AND strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')");
-  $st->execute([$q['uuid'], $disp, $c['id'] ?? -1]);
+  $st->execute([$q['codigo'], $disp, $c['id'] ?? -1]);
   if ($st->fetchColumn()) error_publico('Ya has verificado esta etiqueta este mes. ¡Gracias!', 409);
 
   $dist = distancia_m($q['lat'], $q['lon'], $lat, $lon);
@@ -186,26 +201,26 @@ function qr_verificar(): never {
   $foto = foto_subida(false);
   $db->beginTransaction();
   $db->prepare('INSERT INTO verificaciones (qr, colaborador, dispositivo, distancia, precision, foto, peso, valida, motivo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-     ->execute([$q['uuid'], $c['id'] ?? null, $disp, round($dist, 1), $pre, $foto, NIVELES[$nivel], $motivo ? 0 : 1, $motivo]);
+     ->execute([$q['codigo'], $c['id'] ?? null, $disp, round($dist, 1), $pre, $foto, NIVELES[$nivel], $motivo ? 0 : 1, $motivo]);
   $vid = (string) $db->lastInsertId();
-  evento_qr($q['uuid'], $motivo ? 'verificacion_no_valida' : 'verificacion', $c['id'] ?? null, ['distancia_m' => round($dist), 'motivo' => $motivo]);
+  evento_qr($q['codigo'], $motivo ? 'verificacion_no_valida' : 'verificacion', $c['id'] ?? null, ['distancia_m' => round($dist), 'motivo' => $motivo]);
 
   $estado = $q['estado'];
   if (!$motivo) {
-    $db->prepare("UPDATE qr_codigos SET ultima_verificacion = datetime('now') WHERE uuid = ?")->execute([$q['uuid']]);
+    $db->prepare("UPDATE qr_codigos SET ultima_verificacion = datetime('now') WHERE codigo = ?")->execute([$q['codigo']]);
     if (in_array($estado, ['sin_verificar', 'desaparecida'], true)) {
-      cambiar_estado($q['uuid'], $estado = 'confirmado', $c['id'] ?? null, ['motivo' => 'nueva verificación']);
+      cambiar_estado($q['codigo'], $estado = 'confirmado', $c['id'] ?? null, ['motivo' => 'nueva verificación']);
     } elseif ($estado === 'colocado') {
       // Verificaciones válidas independientes: cada cuenta o dispositivo cuenta una vez.
       $st = $db->prepare("SELECT COUNT(DISTINCT COALESCE('c' || colaborador, 'd' || dispositivo)),
                                  MAX(peso >= ?) FROM verificaciones WHERE qr = ? AND valida = 1");
-      $st->execute([NIVELES['custodia'], $q['uuid']]);
+      $st->execute([NIVELES['custodia'], $q['codigo']]);
       [$independientes, $hay_custodia] = $st->fetch(PDO::FETCH_NUM);
       if ($independientes >= $cfg['verificaciones_para_confirmar'] || $hay_custodia) {
-        cambiar_estado($q['uuid'], $estado = 'confirmado');
-        sumar_meritos($coloco, 'colocacion_confirmada', 5, $q['uuid']);
+        cambiar_estado($q['codigo'], $estado = 'confirmado');
+        sumar_meritos($coloco, 'colocacion_confirmada', 5, $q['codigo']);
         $st = $db->prepare('SELECT id, colaborador FROM verificaciones WHERE qr = ? AND valida = 1 AND colaborador IS NOT NULL');
-        $st->execute([$q['uuid']]);
+        $st->execute([$q['codigo']]);
         foreach ($st->fetchAll() as $v) sumar_meritos((int) $v['colaborador'], 'verificacion', 1, (string) $v['id']);
       }
     } elseif ($c) {
@@ -216,19 +231,19 @@ function qr_verificar(): never {
   json_respuesta(['ok' => true, 'valida' => !$motivo, 'motivo' => $motivo, 'distancia_m' => round($dist), 'estado' => $estado], 201);
 }
 
-// POST /api/qr/<uuid>/aviso {tipo: danado|desaparecida|retirado, dispositivo}: cualquiera puede avisar.
+// POST /api/qr/<código>/aviso {tipo: danado|desaparecida|retirado, texto}: cualquiera puede avisar.
 // El aviso queda en el historial; el estado solo cambia si lo marca alguien de nivel Custodia.
-function qr_aviso(string $uuid): never {
-  $q = etiqueta($uuid) ?? error_publico('Esa etiqueta no existe.', 404);
+function qr_aviso(string $codigo): never {
+  $q = etiqueta($codigo) ?? error_publico('Esa etiqueta no existe.', 404);
   $d = cuerpo_json();
   $tipo = (string) ($d['tipo'] ?? '');
   if (!in_array($tipo, ['danado', 'desaparecida', 'retirado'], true)) error_publico('Tipo de aviso no válido.');
   $c = colaborador_actual();
   $texto = mb_substr((string) ($d['texto'] ?? ''), 0, 1000);
   if ($c && nivel($c) === 'custodia' && in_array($q['estado'], ESTADOS_EN_SITIO, true)) {
-    cambiar_estado($q['uuid'], $tipo, (int) $c['id'], ['texto' => $texto]);
+    cambiar_estado($q['codigo'], $tipo, (int) $c['id'], ['texto' => $texto]);
   } else {
-    evento_qr($q['uuid'], "aviso_$tipo", $c['id'] ?? null, ['texto' => $texto]);
+    evento_qr($q['codigo'], "aviso_$tipo", $c['id'] ?? null, ['texto' => $texto]);
   }
   json_respuesta(['ok' => true], 201);
 }
@@ -237,7 +252,7 @@ function qr_aviso(string $uuid): never {
 // y solo las puede reactivar la misma persona al colocarlas (opción a del procedimiento). Resta 1 mérito.
 function caducar_asignaciones(): void {
   $db = db();
-  $vencidas = $db->query("SELECT a.* FROM asignaciones a JOIN qr_codigos q ON q.uuid = a.qr
+  $vencidas = $db->query("SELECT a.* FROM asignaciones a JOIN qr_codigos q ON q.codigo = a.qr
                           WHERE a.resultado IS NULL AND q.estado = 'asignado' AND a.vence < datetime('now')")->fetchAll();
   foreach ($vencidas as $a) {
     $db->beginTransaction();
@@ -253,7 +268,7 @@ function envejecer_etiquetas(): void {
   $cfg = config()['qr'];
   $db = db();
   foreach ([['confirmado', 'sin_verificar', $cfg['meses_sin_verificar']], ['sin_verificar', 'desaparecida', $cfg['meses_desaparecida']]] as [$de, $a, $meses]) {
-    $st = $db->prepare("SELECT uuid FROM qr_codigos WHERE estado = ? AND COALESCE(ultima_verificacion, creado) < datetime('now', ?)");
+    $st = $db->prepare("SELECT codigo FROM qr_codigos WHERE estado = ? AND COALESCE(ultima_verificacion, creado) < datetime('now', ?)");
     $st->execute([$de, "-$meses months"]);
     foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $u) cambiar_estado($u, $a, null, ['motivo' => "sin verificaciones en $meses meses"]);
   }
@@ -266,7 +281,7 @@ function confianza(string $qr): float {
 }
 
 // GET /api/publico/qr/<uuid-obra>/historial: historial público de las etiquetas de una obra.
-// No incluye el UUID de las etiquetas, ni coordenadas de personas, ni correos.
+// No incluye el código de las etiquetas, ni coordenadas de personas, ni correos.
 function qr_historial(string $obra): never {
   $db = db();
   $st = $db->prepare("SELECT * FROM qr_codigos WHERE obra = ? ORDER BY creado");
@@ -275,12 +290,12 @@ function qr_historial(string $obra): never {
   foreach ($st->fetchAll() as $i => $q) {
     $ev = $db->prepare("SELECT e.tipo, e.fecha, e.datos, c.alias FROM qr_eventos e LEFT JOIN colaboradores c ON c.id = e.colaborador
                         WHERE e.qr = ? AND e.tipo NOT IN ('asignado','plazo_ampliado','caducado','libre') ORDER BY e.fecha, e.id");
-    $ev->execute([$q['uuid']]);
+    $ev->execute([$q['codigo']]);
     $etiquetas[] = [
       'etiqueta' => $i + 1,
       'estado' => $q['estado'],
       'ultima_verificacion' => $q['ultima_verificacion'],
-      'confianza' => confianza($q['uuid']),
+      'confianza' => confianza($q['codigo']),
       'eventos' => array_map(function ($e) {
         $d = json_decode($e['datos'], true);
         $quien = $e['alias'] ?? (str_starts_with($e['tipo'], 'verificacion') || str_starts_with($e['tipo'], 'aviso_') ? 'visitante' : null);

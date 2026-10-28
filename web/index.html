@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CANARIAS.AFRICA</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -803,6 +807,19 @@ details.aviso summary{cursor:pointer;font-family:var(--f-mono);font-size:.85rem}
   .etiqueta.imp{box-shadow:none;border:1px dashed #999;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 
+.hoja.azulejos{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.azulejo svg{display:block;width:100%;height:auto}
+@media print{ .hoja.azulejos{grid-template-columns:repeat(2,100mm);gap:6mm} body:has(.hoja) .formato,body:has(.hoja) .hoja-sec>p{display:none!important} }
+.scan{display:flex;flex-direction:column;gap:16px;max-width:560px}
+.visor{position:relative;aspect-ratio:1;max-width:100%;background:var(--ink);display:grid;place-items:center;overflow:hidden}
+.visor video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.visor .guia{position:absolute;inset:14%;border:3px dashed var(--lichen);border-radius:50%;pointer-events:none}
+.visor .btn{position:relative;z-index:1;background:var(--lichen);color:#111}
+.scan-alt{display:flex;flex-direction:column;gap:14px}
+.scan-alt label{display:flex;flex-direction:column;gap:6px;font-size:.8rem;color:var(--muted)}
+.scan-alt label span{display:flex;gap:8px}
+.scan-alt input[type=text]{font-family:var(--f-mono);font-size:1.2rem;letter-spacing:.12em;text-transform:uppercase;padding:9px 10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-width:0;flex:1}
+
 /* Mapas OSM */
 .lmap{height:340px;background:var(--sea);font-family:var(--f-body);z-index:0}
 .lmap.small{height:280px}
@@ -1056,7 +1073,7 @@ a.of:hover::after{opacity:.9}
   <span class="pie-dcha"><a href="#derechos">Derechos de imagen y uso</a><a href="#privacidad">Privacidad</a><a class="gofio" href="https://gofiodesign.eu" target="_blank" rel="noopener" aria-label="Un proyecto de Gofio Design"><svg class="sello" viewBox="0 0 560 200" aria-hidden="true"><rect x="5" y="5" width="550" height="190" rx="22" fill="#F2E9D7" stroke="#62381F" stroke-width="6"/><rect x="17" y="17" width="526" height="166" rx="14" fill="none" stroke="#62381F" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round"/><g transform="translate(34 34) scale(0.3539) translate(-322 -141)"><path d="M671.03 506.91C666.93 507.67 617.89 507.98 509.57 507.94C359.18 507.89 353.8 507.82 347.96 505.97C340.24 503.52 334.38 498.48 330.81 491.22L328 485.5V167.5L330.77 162.24C333.94 156.22 339.25 151.95 346.82 149.31C351.73 147.59 360.28 147.5 511.5 147.5C667.23 147.5 671.14 147.55 677 149.46C681.32 150.87 684.31 152.72 687.67 156.09C688.85 157.26 689.85 158.01 690.7 158.91C695.58 164.03 695.58 173.8 695.54 293.97C695.53 304.32 695.53 315.5 695.53 327.56C695.52 338 695.53 347.78 695.53 356.94C695.53 481.37 695.53 490.53 690.97 495.47C690.27 496.23 689.47 496.89 688.54 497.84C683.6 502.93 678.62 505.51 671.03 506.91Z" fill="#62381F"/><path d="M361.86 476.54C360.71 475.74 359.25 473.81 358.61 472.26C357.73 470.14 357.51 433.58 357.72 325.24L358 181.04L360.65 178.4L363.3 175.75L454.57 175.92C541.11 176.08 546.37 176.19 556.13 178.07C574.08 181.54 588.51 187.04 601.11 195.22C604.9 197.69 608.9 200.18 610 200.77C613.95 202.87 633.86 223.93 640.12 232.63C651.27 248.12 660.37 268.63 664.01 286.5C667.46 303.39 667.47 334.96 664.04 350.02C662.26 357.82 655.75 379.4 654.38 382C653.95 382.83 651.99 386.81 650.02 390.86C645.6 399.97 642.06 405.15 633.47 415.1C613.99 437.69 584.22 454.57 556 459.04C541.09 461.41 520.14 461.75 508.98 459.81C494.53 457.29 479.94 453.35 472.77 450.02C458.7 443.48 438.1 428.02 429.84 417.8C413.12 397.11 404.8 375.13 403.02 347C400.8 312 419.15 274.77 447.73 256.28C457.62 249.89 473.8 242.46 482.21 240.46C492.52 238.01 521.49 238.83 533 241.9C558.74 248.75 578.7 266.91 589.59 293.36C594.41 305.07 595.94 313.89 595.16 325.45C594.38 337.04 592.4 344.52 587.48 354.5C579.1 371.48 564.67 384.25 547.02 390.29C538.53 393.2 517.69 393.36 509 390.59C495.22 386.19 482.03 376.24 476.72 366.24C467.25 348.39 468.92 330.84 481.41 316.79C497.91 298.24 528.5 303.8 528.5 325.34C528.5 327.66 527.79 330.56 526.93 331.79C524.93 334.65 519.32 337 514.49 337C509.66 337 506.63 339.48 505.54 344.34C503.97 351.27 508.04 358.49 515.22 361.57C521.15 364.1 532.55 363.02 540.07 359.2C547.06 355.65 550.31 352.4 554 345.24C557.51 338.45 559.61 324.88 558.45 316.62C555.99 299.26 538.92 280.77 521.39 276.47C507.93 273.17 487.93 276.4 474.79 283.99C467.37 288.27 457.28 298.06 451.84 306.25C439.2 325.25 437.35 348.63 446.62 372C453.87 390.25 470.23 407.33 488.77 415.99C500.68 421.55 508.06 423.22 522.5 423.58C535.8 423.92 544.87 422.67 556.47 418.89C588.29 408.54 612.96 381.24 622.21 346.13C625.75 332.71 625.94 310.71 622.62 298C617.2 277.2 607.84 259.94 593.5 244.32C579.79 229.38 556.91 216.75 534 211.49C518.91 208.02 486.23 208.81 470 213.03C459.67 215.71 445.47 222.1 433.5 229.45C420.69 237.31 405.72 252.5 395.44 268.06C379.43 292.29 373.44 312.75 373.36 343.5C373.31 359.43 374.85 371.55 378.44 383.65C390.31 423.6 415.34 454.34 450.81 472.56C455.04 474.73 458.49 476.84 458.5 477.25C458.5 477.66 437.23 478 411.22 478C371.39 478 363.62 477.77 361.86 476.54ZM619.5 478.06L597 477.5L607.63 472.38C613.48 469.56 621.47 465.17 625.4 462.63C633.81 457.19 649.38 442.1 659.39 429.68L666.5 420.87L666.47 446.68C666.44 473.59 666.3 474.48 662 476.71C659.06 478.23 644.9 478.68 619.5 478.06Z" fill="#BA6F36"/></g><text x="196" y="86" font-family="Bricolage Grotesque, Lexend, sans-serif" font-size="27" font-weight="600" letter-spacing="7" fill="#BA6F36">UN PROYECTO</text><text x="194" y="146" font-family="Bricolage Grotesque, Lexend, sans-serif" font-size="56" font-weight="800" fill="#62381F">Gofio Design</text></svg></a></span>
 </div></footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="/vendor/leaflet-1.9.4/leaflet.js"></script>
 <script>/* qrcode-generator 1.4.4 · (c) 2009 Kazuhiko Arase · licencia MIT · «QR Code» es marca registrada de DENSO WAVE */
 var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,(function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1}))},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(t,r){var e=n("友");if(2!=e.length||38726!=(e[0]<<8|e[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}((function(){return qrcode}));
 </script>
@@ -1170,10 +1187,10 @@ const OBRAS = [
   qr:{st:"no aplica",inst:"",rev:""},
   obs:[["2026-09-02","equipo","Revisión con patrimonio","desgaste","Se recomienda no señalizar el acceso.","validada"]]}
 ];
-/* Cada obra tiene un UUID permanente. Cada QR impreso tiene otro UUID propio (canarias.africa/<uuid-del-QR>), que sale de un pool:
+/* Cada obra tiene un UUID permanente. Cada etiqueta tiene un código corto propio (8 caracteres en base32 de Crockford, canarias.africa/<CÓDIGO>), que sale de un pool:
    se asigna en cupos a colaboradores y, si no confirman que lo han colocado, vuelve al pool. El código del QR no se publica en la web,
    para que solo quien lo escanea junto a la obra pueda contar cómo está. (Códigos ficticios.) */
-const QR_COD={"f89e8eb0-b995-4f0b-94af-36097f8a24d2":"184ce826-3514-4473-b634-e604cebd878e","430175f8-3b98-4337-95a8-c6bcc6eb0895":"ce00181f-43aa-40b3-9ed1-20957bd172df","d9003675-685a-4fa8-b436-76169cf2e4d6":"944c8aa2-e030-41ae-ba14-2f8ce257a9bc","ed35d309-ae15-427c-8ea7-ed89582727c1":"fc97af85-7276-4301-a328-035b7db5cb72","24c6bc64-b62d-4e3f-be2b-3c4a62a16a4e":"2dbd722e-76c1-4ee4-90da-0ced798105af","b05eca29-3b55-4955-bcc0-6abf1d11e57e":"22810c54-ebdb-44c7-99e6-d5db7f056af0","e680f382-4ea3-42e4-8da0-c906ce4c2f86":"74f58356-457a-407f-9f1c-4ce8b415c6f8","5a22f14c-03da-4c42-a7b9-d56bc954ddbb":"30182012-df63-4463-8965-93171b0a5c85","90cebcbc-aa61-4b46-959e-f2c038599ff7":"cd2530a6-4a53-4477-bd9f-185b77cf6d8b","dbf12703-5acb-47ee-a6bc-dd731e4e9709":"aa46b98d-9d83-43a3-8ede-8d9429fc5853","ca0fab1b-8810-4099-a9ad-6134dcec5aa0":"71d891c4-5457-40c6-a34e-21b38929d182","d0b447c0-cd66-47fe-b295-4221d18e633c":"560a6a4b-4245-45bd-b926-75b8ac8ddcfa","37de1bf1-3851-4eea-83dc-fa8b01a5fd63":"d7035927-af2f-4066-8cd1-67cabc00a7c5"};
+const QR_COD={"f89e8eb0-b995-4f0b-94af-36097f8a24d2":"2D2Z9G0X","430175f8-3b98-4337-95a8-c6bcc6eb0895":"ED20DXTP","d9003675-685a-4fa8-b436-76169cf2e4d6":"DDX5D25C","ed35d309-ae15-427c-8ea7-ed89582727c1":"Z3P999SB","24c6bc64-b62d-4e3f-be2b-3c4a62a16a4e":"FZAFJRTK","b05eca29-3b55-4955-bcc0-6abf1d11e57e":"QAEN6NZT","e680f382-4ea3-42e4-8da0-c906ce4c2f86":"74ZK831K","5a22f14c-03da-4c42-a7b9-d56bc954ddbb":"BP8K07GS","90cebcbc-aa61-4b46-959e-f2c038599ff7":"TNRHEP90","dbf12703-5acb-47ee-a6bc-dd731e4e9709":"P9SW7K23","ca0fab1b-8810-4099-a9ad-6134dcec5aa0":"64CRDPHS","d0b447c0-cd66-47fe-b295-4221d18e633c":"HWG8RFD6","37de1bf1-3851-4eea-83dc-fa8b01a5fd63":"EM70R6K9"};
 OBRAS.forEach(o=>{ o.qr.cod=o.qr.st==="activo"?QR_COD[o.id]:null; });
 const corto=id=>id.slice(0,8);
 /* Trazabilidad de la etiqueta: colocación + verificaciones independientes (escaneos de otras personas). Ficticio en el prototipo. */
@@ -1557,6 +1574,156 @@ function drawQR(canvas,text){
   const Q=4, M=6, W=(m.n+2*Q)*M; canvas.width=canvas.height=W;
   c.fillStyle="#fff"; c.fillRect(0,0,W,W);
   for(let y=0;y<m.n;y++) for(let x=0;x<m.n;x++){ const k=m.celda(x,y); if(k==="b") continue; c.fillStyle=k==="o"?QR_OCRE:"#111"; c.fillRect((x+Q)*M,(y+Q)*M,M,M); }
+}
+
+/* ---------- Glifo de canarias.africa ---------- */
+/* Código circular propio para el código corto de la etiqueta (base32 de Crockford, 8 caracteres de momento).
+   3 anillos × 24 sectores = 72 bits: versión (4) + código (5 bits por carácter) + CRC con el resto.
+   Versión 0 = 8 caracteres (CRC de 28 bits), 1 = 9 (23), 2 = 10 (18): los códigos podrán alargarse sin cambiar el dibujo.
+   Negro = 1. Radios en fracción del radio exterior R: espiral ocre (decorativa) < 0,20 · blanco 0,20–0,29 (referencia) ·
+   datos 0,30–0,84 · blanco 0,84–0,88 · anillo negro 0,88–1 (localización y referencia de negro).
+   No hace falta marca de orientación: el lector prueba los giros y acepta el que cuadra con el CRC (corrige un bit erróneo). */
+const GLIFO={anillos:3,sectores:24,r0:.30,r1:.84,bits:72};
+const B32="0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+const normaCod=c=>String(c||"").toUpperCase().replace(/[-\s]/g,"").replace(/[IL]/g,"1").replace(/O/g,"0");
+const codValido=c=>/^[0-9A-HJKMNP-TV-Z]{8,10}$/.test(normaCod(c));
+const codBonito=c=>{ c=normaCod(c); return c.slice(0,4)+"-"+c.slice(4); };
+const crc32=(()=>{ const T=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; T[n]=c>>>0; }
+  return bytes=>{ let c=0xFFFFFFFF; for(const b of bytes) c=T[(c^b)&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }; })();
+const crcDe=(bits,n)=>{ const by=[]; for(let i=0;i<bits.length;i+=8){ let b=0; for(let k=0;k<8;k++) b=b<<1|(bits[i+k]||0); by.push(b); } return crc32(by)>>>(32-n); };
+function glifoBits(cod){
+  cod=normaCod(cod); if(!codValido(cod)) return null;
+  const v=cod.length-8, bits=[]; for(let k=3;k>=0;k--) bits.push((v>>k)&1);
+  for(const ch of cod){ const x=B32.indexOf(ch); for(let k=4;k>=0;k--) bits.push((x>>k)&1); }
+  const n=GLIFO.bits-bits.length, c=crcDe(bits,n); for(let k=n-1;k>=0;k--) bits.push((c>>>k)&1);
+  return bits;
+}
+function bitsACod(bits){
+  const v=bits[0]<<3|bits[1]<<2|bits[2]<<1|bits[3]; if(v>2) return null;
+  const L=8+v, fin=4+5*L, n=GLIFO.bits-fin; let c=0; for(let i=fin;i<GLIFO.bits;i++) c=(c*2+bits[i])>>>0;
+  if(crcDe(bits.slice(0,fin),n)!==c) return null;
+  let cod=""; for(let i=4;i<fin;i+=5){ let x=0; for(let k=0;k<5;k++) x=x<<1|bits[i+k]; cod+=B32[x]; } return cod;
+}
+function bitsACodCorr(bits,corregir){ const r=bitsACod(bits); if(r||!corregir) return r;
+  for(let i=0;i<bits.length;i++){ bits[i]^=1; const t=bitsACod(bits); bits[i]^=1; if(t&&t.length===8) return t; } return null; }
+/* Dibujo: los sectores negros seguidos de un mismo anillo se unen en un solo arco */
+function glifoSVG(cod,{tinta="#111",ocre="#D6A300",fondo="#fff"}={}){
+  const bits=glifoBits(cod); if(!bits) return "";
+  const {anillos:A,sectores:S,r0,r1}=GLIFO, paso=(r1-r0)/A, g=.012, R=100;
+  const P=(r,t)=>`${(R+r*R*Math.cos(t)).toFixed(2)} ${(R+r*R*Math.sin(t)).toFixed(2)}`;
+  const sector=(ra,rb,t0,t1)=>{ const L=t1-t0>Math.PI?1:0; return `M${P(rb,t0)}A${rb*R} ${rb*R} 0 ${L} 1 ${P(rb,t1)}L${P(ra,t1)}A${ra*R} ${ra*R} 0 ${L} 0 ${P(ra,t0)}Z`; };
+  let d="";
+  for(let a=0;a<A;a++){ const ra=r0+a*paso+g, rb=r0+(a+1)*paso-g, fila=bits.slice(a*S,(a+1)*S);
+    if(fila.every(b=>b)){ d+=sector(ra,rb,0,Math.PI)+sector(ra,rb,Math.PI,2*Math.PI); continue; }
+    const ini=fila.findIndex((b,i)=>!b); // empezar en un hueco para no partir un tramo
+    for(let k=0;k<S;){ const i=(ini+k)%S; if(!fila[i]){ k++; continue; }
+      let n=0; while(n<S-k&&fila[(ini+k+n)%S]) n++;
+      const da=.012/((ra+rb)/2); d+=sector(ra,rb,i*2*Math.PI/S+da,(i+n)*2*Math.PI/S-da); k+=n; } }
+  const esp=[]; for(let t=0;t<=5.2*Math.PI;t+=.12){ const r=.03+.15*t/(5.2*Math.PI); esp.push(P(r,t-Math.PI/2)); }
+  return `<svg viewBox="0 0 200 200" role="img" aria-label="Glifo de canarias.africa"><circle cx="100" cy="100" r="100" fill="${fondo}"/>
+<circle cx="100" cy="100" r="94" fill="none" stroke="${tinta}" stroke-width="12"/><path d="${d}" fill="${tinta}"/>
+<path d="M${esp.join("L")}" fill="none" stroke="${ocre}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+/* Lectura: binariza, busca el anillo exterior entre las manchas oscuras y prueba centro, escala y giro */
+function leerGlifo(img){
+  const k=Math.min(1,420/Math.max(img.width,img.height)), W=Math.max(1,Math.round(img.width*k)), H=Math.max(1,Math.round(img.height*k));
+  const gris=new Float32Array(W*H), d=img.data;
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const i=(Math.min(img.height-1,Math.floor(y/k))*img.width+Math.min(img.width-1,Math.floor(x/k)))*4; gris[y*W+x]=.299*d[i]+.587*d[i+1]+.114*d[i+2]; }
+  const hist=new Array(256).fill(0); gris.forEach(v=>hist[v|0]++);
+  let sum=0; hist.forEach((h,i)=>sum+=h*i); let sB=0,wB=0,mejor=0,umbral=128;
+  for(let t=0;t<256;t++){ wB+=hist[t]; if(!wB) continue; const wF=W*H-wB; if(!wF) break; sB+=t*hist[t]; const mB=sB/wB, mF=(sum-sB)/wF, v=wB*wF*(mB-mF)**2; if(v>mejor){ mejor=v; umbral=t; } }
+  const lab=new Int32Array(W*H).fill(-1), comps=[];
+  for(let s=0;s<W*H;s++){ if(lab[s]!==-1||gris[s]>umbral) continue;
+    const c={x0:W,y0:H,x1:0,y1:0,n:0,sx:0,sy:0,sxx:0,syy:0,sxy:0}, pila=[s]; lab[s]=comps.length;
+    while(pila.length){ const p=pila.pop(), x=p%W, y=(p-x)/W; c.n++; c.sx+=x; c.sy+=y; c.sxx+=x*x; c.syy+=y*y; c.sxy+=x*y; if(x<c.x0)c.x0=x; if(x>c.x1)c.x1=x; if(y<c.y0)c.y0=y; if(y>c.y1)c.y1=y;
+      for(const q of [x>0?p-1:-1,x<W-1?p+1:-1,y>0?p-W:-1,y<H-1?p+W:-1]) if(q>=0&&lab[q]===-1&&gris[q]<=umbral){ lab[q]=comps.length; pila.push(q); } }
+    comps.push(c); }
+  const cand=comps.filter(c=>{ const w=c.x1-c.x0+1,h=c.y1-c.y0+1, r=c.n/(w*h); return w>=30&&h>=30&&w/h>.6&&h/w>.6&&r>.08&&r<.35; })
+    .sort((a,b)=>b.n-a.n).slice(0,6);
+  const muestra=(x,y)=>{ x=Math.max(0,Math.min(W-1.001,x)); y=Math.max(0,Math.min(H-1.001,y)); const x0=x|0,y0=y|0,fx=x-x0,fy=y-y0,i=y0*W+x0;
+    return gris[i]*(1-fx)*(1-fy)+gris[i+1]*fx*(1-fy)+gris[i+W]*(1-fx)*fy+gris[i+W+1]*fx*fy; };
+  const med=a=>a.slice().sort((p,q)=>p-q)[a.length>>1];
+  const {anillos:A,sectores:S,r0,r1}=GLIFO, paso=(r1-r0)/A;
+  for(const c of cand){
+    /* Elipse del anillo por momentos de segundo orden: cubre giros e inclinaciones moderadas del móvil */
+    const mx=c.sx/c.n, my=c.sy/c.n, K=(1+.88*.88)/4, a=(c.sxx/c.n-mx*mx)/K, b=(c.sxy/c.n-mx*my)/K, d2=(c.syy/c.n-my*my)/K;
+    const tr=(a+d2)/2, di=Math.sqrt(Math.max(0,((a-d2)/2)**2+b*b)), l1=tr+di, l2=Math.max(1e-6,tr-di), f=Math.atan2(l1-a,b||1e-9);
+    const cf=Math.cos(f), sf=Math.sin(f), s1=Math.sqrt(l1), s2=Math.sqrt(l2);
+    const M=[cf*cf*s1+sf*sf*s2,cf*sf*(s1-s2),cf*sf*(s1-s2),sf*sf*s1+cf*cf*s2], Rm=Math.sqrt(s1*s2);
+    /* La perspectiva desplaza el centro: se prueba una rejilla de centros y escalas; cada rayo se ajusta al borde interior del anillo negro */
+    const prueba=(dx,dy,e)=>{ const cx=mx+dx*Rm, cy=my+dy*Rm, s=(r,t)=>{ const u=r*e*Math.cos(t), v=r*e*Math.sin(t); return muestra(cx+M[0]*u+M[1]*v,cy+M[2]*u+M[3]*v); };
+      const neg=med(Array.from({length:32},(_,i)=>s(.94,i*Math.PI/16))), bla=med(Array.from({length:32},(_,i)=>s(.245,i*Math.PI/16)));
+      if(bla-neg<25) return null; const u=(neg+bla)/2;
+      const esc=Array.from({length:2*S},(_,j)=>{ const t=j*Math.PI/S; if(s(.94,t)>=u) return 1; for(let r=.94;r>.74;r-=.005) if(s(r,t)>=u) return (r+.0025)/.88; return 1; });
+      const val=[]; let con=0; for(let a=0;a<A;a++){ const r=r0+(a+.5)*paso; val.push(Array.from({length:2*S},(_,j)=>{ const x=s(r*esc[j],j*Math.PI/S); con+=Math.abs(x-u); return x<u?1:0; })); }
+      return {v:val,con:con/(A*2*S*(bla-neg))}; };
+    for(const e of [1,.97,1.03]) for(const dy of [0,-.025,.025,-.05,.05,-.075,.075,-.1,.1]) for(const dx of [0,-.025,.025,-.05,.05,-.075,.075,-.1,.1]){
+      const p=prueba(dx,dy,e); if(!p) continue; const v=p.v;
+      for(let g=0;g<2*S;g++){ const bits=[]; for(let a=0;a<A;a++) for(let i=0;i<S;i++) bits.push(v[a][(2*i+1+g)%(2*S)]);
+        const id=bitsACodCorr(bits,!dx&&!dy&&e===1); if(id) return id; } } }
+  return null;
+}
+
+/* Azulejo de 10 × 10 cm (unidades = mm): glifo grande, QR común a todos los azulejos (canarias.africa/scan) en la esquina */
+const URL_SCAN="https://canarias.africa/scan";
+function azulejoSVG(cod,{qr=(typeof qrcode!=="undefined"?qrcode:null)}={}){
+  const g=glifoSVG(cod); if(!g) return "";
+  let qp=""; if(qr){ const q=qr(0,"Q"); q.addData(URL_SCAN); q.make(); const n=q.getModuleCount(), m=22/n;
+    for(let y=0;y<n;y++) for(let x=0;x<n;x++) if(q.isDark(y,x)) qp+=`M${(75+x*m).toFixed(3)} ${(75+y*m).toFixed(3)}h${m.toFixed(3)}v${m.toFixed(3)}h-${m.toFixed(3)}z`; }
+  const F="Bricolage Grotesque,Lexend,sans-serif", Mo="JetBrains Mono,ui-monospace,monospace";
+  return `<svg viewBox="0 0 100 100" role="img" aria-label="Azulejo de canarias.africa con el código ${codBonito(cod)}">
+<rect x=".3" y=".3" width="99.4" height="99.4" rx="1.6" fill="#fff" stroke="#cfcfc8" stroke-width=".6"/>
+${g.replace("<svg ",'<svg x="3" y="3" width="68" height="68" ')}
+<text transform="translate(87.5 5) rotate(90)" font-family="${Mo}" font-size="4.2" textLength="63" lengthAdjust="spacingAndGlyphs" fill="#111">CENTRO DE ARTE NO UBICADO</text>
+<rect x="77" y="5" width="2.2" height="63" fill="#D6A300"/>
+<text x="4" y="83" font-family="${F}" font-weight="800" font-size="7.6" textLength="64" lengthAdjust="spacingAndGlyphs" fill="#111">CANARIAS.AFRICA</text>
+<text x="4" y="92.4" font-family="${Mo}" font-size="4.2" textLength="39" lengthAdjust="spacingAndGlyphs" fill="#111">canarias.africa/scan</text>
+<rect x="46" y="87.4" width="22" height="6.6" rx="1" fill="#111"/><text x="48" y="92.4" font-family="${Mo}" font-weight="700" font-size="4.4" textLength="18" lengthAdjust="spacingAndGlyphs" fill="#D6A300">${codBonito(cod)}</text>
+<rect x="73" y="73" width="26" height="26" fill="#fff"/><path d="${qp}" fill="#111"/></svg>`;
+}
+
+/* ---------- canarias.africa/scan: lector del glifo ---------- */
+/* El QR común de los azulejos lleva aquí. La cámara busca el glifo; si no hay cámara, vale una foto o teclear el código. */
+let SCAN=null;
+function pararScan(){ if(SCAN){ clearInterval(SCAN.t); SCAN.stream.getTracks().forEach(t=>t.stop()); SCAN=null; } }
+function vScan(){
+  return `<section class="stack"><p class="eyebrow">canarias.africa/scan</p><h1>Lee el azulejo</h1>
+    <p class="lede muted">Apunta al círculo del azulejo con el móvil paralelo a la pared. En cuanto lo lea, se abre la obra.</p></section>
+  <div class="scan" style="margin-top:20px">
+    <div class="visor"><video id="sc-video" playsinline muted hidden></video><canvas id="sc-canvas" hidden></canvas><div class="guia" aria-hidden="true"></div>
+      <button class="btn" type="button" id="sc-cam">Abrir la cámara</button></div>
+    <p id="sc-res" role="status" class="muted"></p>
+    <div class="scan-alt">
+      <label for="sc-foto" class="mono">O sube una foto del azulejo<input id="sc-foto" type="file" accept="image/*" capture="environment"></label>
+      <form id="sc-codf" novalidate><label for="sc-cod" class="mono">O escribe el código que lleva debajo<span><input id="sc-cod" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="7KQ2-M9XD" maxlength="12"><button class="btn alt" type="submit">Ir</button></span></label></form>
+    </div>
+  </div>`;
+}
+function irACodigo(cod){ pararScan(); location.hash="#/q/"+normaCod(cod); }
+function leerImagen(fuente,w,h){ const c=$("#sc-canvas"); c.width=w; c.height=h; const x=c.getContext("2d",{willReadFrequently:true}); x.drawImage(fuente,0,0,w,h); return leerGlifo(x.getImageData(0,0,w,h)); }
+async function abrirCamara(){
+  const res=$("#sc-res");
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) return pinta(res,"Este navegador no deja usar la cámara aquí. Sube una foto o escribe el código.");
+  try{ const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment",width:{ideal:1280}}});
+    const v=$("#sc-video"); if(!v){ stream.getTracks().forEach(t=>t.stop()); return; }
+    v.srcObject=stream; v.hidden=false; $("#sc-cam").hidden=true; await v.play();
+    let ultimo=null; res.textContent="Buscando el glifo…"; res.style.color="var(--muted)";
+    SCAN={stream,t:setInterval(()=>{ if(!$("#sc-video")) return pararScan(); if(!v.videoWidth) return;
+      const k=Math.min(1,640/v.videoWidth), cod=leerImagen(v,Math.round(v.videoWidth*k),Math.round(v.videoHeight*k));
+      if(cod&&cod===ultimo) irACodigo(cod); ultimo=cod; },220)};
+  }catch(e){ pinta(res,e&&e.name==="NotAllowedError"?"No has dado permiso para usar la cámara. Sube una foto o escribe el código.":"No se ha podido abrir la cámara. Sube una foto o escribe el código."); }
+}
+async function leerFoto(e){
+  const f=e.target.files&&e.target.files[0], res=$("#sc-res"); if(!f) return;
+  try{ const bmp=await createImageBitmap(f), k=Math.min(1,1200/Math.max(bmp.width,bmp.height)), cod=leerImagen(bmp,Math.round(bmp.width*k),Math.round(bmp.height*k));
+    if(cod) return irACodigo(cod);
+    pinta(res,"No encuentro el glifo en la foto. Hazla de frente, con el círculo entero y sin reflejos, o escribe el código."); }
+  catch(err){ pinta(res,"No se ha podido abrir la foto."); }
+}
+function wireScan(){
+  const on=(s,ev,fn)=>{ const el=$(s); if(el) el.addEventListener(ev,fn); };
+  on("#sc-cam","click",abrirCamara); on("#sc-foto","change",leerFoto);
+  on("#sc-codf","submit",e=>{ e.preventDefault(); const c=normaCod($("#sc-cod").value); if(!codValido(c)) return pinta($("#sc-res"),"El código tiene 8 letras y números, por ejemplo 7KQ2-M9XD."); irACodigo(c); });
 }
 
 /* ---------- Vistas ---------- */
@@ -2366,14 +2533,14 @@ relaciones.hecha_de = { de: "obra", a: "material", propiedades: ["proporción", 
 
   <section class="stack">
     <h2>Etiquetas QR: colaboración abierta y por méritos</h2>
-    <p class="muted prose">Funciona como una wiki: cualquiera puede colaborar y los permisos crecen con lo que la comunidad verifica. Cada etiqueta lleva su propio UUID, impreso y no publicado, que apunta a <span class="mono">canarias.africa/&lt;uuid&gt;</span>. Todo queda registrado en el historial público de la etiqueta.</p>
+    <p class="muted prose">Funciona como una wiki: cualquiera puede colaborar y los permisos crecen con lo que la comunidad verifica. Cada etiqueta lleva su propio código corto de 8 caracteres, impreso y no publicado. La pegatina apunta a <span class="mono">canarias.africa/&lt;código&gt;</span> y el azulejo lleva el código en un glifo circular que se lee en <a href="#scan" class="mono">canarias.africa/scan</a>. Todo queda registrado en el historial público de la etiqueta.</p>
     <ol class="ciclo">
-      <li><span class="cinta">1 · Pool</span><p>Generamos los UUID por adelantado. Están libres y no apuntan a ninguna obra.</p></li>
+      <li><span class="cinta">1 · Pool</span><p>Generamos los códigos por adelantado. Están libres y no apuntan a ninguna obra.</p></li>
       <li><span class="cinta">2 · Cupo</span><p>Con alias y correo verificado recibes 3 etiquetas para imprimir. Con colocaciones confirmadas subes a 10 y a 25. Tienes un plazo para colocarlas.</p></li>
-      <li><span class="cinta id">3 · Colocada</span><p>Junto a la obra, escaneas la etiqueta, eliges la obra o propones una nueva y envías GPS (25 m o mejor) y una foto. El UUID queda unido a ese punto.</p></li>
+      <li><span class="cinta id">3 · Colocada</span><p>Junto a la obra, escaneas la etiqueta, eliges la obra o propones una nueva y envías GPS (25 m o mejor) y una foto. El código queda unido a ese punto.</p></li>
       <li><span class="cinta id">4 · Confirmada</span><p>Bastan dos verificaciones de otras personas a menos de 50 m. La etiqueta aparece en el mapa y quien la colocó gana méritos.</p></li>
       <li><span class="cinta">5 · Trazabilidad</span><p>Cada escaneo de otra persona atestigua que la etiqueta sigue ahí. Sin verificaciones en 6 meses, pasa a «sin verificar».</p></li>
-      <li><span class="cinta">↺ Vuelve al pool</span><p>Si el plazo vence sin colocarla y no la has impreso, el UUID se libera para otra persona. Si ya la imprimiste, queda caducada y solo tú puedes reactivarla.</p></li>
+      <li><span class="cinta">↺ Vuelve al pool</span><p>Si el plazo vence sin colocarla y no la has impreso, el código se libera para otra persona. Si ya la imprimiste, queda caducada y solo tú puedes reactivarla.</p></li>
     </ol>
     <div class="btns"><a class="btn" href="#colabora">Pedir etiquetas</a></div>
   </section>
@@ -2461,7 +2628,7 @@ function dispositivo(){ let d=null; try{ d=localStorage.getItem("ca-dispositivo"
 function pedirGPS(){ return new Promise((ok,ko)=>{ if(!navigator.geolocation) return ko(new Error("Este navegador no da la ubicación."));
   navigator.geolocation.getCurrentPosition(p=>ok({lat:p.coords.latitude,lon:p.coords.longitude,precision:Math.round(p.coords.accuracy)}),
     e=>ko(new Error(e.code===1?"No has dado permiso para usar tu ubicación.":"No se ha podido obtener tu ubicación. Prueba al aire libre.")),{enableHighAccuracy:true,timeout:20000,maximumAge:0}); }); }
-const uuid4=()=>crypto.randomUUID?crypto.randomUUID():"10000000-1000-4000-8000-100000000000".replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+const nuevoCod=()=>Array.from(crypto.getRandomValues(new Uint8Array(8)),b=>B32[b&31]).join("");
 const enDias=n=>{ const d=new Date(HOY); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
 
 /* Estado de una etiqueta. Vista previa: las de ejemplo están confirmadas y las de tu cupo simulado, pendientes de colocar. */
@@ -2487,7 +2654,7 @@ function vEtiqueta(cod,r){
   if(r.estado==="asignado"){
     if(SES&&(SES.etiquetas||[]).some(e=>e.qr===cod)) return vColocar(cod);
     volver("/q/"+cod);
-    return `<section class="stack"><p class="eyebrow">Etiqueta <span class="cinta id">${corto(cod)}</span></p><h1>Etiqueta pendiente de colocar</h1>
+    return `<section class="stack"><p class="eyebrow">Etiqueta <span class="cinta id">${codBonito(cod)}</span></p><h1>Etiqueta pendiente de colocar</h1>
       <p class="lede muted">Esta etiqueta ya tiene dueño, pero todavía no está unida a ninguna obra.</p>
       <p>¿Es tuya? <a href="#colabora">Entra en tu cuenta</a> y volverás aquí para colocarla.</p></section>`;
   }
@@ -2552,7 +2719,7 @@ let GPSCOL=null;
 function vColocar(cod){
   GPSCOL=null;
   const ops=OBRAS.filter(o=>sensOf(o)!=="reservada").sort((a,b)=>a.t.localeCompare(b.t,"es"));
-  return `<section class="stack"><p class="eyebrow">Tu etiqueta <span class="cinta id">${corto(cod)}</span></p>
+  return `<section class="stack"><p class="eyebrow">Tu etiqueta <span class="cinta id">${codBonito(cod)}</span></p>
     <h1>Colocar esta etiqueta</h1>
     <p class="lede muted">Pega la etiqueta junto a la obra, en un sitio visible que no la dañe. Después elige la obra, guarda tu ubicación aquí mismo y haz una foto de la etiqueta puesta.</p></section>
   <div id="okbox" style="margin-top:20px"></div>
@@ -2657,7 +2824,7 @@ function vColabora(){
   </form>
   <section class="stack" style="margin-top:30px"><h2>Tus etiquetas</h2>
     ${ets.length?`<div class="aytable"><table><thead><tr><th>Código</th><th>Estado</th><th>Plazo</th><th>Impresa</th><th></th></tr></thead><tbody>
-    ${ets.map(e=>`<tr><td class="mono">${corto(e.qr)}</td><td>${ESTQ[e.estado]||esc(e.estado)}</td><td>${e.estado==="asignado"?fd(e.vence):"—"}</td><td>${e.descargada?"Sí":"No"}</td>
+    ${ets.map(e=>`<tr><td class="mono">${codBonito(e.qr)}</td><td>${ESTQ[e.estado]||esc(e.estado)}</td><td>${e.estado==="asignado"?fd(e.vence):"—"}</td><td>${e.descargada?"Sí":"No"}</td>
       <td>${e.estado==="asignado"?`<a href="#/q/${e.qr}">Colocar</a> · <button type="button" class="enlace" data-ampliar="${e.qr}">Ampliar plazo</button>`:""}</td></tr>`).join("")}</tbody></table></div>`
       :`<p class="muted">Todavía no tienes etiquetas.</p>`}
     ${pend.length?`<div class="btns"><button class="btn" type="button" id="hoja-btn">Descargar hoja de etiquetas</button></div>
@@ -2686,7 +2853,7 @@ async function entrarCorreo(e){
 async function pedirEtiquetas(e){
   e.preventDefault(); const n=Math.max(1,Math.min(+$("#as-n").value||1,+SES.disponibles||0));
   let r;
-  if(DEMO){ for(let i=0;i<n;i++) SES.etiquetas.push({qr:uuid4(),vence:enDias(30),descargada:false,estado:"asignado"}); SES.disponibles-=n; guardarSesion(SES); r={ok:true}; }
+  if(DEMO){ for(let i=0;i<n;i++) SES.etiquetas.push({qr:nuevoCod(),vence:enDias(30),descargada:false,estado:"asignado"}); SES.disponibles-=n; guardarSesion(SES); r={ok:true}; }
   else { r=await api("/api/qr/asignar",{metodo:"POST",json:{cantidad:n}}); if(r.ok&&r.j.alias) guardarSesion({...r.j,token:SES.token}); }
   if(!r.ok) return pinta($("#as-err"),esc(errDe(r)));
   route();
@@ -2698,12 +2865,20 @@ async function ampliar(cod){
   if(!r.ok) return pinta($("#okbox"),`<div class="ok" style="border-color:var(--ph-desg)">${esc(errDe(r))}</div>`);
   route(); pinta($("#okbox"),`<div class="ok">Plazo ampliado. Ya no se puede volver a ampliar.</div>`,true);
 }
+let FORMATO="pegatina", HOJA=[];
 async function hojaEtiquetas(){
-  let lista;
-  if(DEMO){ lista=SES.etiquetas.filter(x=>x.estado==="asignado").map(x=>{ x.descargada=true; return {uuid:x.qr,url:API.qr+x.qr,vence:x.vence}; }); guardarSesion(SES); }
-  else { const r=await api("/api/qr/mis-etiquetas"); if(!r.ok||!Array.isArray(r.j)) return pinta($("#hoja"),esc(errDe(r))); lista=r.j; refrescarPerfil(); }
-  $("#hoja").innerHTML=`<div class="hoja-sec"><div class="btns" style="margin:18px 0"><button class="btn" type="button" onclick="print()">Imprimir</button><span class="muted" style="align-self:center;font-size:.88rem">${lista.length} etiquetas · imprime al 100 % en papel adhesivo resistente al agua.</span></div>
-    <div class="hoja">${lista.map(x=>`<div class="etiqueta imp"><span class="cinta">CANARIAS.AFRICA</span><div class="qr">${qrSVG(x.url||API.qr+x.uuid)}</div><span class="cinta id">${corto(x.uuid)}</span><span class="cinta mini">Escanéame</span></div>`).join("")}</div></div>`;
+  if(DEMO){ HOJA=SES.etiquetas.filter(x=>x.estado==="asignado").map(x=>{ x.descargada=true; return {codigo:x.qr,url:API.qr+x.qr,vence:x.vence}; }); guardarSesion(SES); }
+  else { const r=await api("/api/qr/mis-etiquetas"); if(!r.ok||!Array.isArray(r.j)) return pinta($("#hoja"),esc(errDe(r))); HOJA=r.j; refrescarPerfil(); }
+  pintarHoja();
+}
+function pintarHoja(){
+  const cod=x=>normaCod(x.codigo||x.uuid);
+  $("#hoja").innerHTML=`<div class="hoja-sec"><div class="btns formato" role="group" aria-label="Formato" style="margin:18px 0 10px">${[["pegatina","Pegatina"],["azulejo","Azulejo 10 × 10 cm"]].map(([v,t])=>`<button type="button" class="btn${FORMATO===v?"":" alt"}" data-formato="${v}" aria-pressed="${FORMATO===v}">${t}</button>`).join("")}</div>
+    <p class="muted" style="font-size:.88rem;max-width:68ch">${FORMATO==="azulejo"?"El azulejo lleva el glifo con el código de la etiqueta y un QR igual en todos, que abre canarias.africa/scan. Para calcomanía cerámica cocida.":"La pegatina lleva un QR con la dirección propia de la etiqueta. Imprímela al 100 % en papel adhesivo resistente al agua."} ${HOJA.length} etiquetas.</p>
+    <div class="btns" style="margin-bottom:16px"><button class="btn" type="button" onclick="print()">Imprimir</button></div>
+    <div class="hoja${FORMATO==="azulejo"?" azulejos":""}">${HOJA.map(x=>FORMATO==="azulejo"?`<div class="azulejo">${azulejoSVG(cod(x))}</div>`
+      :`<div class="etiqueta imp"><span class="cinta">CANARIAS.AFRICA</span><div class="qr">${qrSVG(x.url||API.qr+cod(x))}</div><span class="cinta id">${codBonito(cod(x))}</span><span class="cinta mini">Escanéame</span></div>`).join("")}</div></div>`;
+  document.querySelectorAll("[data-formato]").forEach(b=>b.addEventListener("click",()=>{ FORMATO=b.dataset.formato; pintarHoja(); }));
 }
 
 /* Historial público de la etiqueta de una obra (sin el UUID de la etiqueta ni posiciones de personas) */
@@ -2734,7 +2909,7 @@ function wireEtiquetas(){
 function route(){
   const h=(location.hash||"#inicio").slice(1)||"inicio", app=$("#app");
   let sec=h, html;
-  if(h.startsWith("/q/")){ const cod=decodeURIComponent(h.slice(3)).toLowerCase(); sec="archivo";
+  if(h.startsWith("/q/")){ const cod=normaCod(decodeURIComponent(h.slice(3))); sec="archivo";
     const r=DEMO?qrDemo(cod):QRRES.get(cod);
     if(!r){ html=`<p class="muted">Comprobando el código…</p>`; resolverQR(cod); }
     else html=vEtiqueta(cod,r); }
@@ -2743,7 +2918,7 @@ function route(){
   else if(h.startsWith("contexto-")){ const o=OBRAS.find(x=>"contexto-"+x.id.toLowerCase()===h); sec="archivo"; html=o?vContexto(o):`<h1>Ficha no encontrada</h1>`; }
   else if(h.startsWith("obra-")){ const o=OBRAS.find(x=>slug(x.id)===h); sec="archivo"; html=o?vObra(o):`<h1>Ficha no encontrada</h1><p><a href="#archivo">Volver al archivo</a></p>`; }
   else if(h.startsWith("nodo-")){ const n=G.byId.get(h.slice(5).toUpperCase()); sec="red"; html=n?vNodo(n):`<h1>Nodo no encontrado</h1><p><a href="#red">Volver a la red</a></p>`; }
-  else html=({inicio:vInicio,archivo:vArchivo,red:vRed,aportar:vAportar,inscripcion:vInscripcion,"proponer-ruta":vProponerRuta,apoya:vApoya,rutas:vRutas,ayudas:vAyudas,sistema:vSistema,colabora:vColabora,comunidad:vComunidad,derechos:vDerechos,privacidad:vPrivacidad}[h]||vInicio)();
+  else html=({inicio:vInicio,archivo:vArchivo,red:vRed,aportar:vAportar,inscripcion:vInscripcion,"proponer-ruta":vProponerRuta,apoya:vApoya,rutas:vRutas,ayudas:vAyudas,sistema:vSistema,colabora:vColabora,scan:vScan,comunidad:vComunidad,derechos:vDerechos,privacidad:vPrivacidad}[h]||vInicio)();
   app.innerHTML=`<div class="view">${html}</div>`;
   document.querySelectorAll("nav.main a").forEach(a=>a.removeAttribute("aria-current"));
   document.querySelectorAll("nav.main a").forEach(a=>{ if(a.getAttribute("href")==="#"+sec) a.setAttribute("aria-current","page"); });
@@ -2759,7 +2934,7 @@ function route(){
   if(h==="inscripcion") $("#inscf").addEventListener("submit",inscribir);
   if($("#obsf")) $("#obsf").addEventListener("submit",enviar);
   if($("#rutaf")) $("#rutaf").addEventListener("submit",proponerRuta);
-  wireEtiquetas();
+  wireEtiquetas(); wireScan(); if(h!=="scan") pararScan();
   if(h==="colabora") refrescarPerfil();
 }
 document.addEventListener("click",e=>{

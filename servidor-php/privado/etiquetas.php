@@ -138,6 +138,7 @@ function qr_colocar(): never {
     $db->prepare('INSERT INTO obras_propuestas (uuid, colaborador, datos) VALUES (?, ?, ?)')
        ->execute([$obra_uuid, $c['id'], json_encode($datos, JSON_UNESCAPED_UNICODE)]);
   }
+  if (!in_array((string) ($_POST['acepta_derechos'] ?? ''), ['1', 'true', 'on'], true)) error_publico('Hay que aceptar las condiciones de uso de la foto.');
   $foto = foto_subida(true);
 
   $db->beginTransaction();

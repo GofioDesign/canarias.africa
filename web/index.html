@@ -778,6 +778,31 @@ svg.leaflet-image-layer.leaflet-interactive path {
 		}
 	}
 
+
+/* Etiquetas: cuenta, colocación, verificación, hoja imprimible */
+.cuenta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;margin-top:22px;max-width:980px}
+.cuenta form.obsf{background:var(--surface);border:1px solid var(--line);padding:18px;align-content:start}
+.cuenta h2{margin:0;font-size:1.15rem}
+.perfil{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+form.obsf .gps,form.obsf .nueva{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+form.obsf .nueva{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px;border-left:3px solid var(--lichen);padding-left:14px}
+form.obsf .nueva[hidden]{display:none}
+form.obsf select{font:inherit;font-family:var(--f-body);font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);padding:9px 10px;max-width:100%}
+button.enlace{background:none;border:0;padding:0;font:inherit;color:var(--lichen-ink);text-decoration:underline;cursor:pointer}
+details.aviso{margin-top:18px;max-width:760px}
+#avisof .radios label{flex-direction:row;align-items:center;gap:8px}
+details.aviso summary{cursor:pointer;font-family:var(--f-mono);font-size:.85rem}
+.hoja{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:22px}
+.etiqueta.imp{transform:none;break-inside:avoid}
+.etiqueta.imp .qr svg{display:block;width:100%;max-width:150px}
+@media (max-width:720px){ .cuenta,form.obsf .nueva{grid-template-columns:minmax(0,1fr)} }
+@media print{
+  body:has(.hoja) header.top,body:has(.hoja) .qrband,body:has(.hoja) .proto,body:has(.hoja) footer,body:has(.hoja) .view>:not(section),body:has(.hoja) .view>section>:not(#hoja),body:has(.hoja) .hoja-sec>.btns{display:none!important}
+  body:has(.hoja){background:#fff}
+  .hoja{grid-template-columns:repeat(3,52mm);gap:8mm}
+  .etiqueta.imp{box-shadow:none;border:1px dashed #999;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
 /* Mapas OSM */
 .lmap{height:340px;background:var(--sea);font-family:var(--f-body);z-index:0}
 .lmap.small{height:280px}
@@ -1016,6 +1041,7 @@ a.of:hover::after{opacity:.9}
       <a href="#aportar">Proponer obra</a>
       <a href="#ayudas">Ayudas</a>
       <a href="#apoya">Apoya</a>
+      <a href="#colabora">Colabora</a>
       <a href="#comunidad">Comunidad</a>
       <a href="#sistema">Cómo funciona</a>
     </nav>
@@ -1031,6 +1057,9 @@ a.of:hover::after{opacity:.9}
 </div></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>/* qrcode-generator 1.4.4 · (c) 2009 Kazuhiko Arase · licencia MIT · «QR Code» es marca registrada de DENSO WAVE */
+var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,(function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1}))},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(n*r,o*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(t,r){var e=n("友");if(2!=e.length||38726!=(e[0]<<8|e[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}((function(){return qrcode}));
+</script>
 <script>
 /* ---------- Vocabularios ---------- */
 const FASES = {
@@ -1149,6 +1178,7 @@ OBRAS.forEach(o=>{ o.qr.cod=o.qr.st==="activo"?QR_COD[o.id]:null; });
 const corto=id=>id.slice(0,8);
 /* Trazabilidad de la etiqueta: colocación + verificaciones independientes (escaneos de otras personas). Ficticio en el prototipo. */
 function trazaEtiqueta(o){
+  if(!DEMO) return `<div id="traza"></div>`; // en producción, historial público de la API (cargarHistorial)
   if(!o.qr.inst) return "";
   const ver=o.obs.filter(b=>/QR/.test(b[2])).map((b,i)=>({f:b[0],a:b[1],d:[12,31,8,22][i%4]})).sort((x,y)=>x.f<y.f?1:-1);
   const ult=ver[0]?ver[0].f:o.qr.inst, estado=o.qr.st!=="activo"?"—":ver.length>=2?"Confirmada":"Pendiente de verificar";
@@ -1462,13 +1492,6 @@ async function cargarFicha(o){
     o._ficha=true; return true;
   }catch(e){ return false; }
 }
-/* QR → obra: en producción lo resuelve el servidor (el código del QR no está en el catálogo público) */
-const QRRES=new Map();
-async function resolverQR(cod){
-  try{ const r=await fetch(API.qrResolver+encodeURIComponent(cod)); const j=r.ok?await r.json():null; QRRES.set(cod,j&&j.estado==="colocado"?j.obra:null); }
-  catch(e){ QRRES.set(cod,null); }
-  route();
-}
 async function cargarUMap(){
   const capa=async c=>{ const r=await fetch(MAPA.umap+c+".geojson"); if(!r.ok) throw new Error(c); return (await r.json()).features||[]; };
   let cambio=false;
@@ -1512,20 +1535,28 @@ function initMaps(){
 
 function leyenda(){ return `<div class="legend">${["plenitud","desgaste","intervencion","transformacion","desaparicion","memoria"].map(f=>`<span><i class="sw" style="background:${css(FASES[f].c)}"></i>${FASES[f].n}</span>`).join("")}</div>`; }
 
-/* ---------- QR ilustrativo ---------- */
-/* QR de canarias.africa: negro y blanco como base y el ocre solo en el centro de las tres marcas de posición
-   (y en el sello central), para que siga leyéndose bien con cualquier móvil. */
+/* ---------- QR de canarias.africa ---------- */
+/* QR real (corrección de errores H) en negro y blanco. El ocre va en un sello alrededor del patrón central,
+   que se conserva intacto: así el móvil lo sigue leyendo y el 30 % de redundancia cubre los módulos tapados. */
+const QR_OCRE="#D6A300";
+function qrMatriz(text){
+  if(typeof qrcode!=="function") return null;
+  try{ const q=qrcode(0,"H"); q.addData(text); q.make(); const n=q.getModuleCount(), c=(n-1)/2;
+    return {n,celda:(x,y)=>{ const d=Math.max(Math.abs(x-c),Math.abs(y-c)); return d===4?"o":d===3?"b":q.isDark(y,x)?"n":"b"; }};
+  }catch(e){ return null; }
+}
+function qrSVG(text){
+  const m=qrMatriz(text); if(!m) return `<p class="muted mono" style="font-size:.7rem;word-break:break-all">${esc(text)}</p>`;
+  const Q=4, W=m.n+2*Q; let neg="", oc="";
+  for(let y=0;y<m.n;y++) for(let x=0;x<m.n;x++){ const k=m.celda(x,y); if(k==="n") neg+=`M${x+Q} ${y+Q}h1v1h-1z`; else if(k==="o") oc+=`M${x+Q} ${y+Q}h1v1h-1z`; }
+  return `<svg viewBox="0 0 ${W} ${W}" shape-rendering="crispEdges" role="img" aria-label="Código QR de ${esc(text)}"><rect width="${W}" height="${W}" fill="#fff"/><path d="${neg}" fill="#111"/><path d="${oc}" fill="${QR_OCRE}"/></svg>`;
+}
 function drawQR(canvas,text){
-  const N=25,M=8,c=canvas.getContext("2d"), OCRE="#D6A300", NEGRO="#111", BLANCO="#fff"; canvas.width=canvas.height=N*M;
-  let h=2166136261; for(const ch of text){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619); }
-  const rnd=()=>{ h^=h<<13; h^=h>>>17; h^=h<<5; return (h>>>0)/4294967296; };
-  const sq=(x,y,w,col)=>{ c.fillStyle=col; c.fillRect(x*M,y*M,w*M,w*M); };
-  sq(0,0,N,BLANCO);
-  const ctr=k=>k>=10&&k<=14;
-  for(let y=0;y<N;y++)for(let x=0;x<N;x++){ const inF=(x<8&&y<8)||(x>N-9&&y<8)||(x<8&&y>N-9); if(!inF&&!(ctr(x)&&ctr(y))&&rnd()>.52) sq(x,y,1,NEGRO); }
-  const finder=(x,y)=>{ sq(x,y,7,NEGRO); sq(x+1,y+1,5,BLANCO); sq(x+2,y+2,3,OCRE); };
-  finder(0,0); finder(N-7,0); finder(0,N-7);
-  sq(10,10,5,BLANCO); sq(11,11,3,NEGRO); sq(12,12,1,OCRE); // sello central
+  const m=qrMatriz(text), c=canvas.getContext("2d");
+  if(!m){ canvas.width=canvas.height=200; c.fillStyle="#fff"; c.fillRect(0,0,200,200); return; }
+  const Q=4, M=6, W=(m.n+2*Q)*M; canvas.width=canvas.height=W;
+  c.fillStyle="#fff"; c.fillRect(0,0,W,W);
+  for(let y=0;y<m.n;y++) for(let x=0;x<m.n;x++){ const k=m.celda(x,y); if(k==="b") continue; c.fillStyle=k==="o"?QR_OCRE:"#111"; c.fillRect((x+Q)*M,(y+Q)*M,M,M); }
 }
 
 /* ---------- Vistas ---------- */
@@ -1534,7 +1565,7 @@ function vInicio(){
   const OF=[
    ["Archivo colaborativo","Fichas permanentes de obras en el espacio público y rural: quién las hizo, quién las pagó y cómo han cambiado.","#archivo","on"],
    ["Red nodal","Cómo se conectan obras, personas, lugares, fuentes y financiación. Cada nodo tiene su página.","#red","on"],
-   ["QR en las obras","Un código junto a cada obra abre su ficha. Solo escaneándolo se puede contar cómo está hoy.","#archivo","on"],
+   ["QR en las obras","Un código junto a cada obra abre su ficha. Solo escaneándolo se puede contar cómo está hoy. Pide etiquetas y colócalas tú.","#colabora","on"],
    ["Rutas curatoriales","Proyectos de curaduría sobre obras catalogadas, que se recorren a pie. Puedes proponer la tuya.","#rutas","on"],
    ["Salidas colectivas de mapeo","En municipios de Tenerife, para localizar y documentar obras entre vecinas y vecinos. Apúntate y te avisamos de la fecha.","#inscripcion","on"],
    ["Ayudas a artistas","Calendario de convocatorias, residencias e incentivos para artistas y colectivos de Canarias.","#ayudas","on"],
@@ -1669,12 +1700,12 @@ function vObra(o){
       <h1>${esc(o.t)}</h1>
       <p class="lede muted">${o.tipo} · ${esc(o.lugar)} · ${M.n}, ${ISLAS[M.isla]}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}
       <div class="btns"><a class="btn lichen" href="#contexto-${o.id.toLowerCase()}">Aportar contexto</a></div>
-      <div class="qrhint">${o.qr.st==="activo"?`<p><b>¿Estás junto a la obra?</b> Escanea su QR para contar cómo está hoy. El estado de una obra solo se puede observar desde su QR.</p><div class="btns" style="align-items:center"><a class="btn alt" href="#${qrHash(o)}" style="padding:6px 12px;font-size:.88rem">Simular escaneo del QR</a><span class="fake">solo en el prototipo</span></div>`
+      <div class="qrhint">${o.qr.st==="activo"?`<p><b>¿Estás junto a la obra?</b> Escanea su QR para contar cómo está hoy. El estado de una obra solo se puede observar desde su QR.</p>${DEMO?`<div class="btns" style="align-items:center"><a class="btn alt" href="#${qrHash(o)}" style="padding:6px 12px;font-size:.88rem">Simular escaneo del QR</a><span class="fake">solo en el prototipo</span></div>`:""}`
         :sensOf(o)==="reservada"?`<p class="muted">Esta obra no lleva QR en el sitio, para no señalar dónde está. Su estado lo revisa el equipo junto con la autoridad de patrimonio. Puedes aportar contexto.</p>`
         :`<p class="muted">Esta obra no tiene un QR activo (${esc(o.qr.st)}), así que ahora no se puede observar su estado. Lo revisaremos en la próxima salida de mapeo.</p>`}</div>
       ${(()=>{ const ags=o.aut.filter(a=>a.c==="confirmada").map(a=>G.byKey.get("ag:"+a.n)).filter(ag=>ag&&canales(ag).length); return ags.length?`<div class="apoya"><span class="eyebrow">Apoya a la autoría</span>${ags.map(ag=>`<div><b>${esc(ag.label)}</b>${botonesCanal(ag)}</div>`).join("")}</div>`:""; })()}
     </div>
-    <aside ${sensOf(o)==="reservada"?"hidden":""}><div class="etiqueta" aria-label="Etiqueta QR que se coloca junto a la obra"><span class="cinta">CANARIAS.AFRICA</span><div class="qr"><canvas id="qr" aria-label="Código QR ilustrativo de la obra"></canvas></div><span class="cinta id" title="${o.id}">${corto(o.id)}</span><span class="cinta mini">Escanéame</span></div><p class="qrnote">Así es la etiqueta junto a la obra. QR ilustrativo, no escaneable. Apunta a canarias.africa/ seguido del código propio del QR, que no se publica en la web.</p>${trazaEtiqueta(o)}</aside>
+    <aside ${sensOf(o)==="reservada"?"hidden":""}><div class="etiqueta" aria-label="Etiqueta QR que se coloca junto a la obra"><span class="cinta">CANARIAS.AFRICA</span><div class="qr"><canvas id="qr" aria-label="Código QR de muestra que abre esta ficha"></canvas></div><span class="cinta id" title="${o.id}">${corto(o.id)}</span><span class="cinta mini">Escanéame</span></div><p class="qrnote">Así es la etiqueta junto a la obra. Este QR de muestra abre la ficha; el de la etiqueta real apunta a canarias.africa/ seguido de su propio código, que no se publica en la web. <a href="#colabora">Coloca etiquetas</a>.</p>${trazaEtiqueta(o)}</aside>
   </section>
 
   <section class="grid2">
@@ -1722,15 +1753,15 @@ let PRESEL="";
 const qrHash=o=>`/q/${o.qr.cod}`;
 /* En producción el código lo valida el servidor al redirigir y al recibir la observación. En la vista previa se compara con el token de ejemplo. */
 const qrValido=(o,c)=>!!c&&o.qr.st==="activo"&&(!DEMO||c===o.qr.cod);
-const LIC=`<label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-lic" required style="margin-top:4px"> Confirmo que las fotos o documentos son míos o puedo compartirlos. Conservo mis derechos y autorizo, sin exclusividad, a mostrarlos con mi crédito en el archivo (<a href="#derechos">derechos de imagen</a>).</label>`;
-const PRIV=`<label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-priv" name="acepta_privacidad" value="1" required style="margin-top:4px"> He leído la <a href="#privacidad">política de privacidad</a> y acepto que canarias.africa guarde estos datos para revisar y publicar mi aportación.</label>`;
+const LIC=`<label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-lic" required style="margin-top:4px"> <span>Confirmo que las fotos o documentos son míos o puedo compartirlos. Conservo mis derechos y autorizo, sin exclusividad, a mostrarlos con mi crédito en el archivo (<a href="#derechos">derechos de imagen</a>).</span></label>`;
+const PRIV=`<label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-priv" name="acepta_privacidad" value="1" required style="margin-top:4px"> <span>He leído la <a href="#privacidad">política de privacidad</a> y acepto que canarias.africa guarde estos datos para revisar y publicar mi aportación.</span></label>`;
 const ALIAS=`<label for="o-alias">Tu nombre o alias (opcional)<input id="o-alias" type="text" placeholder="Se mostrará en la ficha" autocomplete="nickname"></label>`;
 function cabObra(o,eyebrow){ return `<p class="eyebrow"><a href="#${slug(o.id)}">← Ficha de la obra</a></p>
   <section class="stack" style="margin-top:14px"><div class="idline"><span class="idbadge" title="${o.id}">${corto(o.id)}</span>${chip(o.fase)}</div>
   <p class="eyebrow">${eyebrow}</p><h1>${esc(o.t)}</h1><p class="lede muted">${esc(o.lugar)} · ${MUNIS[o.m].n}</p></section>`; }
 
 /* Observación del estado: solo al escanear el QR junto a la obra */
-function vQR(o,cod){
+function vQR(o,cod,estado){
   return cabObra(o,"Has escaneado el QR de esta obra")+`
   <div id="okbox" style="margin-top:20px"></div>
   <form class="obsf" id="obsf" data-modo="qr" data-obra="${o.id}" novalidate style="margin-top:20px">
@@ -1743,7 +1774,7 @@ function vQR(o,cod){
     ${ALIAS}${LIC}${PRIV}
     <p class="full muted" id="o-err" style="font-size:.9rem"></p>
     <div class="full btns"><button class="btn" type="submit">Enviar observación</button></div>
-  </form>`;
+  </form>${bloqueVerificar(cod,estado,o)}`;
 }
 /* Contexto: desde la ficha, sin estar junto a la obra */
 const TCTX=["Historia o testimonio","Dato de autoría","Fuente o documento","Corrección de la ficha"];
@@ -2342,8 +2373,9 @@ relaciones.hecha_de = { de: "obra", a: "material", propiedades: ["proporción", 
       <li><span class="cinta id">3 · Colocada</span><p>Junto a la obra, escaneas la etiqueta, eliges la obra o propones una nueva y envías GPS (25 m o mejor) y una foto. El UUID queda unido a ese punto.</p></li>
       <li><span class="cinta id">4 · Confirmada</span><p>Bastan dos verificaciones de otras personas a menos de 50 m. La etiqueta aparece en el mapa y quien la colocó gana méritos.</p></li>
       <li><span class="cinta">5 · Trazabilidad</span><p>Cada escaneo de otra persona atestigua que la etiqueta sigue ahí. Sin verificaciones en 6 meses, pasa a «sin verificar».</p></li>
-      <li><span class="cinta">↺ Vuelve al pool</span><p>Si el plazo vence sin colocarla, el UUID se libera para otra persona.</p></li>
+      <li><span class="cinta">↺ Vuelve al pool</span><p>Si el plazo vence sin colocarla y no la has impreso, el UUID se libera para otra persona. Si ya la imprimiste, queda caducada y solo tú puedes reactivarla.</p></li>
     </ol>
+    <div class="btns"><a class="btn" href="#colabora">Pedir etiquetas</a></div>
   </section>
 
   <section class="stack">
@@ -2405,26 +2437,321 @@ relaciones.hecha_de = { de: "obra", a: "material", propiedades: ["proporción", 
   </section>`;
 }
 
+/* ---------- Etiquetas QR: cuentas, cupo, colocación y verificación (api.canarias.africa) ---------- */
+/* Sin contraseñas: el servidor envía un enlace a #/entrar?t=… y devuelve un token que se manda como Bearer. En la vista previa se simula todo. */
+const OBSERVABLE=["colocado","confirmado","sin_verificar","desaparecida"];
+const ESTQ={libre:"Libre",asignado:"Pendiente de colocar",caducado:"Caducada",colocado:"Colocada",confirmado:"Confirmada",sin_verificar:"Sin verificar",desaparecida:"Posiblemente desaparecida",danado:"Dañada",retirado:"Retirada",sustituido:"Sustituida",desconocido:"Desconocida"};
+const NIVEL={visitante:"Visitante",colaborador:"Colaborador/a",acreditado:"Colaborador/a acreditado",custodia:"Custodia"};
+let SES=null; try{ SES=JSON.parse(localStorage.getItem("ca-sesion")||"null"); }catch(e){}
+function guardarSesion(s){ SES=s; try{ s?localStorage.setItem("ca-sesion",JSON.stringify(s)):localStorage.removeItem("ca-sesion"); }catch(e){} }
+const volver=v=>{ try{ if(v===undefined){ const x=localStorage.getItem("ca-volver"); localStorage.removeItem("ca-volver"); return x; } localStorage.setItem("ca-volver",v); }catch(e){ return null; } };
+async function api(ruta,{metodo="GET",json,form}={}){
+  const h={Accept:"application/json"}; if(SES&&SES.token&&!ruta.startsWith("/api/publico/")) h.Authorization="Bearer "+SES.token;
+  let body; if(json){ h["Content-Type"]="application/json"; body=JSON.stringify(json); } else if(form) body=form;
+  try{ const r=await fetch(API_BASE+ruta,{method:metodo,headers:h,body}); let j=null; try{ j=await r.json(); }catch(e){}
+    if(r.status===401&&SES) guardarSesion(null);
+    return {ok:r.ok,status:r.status,j:j||{}}; }
+  catch(e){ return {ok:false,status:0,j:{error:"No hay conexión con canarias.africa. Inténtalo de nuevo en un rato."}}; }
+}
+const errDe=(r,t)=>(r.j&&r.j.error)||t||"No se ha podido completar. Inténtalo de nuevo en un rato.";
+function dispositivo(){ let d=null; try{ d=localStorage.getItem("ca-dispositivo"); }catch(e){}
+  if(!d||!/^[A-Za-z0-9_-]{16,64}$/.test(d)){ const a=new Uint8Array(18); crypto.getRandomValues(a); d=btoa(String.fromCharCode(...a)).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+    try{ localStorage.setItem("ca-dispositivo",d); }catch(e){} }
+  return d; }
+function pedirGPS(){ return new Promise((ok,ko)=>{ if(!navigator.geolocation) return ko(new Error("Este navegador no da la ubicación."));
+  navigator.geolocation.getCurrentPosition(p=>ok({lat:p.coords.latitude,lon:p.coords.longitude,precision:Math.round(p.coords.accuracy)}),
+    e=>ko(new Error(e.code===1?"No has dado permiso para usar tu ubicación.":"No se ha podido obtener tu ubicación. Prueba al aire libre.")),{enableHighAccuracy:true,timeout:20000,maximumAge:0}); }); }
+const uuid4=()=>crypto.randomUUID?crypto.randomUUID():"10000000-1000-4000-8000-100000000000".replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+const enDias=n=>{ const d=new Date(HOY); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); };
+
+/* Estado de una etiqueta. Vista previa: las de ejemplo están confirmadas y las de tu cupo simulado, pendientes de colocar. */
+function qrDemo(cod){
+  const o=OBRAS.find(x=>x.qr.cod===cod&&x.qr.st==="activo"); if(o) return {obra:o.id,estado:"confirmado"};
+  const e=SES&&(SES.etiquetas||[]).find(x=>x.qr===cod); if(e) return {obra:e.obra||null,estado:e.estado};
+  return {obra:null,estado:"desconocido"};
+}
+const QRRES=new Map();
+async function resolverQR(cod){
+  const r=await api("/api/qr/"+encodeURIComponent(cod));
+  QRRES.set(cod,r.status===0?{estado:"sin_conexion"}:{obra:r.j.obra||null,estado:r.j.estado||"desconocido"});
+  route();
+}
+const MSGQR={libre:["Etiqueta sin asignar","Este código todavía está en el pool y no corresponde a ninguna obra."],
+  caducado:["Etiqueta caducada","El plazo para colocar esta etiqueta venció. Solo la persona que la recibió puede reactivarla desde su cuenta."],
+  danado:["Etiqueta dañada","Alguien avisó de que esta etiqueta está dañada. Se colocará una nueva con otro código."],
+  retirado:["Etiqueta retirada","Esta etiqueta ya no está en uso."],
+  sustituido:["Etiqueta sustituida","Esta etiqueta se cambió por otra nueva. Busca la etiqueta nueva junto a la obra."],
+  desconocido:["Este QR no es válido","El código no existe en canarias.africa. Puede que la etiqueta sea una copia o que esté mal impresa."],
+  sin_conexion:["No hay conexión","No se ha podido comprobar el código. Vuelve a escanearlo cuando tengas cobertura."]};
+function vEtiqueta(cod,r){
+  if(r.estado==="asignado"){
+    if(SES&&(SES.etiquetas||[]).some(e=>e.qr===cod)) return vColocar(cod);
+    volver("/q/"+cod);
+    return `<section class="stack"><p class="eyebrow">Etiqueta <span class="cinta id">${corto(cod)}</span></p><h1>Etiqueta pendiente de colocar</h1>
+      <p class="lede muted">Esta etiqueta ya tiene dueño, pero todavía no está unida a ninguna obra.</p>
+      <p>¿Es tuya? <a href="#colabora">Entra en tu cuenta</a> y volverás aquí para colocarla.</p></section>`;
+  }
+  if(OBSERVABLE.includes(r.estado)){ const o=r.obra&&byId(r.obra); if(o) return vQR(o,cod,r.estado);
+    return `<section class="stack"><p class="eyebrow">Etiqueta <span class="cinta id">${ESTQ[r.estado]}</span></p><h1>Obra recién incorporada</h1>
+      <p class="lede muted">Esta etiqueta ya está colocada, pero la ficha de la obra se publicará en la próxima actualización del archivo.</p></section>${bloqueVerificar(cod,r.estado,null)}`; }
+  const [t,d]=MSGQR[r.estado]||MSGQR.desconocido;
+  return `<section class="stack"><h1>${t}</h1><p class="lede muted">${d}</p><p><a href="#archivo">Ir al archivo</a></p></section>`;
+}
+
+/* Verificar que la etiqueta sigue ahí (cualquiera, con o sin cuenta) y avisar de daños */
+function bloqueVerificar(cod,estado,o){
+  return `<section class="stack verif" style="margin-top:34px">
+    <h2>¿La etiqueta sigue aquí?</h2>
+    <p class="muted prose">Verifícala con tu ubicación. Cada verificación de otra persona atestigua que la etiqueta existe y da continuidad a este espacio expositivo. Solo se guarda tu distancia a la etiqueta, no tu posición.${estado?` Estado actual: <span class="cinta mini">${ESTQ[estado]||estado}</span>`:""}</p>
+    <form class="obsf" id="verf" data-qr="${esc(cod)}" data-obra="${o?o.id:""}" novalidate>
+      <label for="v-foto">Foto de la etiqueta (opcional)<input id="v-foto" type="file" accept="image/*" capture="environment"></label>
+      <div class="full btns"><button class="btn" type="submit">Verificar con mi ubicación</button></div>
+      <p class="full" id="v-res" role="status"></p>
+    </form>
+    <details class="aviso"><summary>¿Está dañada o ya no está? Avísanos</summary>
+      <form class="obsf" id="avisof" data-qr="${esc(cod)}" novalidate style="margin-top:14px">
+        <fieldset class="full"><legend>Qué pasa</legend><div class="radios">
+          ${[["danado","Está dañada"],["desaparecida","La obra o la etiqueta ya no está"],["retirado","La han quitado"]].map(([v,t],i)=>`<label><input type="radio" name="a-tipo" value="${v}" ${i?"":"checked"}> ${t}</label>`).join("")}
+        </div></fieldset>
+        <label class="full" for="a-txt">Detalles (opcional)<textarea id="a-txt" placeholder="Por ejemplo: la pegatina está rayada y no se lee la mitad."></textarea></label>
+        <div class="full btns"><button class="btn alt" type="submit">Enviar aviso</button></div>
+        <p class="full" id="a-res" role="status"></p>
+      </form>
+    </details>
+  </section>`;
+}
+const pinta=(el,txt,bien)=>{ el.innerHTML=txt; el.style.color=bien?"var(--ph-plen)":"var(--ph-desg)"; };
+async function verificar(e){
+  e.preventDefault(); const f=e.target, b=f.querySelector("button"), res=$("#v-res"), cod=f.dataset.qr;
+  b.disabled=true; pinta(res,"Pidiendo tu ubicación…",true); res.style.color="var(--muted)";
+  let g; try{ g=await pedirGPS(); }catch(err){ pinta(res,esc(err.message)); b.disabled=false; return; }
+  let r;
+  if(DEMO){ const o=byId(f.dataset.obra), d=o&&sensOf(o)==="abierta"?Math.round(km(g.lat,g.lon,o.lat,o.lon)*1000):12;
+    r=g.precision>50?{ok:true,status:200,j:{valida:false,motivo:"gps_impreciso",distancia_m:d}}:{ok:true,status:200,j:{valida:d<=50,motivo:d<=50?null:"fuera_del_radio",distancia_m:d,estado:"confirmado"}}; }
+  else { const fd=new FormData(); fd.append("qr",cod); fd.append("lat",g.lat); fd.append("lon",g.lon); fd.append("precision",g.precision); fd.append("dispositivo",dispositivo());
+    const foto=archivo("#v-foto"); if(foto) fd.append("foto",foto);
+    r=await api("/api/collections/verificaciones/records",{metodo:"POST",form:fd}); }
+  b.disabled=false;
+  if(r.status===409) return pinta(res,"Ya se ha verificado esta etiqueta este mes desde tu cuenta o desde este móvil. Gracias: vuelve dentro de unas semanas.",true);
+  if(r.status===403) return pinta(res,esc(errDe(r,"Colocaste tú esta etiqueta, así que tienen que verificarla otras personas.")));
+  if(!r.ok) return pinta(res,esc(errDe(r)));
+  const d=r.j.distancia_m;
+  if(r.j.valida){ pinta(res,`<b>Verificación válida.</b> Estás a ${d} m de la etiqueta.${r.j.estado?` Estado: ${ESTQ[r.j.estado]||r.j.estado}.`:""}${DEMO?" En este prototipo no se envía a ningún sitio.":""}`,true); f.querySelector("button").hidden=true; }
+  else if(r.j.motivo==="gps_impreciso") pinta(res,`El GPS es poco preciso ahora mismo (±${g.precision} m). Sal al aire libre, espera unos segundos y vuelve a intentarlo.`);
+  else pinta(res,`Estás a ${d} m del punto donde se colocó la etiqueta, a más de 50 m. Puede que se haya movido o que sea una copia, así que no cuenta como verificación. Si la obra se ha trasladado, avísanos abajo.`);
+}
+async function avisar(e){
+  e.preventDefault(); const f=e.target, res=$("#a-res"), tipo=f.querySelector('input[name="a-tipo"]:checked').value;
+  const r=DEMO?{ok:true}:await api("/api/qr/"+encodeURIComponent(f.dataset.qr)+"/aviso",{metodo:"POST",json:{tipo,texto:$("#a-txt").value.trim()}});
+  if(!r.ok) return pinta(res,esc(errDe(r)));
+  pinta(res,`Aviso recibido. Queda en el historial público de la etiqueta.${DEMO?" En este prototipo no se envía a ningún sitio.":""}`,true); f.querySelector("button").disabled=true;
+}
+
+/* Colocar: quien tiene la etiqueta en su cupo la une a una obra con GPS (25 m o mejor) y foto */
+let GPSCOL=null;
+function vColocar(cod){
+  GPSCOL=null;
+  const ops=OBRAS.filter(o=>sensOf(o)!=="reservada").sort((a,b)=>a.t.localeCompare(b.t,"es"));
+  return `<section class="stack"><p class="eyebrow">Tu etiqueta <span class="cinta id">${corto(cod)}</span></p>
+    <h1>Colocar esta etiqueta</h1>
+    <p class="lede muted">Pega la etiqueta junto a la obra, en un sitio visible que no la dañe. Después elige la obra, guarda tu ubicación aquí mismo y haz una foto de la etiqueta puesta.</p></section>
+  <div id="okbox" style="margin-top:20px"></div>
+  <form class="obsf" id="colf" data-qr="${esc(cod)}" novalidate style="margin-top:20px">
+    <label class="full" for="c-obra">Obra<select id="c-obra"><option value="">Elige la obra…</option><option value="nueva">No está en el archivo: es una obra nueva</option>${ops.map(o=>`<option value="${o.id}">${esc(o.t)} · ${MUNIS[o.m].n}</option>`).join("")}</select></label>
+    <div class="full nueva" id="c-nueva" hidden>
+      <label for="c-n-tit">Qué es<input id="c-n-tit" type="text" placeholder="Por ejemplo: mural en la fachada del colegio"></label>
+      <label for="c-n-mun">Municipio<input id="c-n-mun" type="text" list="munlist2" placeholder="Escribe el municipio"><datalist id="munlist2">${MUN_TF.map(m=>`<option value="${m}">`).join("")}</datalist></label>
+      <label for="c-n-sens">Protección<select id="c-n-sens"><option value="abierta">Abierta: ubicación exacta pública</option><option value="difusa">Difusa: solo una zona de unos 2 km</option></select></label>
+      <label class="full" for="c-n-txt">Lo que sabes de ella (opcional)<textarea id="c-n-txt" placeholder="Quién la hizo, cuándo, quién la pagó."></textarea></label>
+      <p class="full muted" style="font-size:.88rem">Si es patrimonio protegido, como un grabado aborigen, no pongas etiqueta: <a href="#aportar">propón la obra sin QR</a>.</p>
+    </div>
+    <div class="full gps"><button class="btn alt" type="button" id="c-gps">Guardar mi ubicación</button><span class="muted" id="c-gps-res">Hace falta una precisión de 25 m o mejor.</span></div>
+    <label for="c-foto">Foto de la etiqueta colocada<input id="c-foto" type="file" accept="image/*" capture="environment"></label>
+    ${LIC}
+    <p class="full muted" id="o-err" style="font-size:.9rem"></p>
+    <div class="full btns"><button class="btn" type="submit">Confirmar colocación</button></div>
+  </form>`;
+}
+async function gpsColocar(){
+  const out=$("#c-gps-res"); out.textContent="Buscando tu ubicación…"; out.style.color="var(--muted)";
+  try{ GPSCOL=await pedirGPS(); }catch(err){ GPSCOL=null; return pinta(out,esc(err.message)); }
+  if(GPSCOL.precision>25) return pinta(out,`Precisión de ±${GPSCOL.precision} m: hace falta 25 m o mejor. Sal al aire libre, espera unos segundos y vuelve a pulsar.`);
+  pinta(out,`Ubicación guardada (±${GPSCOL.precision} m).`,true);
+  const sel=$("#c-obra"), v=sel.value, cerca=[...sel.options].slice(2).map(op=>{ const o=byId(op.value); return {op,d:km(GPSCOL.lat,GPSCOL.lon,o.lat,o.lon)}; }).sort((a,b)=>a.d-b.d);
+  cerca.forEach(({op,d})=>{ op.textContent=op.textContent.replace(/ · a .*$/,"")+(d<5?` · a ${d<1?Math.round(d*1000)+" m":d.toFixed(1)+" km"}`:""); sel.appendChild(op); });
+  sel.value=v;
+}
+async function colocar(e){
+  e.preventDefault(); const f=e.target, cod=f.dataset.qr, err=$("#o-err"), bad=t=>pinta(err,esc(t));
+  const obra=$("#c-obra").value, nueva=obra==="nueva", foto=archivo("#c-foto");
+  if(!obra) return bad("Elige la obra o marca que es una obra nueva.");
+  if(nueva&&!$("#c-n-tit").value.trim()) return bad("Di qué es la obra nueva.");
+  if(!GPSCOL) return bad("Guarda tu ubicación antes de confirmar.");
+  if(GPSCOL.precision>25) return bad("La ubicación no es lo bastante precisa (hace falta 25 m o mejor).");
+  if(!foto) return bad("Falta la foto de la etiqueta colocada.");
+  if(!$("#o-lic").checked) return bad("Marca la casilla de derechos de imagen para poder publicar la foto.");
+  const b=f.querySelector('button[type="submit"]'); b.disabled=true;
+  let r;
+  if(DEMO){ const et=SES.etiquetas.find(x=>x.qr===cod); et.estado="colocado"; et.obra=nueva?null:obra; guardarSesion(SES); r={ok:true,j:{obra:et.obra,estado:"colocado"}}; }
+  else { const fd=new FormData(); fd.append("qr",cod);
+    if(nueva){ fd.append("obra_nueva_titulo",$("#c-n-tit").value.trim()); fd.append("obra_nueva_sensibilidad",$("#c-n-sens").value);
+      const m=$("#c-n-mun").value.trim(), t=$("#c-n-txt").value.trim(); if(m) fd.append("obra_nueva_municipio",m); if(t) fd.append("obra_nueva_descripcion",t); }
+    else fd.append("obra",obra);
+    fd.append("lat",GPSCOL.lat); fd.append("lon",GPSCOL.lon); fd.append("precision",GPSCOL.precision); fd.append("foto",foto); fd.append("acepta_derechos","1");
+    r=await api("/api/collections/colocaciones/records",{metodo:"POST",form:fd});
+    if(r.ok){ QRRES.set(cod,{obra:r.j.obra||null,estado:r.j.estado||"colocado"}); refrescarPerfil(); } }
+  b.disabled=false;
+  if(!r.ok) return bad(errDe(r));
+  const o=r.j.obra&&byId(r.j.obra);
+  f.remove();
+  $("#okbox").innerHTML=`<div class="ok"><h3>Etiqueta colocada</h3><p>${o?`Ya está unida a <a href="#${slug(o.id)}">${esc(o.t)}</a>.`:"La obra nueva tendrá ficha cuando se publique la próxima actualización del archivo."} Cuando dos personas la verifiquen escaneándola, pasará a confirmada, aparecerá en el mapa y sumarás méritos.${DEMO?" En este prototipo no se envía a ningún sitio.":""}</p><p><a href="#colabora">Volver a tus etiquetas</a></p></div>`;
+  window.scrollTo(0,0);
+}
+
+/* Cuenta: alta, entrada por enlace, cupo, hoja de etiquetas */
+async function refrescarPerfil(){
+  if(DEMO||!SES) return;
+  const r=await api("/api/cuenta/yo"); if(!r.ok||!r.j.alias) return;
+  const antes=JSON.stringify(SES); guardarSesion({...r.j,token:SES.token});
+  if(antes!==JSON.stringify(SES)&&(location.hash||"").slice(1)==="colabora") route();
+}
+function sesionDemo(alias){ guardarSesion({token:"demo",alias,nivel:"colaborador",meritos:0,cupo:3,disponibles:3,etiquetas:[]}); }
+let ENTRANDO=false;
+async function entrarConToken(t){
+  if(ENTRANDO) return; ENTRANDO=true;
+  const r=DEMO?{ok:false,j:{error:"En la vista previa no hay enlaces de entrada. Usa el formulario."}}:await api("/api/cuenta/sesion",{metodo:"POST",json:{t}});
+  ENTRANDO=false;
+  if(r.ok&&r.j.token){ guardarSesion(r.j); location.hash="#"+(volver()||"colabora"); return; }
+  $("#app").innerHTML=`<div class="view"><h1>No se ha podido entrar</h1><p class="lede muted">${esc(errDe(r,"El enlace ha caducado o ya se ha usado."))}</p><p><a href="#colabora">Pide un enlace nuevo</a></p></div>`;
+}
+function vColabora(){
+  const intro=`<p class="eyebrow">Colabora</p><h1>Coloca etiquetas QR</h1>`;
+  if(!SES) return `<section class="stack">${intro}
+    <p class="lede muted">Las etiquetas QR son la cara de CANARIAS.AFRICA en la calle. Funciona como una wiki: cualquiera puede colaborar y los permisos crecen con lo que la comunidad verifica. Empiezas con 3 etiquetas.</p>
+    <p class="muted">No hay contraseñas: te enviamos un enlace al correo cada vez que entras. <a href="#sistema">Cómo funciona el sistema de etiquetas</a></p></section>
+  <div class="cuenta">
+    <form class="obsf" id="altaf" novalidate><h2 class="full">Crear cuenta</h2>
+      <label for="u-alias">Alias<input id="u-alias" type="text" required autocomplete="nickname" placeholder="Se muestra en el historial"></label>
+      <label for="u-correo">Correo<input id="u-correo" type="email" required autocomplete="email" placeholder="No se publica"></label>
+      ${PRIV}
+      <p class="full muted" id="u-err" style="font-size:.9rem"></p>
+      <div class="full btns"><button class="btn" type="submit">Crear cuenta</button></div>
+    </form>
+    <form class="obsf" id="entrarf" novalidate><h2 class="full">Ya tengo cuenta</h2>
+      <label class="full" for="e-correo">Correo<input id="e-correo" type="email" required autocomplete="email"></label>
+      <p class="full muted" id="e-err" style="font-size:.9rem"></p>
+      <div class="full btns"><button class="btn alt" type="submit">Enviarme el enlace</button></div>
+    </form>
+  </div>
+  ${DEMO?`<p class="muted" style="margin-top:14px"><span class="fake">solo en el prototipo</span> No se envía ningún correo: entras directamente con un cupo simulado.</p>`:""}`;
+  const S=SES, ets=S.etiquetas||[], pend=ets.filter(e=>e.estado==="asignado");
+  return `<section class="stack">${intro}
+    <p class="lede muted">Hola, ${esc(S.alias)}. Pide etiquetas, imprímelas y colócalas junto a obras del archivo o junto a obras nuevas. Cada colocación que otras personas verifiquen te da méritos y más cupo.</p>
+    <div class="perfil"><span class="cinta id">${NIVEL[S.nivel]||esc(S.nivel)}</span><span class="cinta">${+S.meritos||0} méritos</span><span class="cinta">Cupo ${+S.cupo||0}</span><span class="cinta">${+S.disponibles||0} disponibles</span></div>
+  </section>
+  <div id="okbox" style="margin-top:20px"></div>
+  <form class="obsf" id="asigf" novalidate style="margin-top:20px">
+    <label for="as-n">Cuántas etiquetas pides<input id="as-n" type="number" min="1" max="${Math.max(1,+S.disponibles||0)}" value="${Math.max(1,+S.disponibles||0)}" ${S.disponibles>0?"":"disabled"}></label>
+    <div class="btns" style="align-self:end"><button class="btn" type="submit" ${S.disponibles>0?"":"disabled"}>Pedir etiquetas</button></div>
+    <p class="full muted" id="as-err" style="font-size:.88rem">${S.disponibles>0?"Tienes 30 días para colocarlas, ampliables una vez.":"No te quedan etiquetas disponibles. Cuando las que tienes se confirmen o caduquen, podrás pedir más."}</p>
+  </form>
+  <section class="stack" style="margin-top:30px"><h2>Tus etiquetas</h2>
+    ${ets.length?`<div class="aytable"><table><thead><tr><th>Código</th><th>Estado</th><th>Plazo</th><th>Impresa</th><th></th></tr></thead><tbody>
+    ${ets.map(e=>`<tr><td class="mono">${corto(e.qr)}</td><td>${ESTQ[e.estado]||esc(e.estado)}</td><td>${e.estado==="asignado"?fd(e.vence):"—"}</td><td>${e.descargada?"Sí":"No"}</td>
+      <td>${e.estado==="asignado"?`<a href="#/q/${e.qr}">Colocar</a> · <button type="button" class="enlace" data-ampliar="${e.qr}">Ampliar plazo</button>`:""}</td></tr>`).join("")}</tbody></table></div>`
+      :`<p class="muted">Todavía no tienes etiquetas.</p>`}
+    ${pend.length?`<div class="btns"><button class="btn" type="button" id="hoja-btn">Descargar hoja de etiquetas</button></div>
+    <p class="muted" style="font-size:.88rem;max-width:68ch">Al descargarlas quedan marcadas como impresas. Si el plazo vence sin colocarlas, quedan caducadas y solo tú puedes reactivarlas: no se reparten a nadie más, para que nunca haya dos pegatinas con el mismo código.</p>`:""}
+    <div id="hoja"></div>
+    <p><button type="button" class="enlace" id="salir">Salir de la cuenta</button></p>
+  </section>`;
+}
+async function alta(e){
+  e.preventDefault(); const err=$("#u-err"), alias=$("#u-alias").value.trim(), correo=$("#u-correo").value.trim();
+  if(!alias||!/^\S+@\S+\.\S+$/.test(correo)) return pinta(err,"Escribe un alias y un correo válido.");
+  if(!$("#o-priv").checked) return pinta(err,"Marca la casilla de privacidad para crear la cuenta.");
+  if(DEMO){ sesionDemo(alias); return route(); }
+  const r=await api("/api/cuenta/alta",{metodo:"POST",json:{alias,correo,acepta_privacidad:true}});
+  if(!r.ok) return pinta(err,esc(errDe(r)));
+  e.target.innerHTML=`<div class="ok full"><h3>Revisa tu correo</h3><p>Te hemos enviado un enlace a ${esc(correo)}. Ábrelo en este mismo móvil o navegador para entrar.</p></div>`;
+}
+async function entrarCorreo(e){
+  e.preventDefault(); const err=$("#e-err"), correo=$("#e-correo").value.trim();
+  if(!/^\S+@\S+\.\S+$/.test(correo)) return pinta(err,"Escribe un correo válido.");
+  if(DEMO){ sesionDemo(correo.split("@")[0]); return route(); }
+  const r=await api("/api/cuenta/entrar",{metodo:"POST",json:{correo}});
+  if(!r.ok) return pinta(err,esc(errDe(r)));
+  e.target.innerHTML=`<div class="ok full"><h3>Revisa tu correo</h3><p>Si ${esc(correo)} tiene cuenta, te llegará un enlace para entrar. Ábrelo en este mismo móvil o navegador.</p></div>`;
+}
+async function pedirEtiquetas(e){
+  e.preventDefault(); const n=Math.max(1,Math.min(+$("#as-n").value||1,+SES.disponibles||0));
+  let r;
+  if(DEMO){ for(let i=0;i<n;i++) SES.etiquetas.push({qr:uuid4(),vence:enDias(30),descargada:false,estado:"asignado"}); SES.disponibles-=n; guardarSesion(SES); r={ok:true}; }
+  else { r=await api("/api/qr/asignar",{metodo:"POST",json:{cantidad:n}}); if(r.ok&&r.j.alias) guardarSesion({...r.j,token:SES.token}); }
+  if(!r.ok) return pinta($("#as-err"),esc(errDe(r)));
+  route();
+}
+async function ampliar(cod){
+  let r;
+  if(DEMO){ const et=SES.etiquetas.find(x=>x.qr===cod); if(et.ampliada) r={ok:false,j:{error:"El plazo de esta etiqueta ya se amplió una vez."}}; else { et.ampliada=true; et.vence=enDias(60); guardarSesion(SES); r={ok:true}; } }
+  else { r=await api("/api/qr/"+encodeURIComponent(cod)+"/ampliar",{metodo:"POST"}); if(r.ok){ await refrescarPerfil(); } }
+  if(!r.ok) return pinta($("#okbox"),`<div class="ok" style="border-color:var(--ph-desg)">${esc(errDe(r))}</div>`);
+  route(); pinta($("#okbox"),`<div class="ok">Plazo ampliado. Ya no se puede volver a ampliar.</div>`,true);
+}
+async function hojaEtiquetas(){
+  let lista;
+  if(DEMO){ lista=SES.etiquetas.filter(x=>x.estado==="asignado").map(x=>{ x.descargada=true; return {uuid:x.qr,url:API.qr+x.qr,vence:x.vence}; }); guardarSesion(SES); }
+  else { const r=await api("/api/qr/mis-etiquetas"); if(!r.ok||!Array.isArray(r.j)) return pinta($("#hoja"),esc(errDe(r))); lista=r.j; refrescarPerfil(); }
+  $("#hoja").innerHTML=`<div class="hoja-sec"><div class="btns" style="margin:18px 0"><button class="btn" type="button" onclick="print()">Imprimir</button><span class="muted" style="align-self:center;font-size:.88rem">${lista.length} etiquetas · imprime al 100 % en papel adhesivo resistente al agua.</span></div>
+    <div class="hoja">${lista.map(x=>`<div class="etiqueta imp"><span class="cinta">CANARIAS.AFRICA</span><div class="qr">${qrSVG(x.url||API.qr+x.uuid)}</div><span class="cinta id">${corto(x.uuid)}</span><span class="cinta mini">Escanéame</span></div>`).join("")}</div></div>`;
+}
+
+/* Historial público de la etiqueta de una obra (sin el UUID de la etiqueta ni posiciones de personas) */
+const EVQ={asignacion:"Asignada",colocacion:"Colocada con GPS y foto",verificacion:"Verificada",confirmacion:"Confirmada",aviso:"Aviso",sustitucion:"Sustituida",retirada:"Retirada",caducidad:"Caducada"};
+const MOTQ={fuera_del_radio:"fuera del radio de 50 m",gps_impreciso:"GPS impreciso"};
+async function cargarHistorial(o){
+  const el=$("#traza"); if(DEMO||!el) return;
+  const r=await api("/api/publico/qr/"+encodeURIComponent(o.id)+"/historial"); const ets=r.ok&&Array.isArray(r.j.etiquetas)?r.j.etiquetas:[];
+  if(!$("#traza")) return;
+  $("#traza").innerHTML=ets.map((et,i)=>{ const ev=(et.eventos||[]).slice().sort((a,b)=>a.fecha<b.fecha?1:-1);
+    return `<details class="traza"${i?"":" open"}><summary><span class="cinta${et.estado==="confirmado"?" id":""}">${ESTQ[et.estado]||esc(et.estado)}</span> ${ets.length>1?`Etiqueta ${esc(et.etiqueta)} · `:""}confianza ${(+et.confianza||0).toFixed(1)} · última verificación ${et.ultima_verificacion?fd(String(et.ultima_verificacion).slice(0,10)):"ninguna"}</summary>
+      <ol>${ev.map(v=>`<li><span class="mono">${fd(String(v.fecha).slice(0,10))}</span> ${v.tipo==="verificacion"&&v.motivo?"Verificación no válida":EVQ[v.tipo]||esc(String(v.tipo).replace(/_/g," "))}${v.alias?` por ${esc(v.alias)}`:""}${v.distancia_m!=null?` · a ${+v.distancia_m} m`:""}${v.motivo?` · ${MOTQ[v.motivo]||esc(v.motivo)}`:""}</li>`).join("")}</ol>
+      <p class="qrnote">Cada escaneo de otra persona a menos de 50 m atestigua que la etiqueta sigue ahí.</p></details>`; }).join("");
+}
+
+function wireEtiquetas(){
+  const on=(s,ev,fn)=>{ const el=$(s); if(el) el.addEventListener(ev,fn); };
+  on("#verf","submit",verificar); on("#avisof","submit",avisar);
+  on("#colf","submit",colocar); on("#c-gps","click",gpsColocar);
+  on("#c-obra","change",e=>{ $("#c-nueva").hidden=e.target.value!=="nueva"; });
+  on("#altaf","submit",alta); on("#entrarf","submit",entrarCorreo); on("#asigf","submit",pedirEtiquetas);
+  on("#hoja-btn","click",hojaEtiquetas);
+  on("#salir","click",()=>{ guardarSesion(null); route(); });
+  document.querySelectorAll("[data-ampliar]").forEach(b=>b.addEventListener("click",()=>ampliar(b.dataset.ampliar)));
+}
+
 /* ---------- Router ---------- */
 function route(){
   const h=(location.hash||"#inicio").slice(1)||"inicio", app=$("#app");
   let sec=h, html;
   if(h.startsWith("/q/")){ const cod=decodeURIComponent(h.slice(3)).toLowerCase(); sec="archivo";
-    const o=DEMO?OBRAS.find(x=>x.qr.cod===cod&&x.qr.st==="activo"):(QRRES.get(cod)?byId(QRRES.get(cod)):null);
-    if(!o&&!DEMO&&!QRRES.has(cod)){ html=`<p class="muted">Comprobando el código…</p>`; resolverQR(cod); }
-    else html=o&&qrValido(o,cod)?vQR(o,cod):`<h1>Este QR no es válido</h1><p class="muted">Puede que el código se haya sustituido, que todavía no esté colocado o que haya vuelto al pool. <a href="#archivo">Volver al archivo</a></p>`; }
+    const r=DEMO?qrDemo(cod):QRRES.get(cod);
+    if(!r){ html=`<p class="muted">Comprobando el código…</p>`; resolverQR(cod); }
+    else html=vEtiqueta(cod,r); }
+  else if(h.startsWith("/entrar")){ sec="colabora"; html=`<p class="muted">Entrando…</p>`; entrarConToken(new URLSearchParams(h.split("?")[1]||"").get("t")||""); }
   else if(h.startsWith("/observar/")){ const [ruta,qs]=h.split("?"), o=byId(decodeURIComponent(ruta.slice(10))), cod=new URLSearchParams(qs||"").get("qr"); sec="archivo"; html=o&&qrValido(o,cod)?vQR(o,cod):`<h1>Este QR no es válido</h1><p class="muted">Puede que el código se haya sustituido o que la obra no tenga QR activo. <a href="#archivo">Volver al archivo</a></p>`; }
   else if(h.startsWith("contexto-")){ const o=OBRAS.find(x=>"contexto-"+x.id.toLowerCase()===h); sec="archivo"; html=o?vContexto(o):`<h1>Ficha no encontrada</h1>`; }
   else if(h.startsWith("obra-")){ const o=OBRAS.find(x=>slug(x.id)===h); sec="archivo"; html=o?vObra(o):`<h1>Ficha no encontrada</h1><p><a href="#archivo">Volver al archivo</a></p>`; }
   else if(h.startsWith("nodo-")){ const n=G.byId.get(h.slice(5).toUpperCase()); sec="red"; html=n?vNodo(n):`<h1>Nodo no encontrado</h1><p><a href="#red">Volver a la red</a></p>`; }
-  else html=({inicio:vInicio,archivo:vArchivo,red:vRed,aportar:vAportar,inscripcion:vInscripcion,"proponer-ruta":vProponerRuta,apoya:vApoya,rutas:vRutas,ayudas:vAyudas,sistema:vSistema,comunidad:vComunidad,derechos:vDerechos,privacidad:vPrivacidad}[h]||vInicio)();
+  else html=({inicio:vInicio,archivo:vArchivo,red:vRed,aportar:vAportar,inscripcion:vInscripcion,"proponer-ruta":vProponerRuta,apoya:vApoya,rutas:vRutas,ayudas:vAyudas,sistema:vSistema,colabora:vColabora,comunidad:vComunidad,derechos:vDerechos,privacidad:vPrivacidad}[h]||vInicio)();
   app.innerHTML=`<div class="view">${html}</div>`;
   document.querySelectorAll("nav.main a").forEach(a=>a.removeAttribute("aria-current"));
   document.querySelectorAll("nav.main a").forEach(a=>{ if(a.getAttribute("href")==="#"+sec) a.setAttribute("aria-current","page"); });
   window.scrollTo(0,0);
   if(h==="archivo"){ renderCerca(); renderRes(); ["q","m","f","c"].forEach(k=>{ const el=$("#f-"+k); el.addEventListener("input",()=>{FILT[k]=el.value;renderRes();}); }); }
   if(h.startsWith("obra-")){ const o=OBRAS.find(x=>slug(x.id)===h);
-    if(o&&$("#qr")) drawQR($("#qr"),API.qr+(o.qr.cod||o.id));
+    if(o&&$("#qr")) drawQR($("#qr"),API.qr+"#"+slug(o.id));
+    if(o) cargarHistorial(o);
     if(o) cargarFicha(o).then(n=>{ if(n&&(location.hash||"").slice(1)===h) route(); }); }
   initMaps();
   if(h==="red") wireRed();
@@ -2432,6 +2759,8 @@ function route(){
   if(h==="inscripcion") $("#inscf").addEventListener("submit",inscribir);
   if($("#obsf")) $("#obsf").addEventListener("submit",enviar);
   if($("#rutaf")) $("#rutaf").addEventListener("submit",proponerRuta);
+  wireEtiquetas();
+  if(h==="colabora") refrescarPerfil();
 }
 document.addEventListener("click",e=>{
   const a=e.target.closest("[data-obra]"); if(a) PRESEL=a.dataset.obra;

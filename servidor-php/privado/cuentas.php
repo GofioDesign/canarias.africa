@@ -21,7 +21,7 @@ function enviar_enlace(array $c): void {
   $st->execute([$c['id']]);
   if ($st->fetchColumn() >= 3) error_publico('Ya te hemos enviado varios enlaces hace poco. Mira tu correo o prueba dentro de una hora.', 429);
   $t = crear_token((int) $c['id'], 'enlace', '+24 hours');
-  $url = config()['web'] . '/#/entrar?t=' . $t;
+  $url = config()['web'] . '/prototipo/#/entrar?t=' . $t; // la web de cuentas y etiquetas es el prototipo
   $texto = "Hola, {$c['alias']}:\n\nPara entrar en canarias.africa abre este enlace (vale 24 horas y una sola vez):\n$url\n\nSi no lo has pedido tú, ignora este correo.\n";
   $de = config()['contacto'];
   @mail($c['correo'], '=?UTF-8?B?' . base64_encode('Tu enlace para entrar en canarias.africa') . '?=', $texto,

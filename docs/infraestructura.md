@@ -6,7 +6,9 @@ Decidido el 27 de octubre de 2026: empezar sin coste nuevo, con GitHub Pages y e
 
 | Pieza | Dónde | Coste |
 |---|---|---|
-| Web y fichas de obras (catálogo público) | GitHub Pages, desde `web/` de este repositorio (`canarias.africa`) | 0 € |
+| Web: página de lanzamiento en la raíz, prototipo en `/prototipo/`, fichas de obras (catálogo público) | GitHub Pages, desde `web/` de este repositorio (`canarias.africa`) | 0 € |
+| Propuestas del colectivo | `propuestas/*.md`; la acción las publica en `propuestas.json` y abre un issue de debate por propuesta (votos = reacciones) | 0 € |
+| Lista de correo y votos de la web | Hosting PHP (SQLite), con doble confirmación y baja en cada correo | Ya pagado |
 | Cuentas, etiquetas QR, formularios, observaciones aprobadas, moderación | Hosting PHP actual, en `api.canarias.africa` (`servidor-php/`) | Ya pagado |
 | Caché de teselas OSM | Hosting PHP: `api.canarias.africa/teselas/osm/{z}/{x}/{y}.png` (máx. 300 MB) | Ya pagado |
 | Capas de uMap (QR, rutas) | uMap público; el cron del hosting las copia cada hora a `api.canarias.africa/datos/umap/` | 0 € |
@@ -28,6 +30,10 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 
 | Ruta | Qué hace |
 |---|---|
+| `POST /api/participa` | «Quiero participar»: correo, alias, isla, perfil, votos e ideas. Queda pendiente y envía un correo de confirmación (`#confirmar?t=…`, 7 días). Límite: 20 envíos por hora e IP, 3 correos al día por dirección |
+| `POST /api/participa/confirmar` | Confirma el correo y aplica lo pendiente: en cada propuesta cuenta el último voto confirmado |
+| `GET /api/participa/resultados` | `{participantes, ideas: {<id>: {prioritaria, interesante, no}}}`, solo de altas confirmadas |
+| `GET`/`POST /api/participa/baja?t=…` | Baja de la lista: el GET muestra un botón y el POST la hace (también la baja en un clic de los clientes de correo) |
 | `POST /api/cuenta/alta`, `/api/cuenta/entrar` | Alta con alias y correo, o entrada: envía un enlace por correo (sin contraseñas) |
 | `POST /api/cuenta/sesion` | Canjea el enlace del correo (`#/entrar?t=…`) por un token de sesión de 90 días (`Authorization: Bearer`) |
 | `GET /api/cuenta/yo` | Alias, nivel, méritos, cupo y etiquetas asignadas |
@@ -42,11 +48,11 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 | `GET /api/publico/etiquetas.geojson` | Etiquetas confirmadas para el mapa (difusas en su celda de 0,02°) |
 | `GET /teselas/osm/{z}/{x}/{y}.png` | Teselas de OSM desde la caché |
 | `GET /datos/umap/{qr,rutas}.geojson` | Última copia de las capas de uMap |
-| `/admin` | Moderación, pool de etiquetas, personas (nivel Custodia), obras propuestas y descarga de la base de datos (con contraseña) |
+| `/admin` | Moderación, pool de etiquetas, personas (nivel Custodia), obras propuestas, lista y votos del lanzamiento (con CSV e ideas nuevas) y descarga de la base de datos (con contraseña) |
 
 ## Puesta en marcha
 
-1. **GitHub Pages:** en *Settings → Pages*, poner *Source: GitHub Actions* y el dominio `canarias.africa` con *Enforce HTTPS*. La acción `.github/workflows/publicar-web.yml` publica `web/` cada vez que cambia `main`.
+1. **GitHub Pages:** en *Settings → Pages*, poner *Source: GitHub Actions* y el dominio `canarias.africa` con *Enforce HTTPS*. La acción `.github/workflows/publicar-web.yml` publica `web/` cada vez que cambia `main` y cada 6 horas (para refrescar los votos de GitHub); antes genera `propuestas.json` y abre los issues de debate de las propuestas nuevas con la etiqueta `propuesta`.
 2. **DNS** (en Porkbun, que gestiona la zona DNS; el dominio está registrado en Regery, caduca el 2 de octubre de 2028 (renovado en octubre de 2026) y el .africa no tiene periodo de gracia, así que hay que activar la renovación automática en Regery):
 
    | Nombre | Tipo | Valor |

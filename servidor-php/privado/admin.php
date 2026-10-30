@@ -74,6 +74,27 @@ if ($sub === '/propuesta' && $metodo === 'POST') {
   exit;
 }
 
+if ($sub === '/participa/idea' && $metodo === 'POST') {
+  if (in_array($_POST['estado'], ['nueva', 'pasada', 'descartada'], true)) {
+    $db->prepare('UPDATE participa_ideas SET estado = ? WHERE id = ?')->execute([$_POST['estado'], (int) $_POST['id']]);
+  }
+  header('Location: /admin/participa', true, 303);
+  exit;
+}
+
+if ($sub === '/participa.csv') {
+  // Lista de correo confirmada, para importarla en otra herramienta. Las bajas no salen.
+  header('Content-Type: text/csv; charset=utf-8');
+  header('Content-Disposition: attachment; filename="participantes-' . date('Y-m-d') . '.csv"');
+  $out = fopen('php://output', 'w');
+  fwrite($out, "\xEF\xBB\xBF");
+  fputcsv($out, ['correo', 'alias', 'isla', 'perfil', 'confirmado'], ',', '"', '');
+  foreach ($db->query("SELECT correo, alias, isla, perfil, confirmado FROM participantes WHERE estado = 'confirmada' ORDER BY confirmado") as $f) {
+    fputcsv($out, array_map(fn($v) => preg_match('/^[=+\-@]/', (string) $v) ? "'$v" : $v, $f), ',', '"', '');
+  }
+  exit;
+}
+
 if ($sub === '/copia') {
   $f = PRIVADO . '/copias/canarias-' . date('Y-m-d') . '.sqlite';
   @mkdir(dirname($f), 0700, true);
@@ -107,6 +128,25 @@ if ($sub === '/personas') {
       <form method=post action=/admin/custodia><input type=hidden name=csrf value=$csrf><input type=hidden name=id value={$c['id']}><input type=hidden name=valor value=" . ($c['custodia'] ? 0 : 1) . "><button>" . ($c['custodia'] ? 'Quitar custodia' : 'Dar custodia') . "</button></form></td></tr>";
   }
   pagina('Personas colaboradoras', $html . '</table>');
+}
+
+if ($sub === '/participa') {
+  $n = $db->query('SELECT estado, COUNT(*) n FROM participantes GROUP BY estado')->fetchAll(PDO::FETCH_KEY_PAIR);
+  $html = '<p>' . (int) ($n['confirmada'] ?? 0) . ' confirmadas · ' . (int) ($n['pendiente'] ?? 0) . ' sin confirmar · ' . (int) ($n['baja'] ?? 0)
+    . " de baja · <a href=/admin/participa.csv>Descargar la lista confirmada (CSV)</a></p><h2>Votos</h2><table><tr><th>Propuesta</th><th>Prioritaria</th><th>Interesante</th><th>No</th></tr>";
+  foreach ($db->query("SELECT propuesta, SUM(voto = 'prioritaria') p, SUM(voto = 'interesante') i, SUM(voto = 'no') n FROM participa_votos v
+      JOIN participantes x ON x.id = v.participante WHERE x.estado != 'pendiente' GROUP BY propuesta ORDER BY p DESC, i DESC") as $f) {
+    $html .= "<tr><td><code>{$h($f['propuesta'])}</code></td><td>{$f['p']}</td><td>{$f['i']}</td><td>{$f['n']}</td></tr>";
+  }
+  $html .= '</table><h2>Ideas nuevas</h2><p class=meta>Para publicarlas, crea un archivo en <code>propuestas/</code> con la autoría que la persona quiera y marca la idea como pasada.</p>';
+  foreach ($db->query("SELECT i.*, p.alias, p.correo FROM participa_ideas i JOIN participantes p ON p.id = i.participante ORDER BY i.estado = 'nueva' DESC, i.creado DESC LIMIT 300") as $i) {
+    $html .= "<article><span class=meta>{$h($i['estado'])} · {$h($i['alias'] ?: 'sin alias')} · {$h($i['correo'])} · {$h($i['creado'])}</span><p style='white-space:pre-wrap'>{$h($i['texto'])}</p>";
+    foreach (['pasada' => 'Pasada a propuestas', 'descartada' => 'Descartar', 'nueva' => 'Devolver a nuevas'] as $e => $t) {
+      if ($e !== $i['estado']) $html .= "<form method=post action=/admin/participa/idea class=inline><input type=hidden name=csrf value=$csrf><input type=hidden name=id value={$i['id']}><input type=hidden name=estado value=$e><button>$t</button></form> ";
+    }
+    $html .= '</article>';
+  }
+  pagina('Lista y votos del lanzamiento', $html);
 }
 
 if ($sub === '/obras') {
@@ -143,7 +183,7 @@ foreach ($envios as $e) {
 pagina('Moderación', $html);
 
 function pagina(string $titulo, string $cuerpo): never {
-  $menu = empty($_SESSION['admin']) ? '' : "<p class=meta><a href=/admin>Envíos</a> · <a href=/admin/qr>Etiquetas QR</a> · <a href=/admin/personas>Personas</a> · <a href=/admin/obras>Obras propuestas</a> · <a href=/admin/copia>Descargar copia de la base de datos</a> · <a href=/admin/salir>Salir</a></p>";
+  $menu = empty($_SESSION['admin']) ? '' : "<p class=meta><a href=/admin>Envíos</a> · <a href=/admin/qr>Etiquetas QR</a> · <a href=/admin/personas>Personas</a> · <a href=/admin/obras>Obras propuestas</a> · <a href=/admin/participa>Lista y votos</a> · <a href=/admin/copia>Descargar copia de la base de datos</a> · <a href=/admin/salir>Salir</a></p>";
   header('Content-Type: text/html; charset=utf-8');
   echo <<<HTML
 <!doctype html><html lang=es><head><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1"><meta name=robots content=noindex>

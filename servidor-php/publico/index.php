@@ -1,7 +1,7 @@
 <?php
 // Servidor de canarias.africa en un hosting compartido con PHP (api.canarias.africa).
 // La web y las fichas viven en GitHub Pages; aquí solo está lo que necesita servidor: cuentas de colaboradores,
-// etiquetas QR (pool, cupos, colocación, verificaciones), formularios, caché de teselas OSM, copia de uMap y moderación.
+// etiquetas QR (pool, cupos, colocación, verificaciones), lista de correo y votos del lanzamiento, formularios, caché de teselas OSM, copia de uMap y moderación.
 declare(strict_types=1);
 require __DIR__ . '/../privado/lib.php';
 
@@ -10,7 +10,8 @@ $metodo = $_SERVER['REQUEST_METHOD'];
 cors();
 if ($metodo === 'OPTIONS') { http_response_code(204); exit; }
 // Los envíos solo se aceptan desde la web oficial (o sin cabecera Origin, como en las pruebas con curl).
-if ($metodo === 'POST' && !str_starts_with($ruta, '/admin') && ($_SERVER['HTTP_ORIGIN'] ?? config()['web']) !== config()['web']) {
+// La baja se hace desde una página de este servidor o desde el cliente de correo, y la autoriza su token.
+if ($metodo === 'POST' && !str_starts_with($ruta, '/admin') && $ruta !== '/api/participa/baja' && ($_SERVER['HTTP_ORIGIN'] ?? config()['web']) !== config()['web']) {
   error_publico('Origen no permitido.', 403);
 }
 
@@ -26,6 +27,10 @@ try {
   if ($metodo === 'GET' && preg_match('#^/api/qr/(' . RE_CODIGO . ')$#i', $ruta, $m)) qr_resolver($m[1]);
   if ($metodo === 'POST' && preg_match('#^/api/qr/(' . RE_CODIGO . ')/ampliar$#i', $ruta, $m)) qr_ampliar($m[1]);
   if ($metodo === 'POST' && preg_match('#^/api/qr/(' . RE_CODIGO . ')/aviso$#i', $ruta, $m)) qr_aviso($m[1]);
+  if ($metodo === 'POST' && $ruta === '/api/participa') participa_alta();
+  if ($metodo === 'POST' && $ruta === '/api/participa/confirmar') participa_confirmar();
+  if ($metodo === 'GET' && $ruta === '/api/participa/resultados') participa_resultados();
+  if (in_array($metodo, ['GET', 'POST'], true) && $ruta === '/api/participa/baja') participa_baja($metodo);
   if ($metodo === 'POST' && $ruta === '/api/cuenta/alta') cuenta_alta();
   if ($metodo === 'POST' && $ruta === '/api/cuenta/entrar') cuenta_entrar();
   if ($metodo === 'POST' && $ruta === '/api/cuenta/sesion') cuenta_sesion();

@@ -3,6 +3,8 @@
 return [
   // Dónde está la web pública (GitHub Pages). Solo ese origen puede enviar formularios.
   'web' => 'https://canarias.africa',
+  // Dónde está este servidor: se usa en los enlaces de baja de los correos.
+  'api' => 'https://api.canarias.africa',
   // Correo de contacto: va en el User-Agent de la caché de teselas (lo exige OSM) y recibe los avisos.
   'contacto' => 'hola@canarias.africa',
   'avisar_por_correo' => true,

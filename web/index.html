@@ -49,7 +49,7 @@ p{margin:0}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ink);color:var(--bg)}
 .top .wrap{display:flex;align-items:center;gap:20px;padding-block:10px;flex-wrap:wrap}
 .brand{font-family:var(--f-display);font-weight:800;font-size:1.15rem;color:var(--bg);text-decoration:none;letter-spacing:.01em;display:flex;align-items:center;gap:8px}
-.brand i{display:inline-block;width:14px;height:14px;flex:none;border:2.5px solid var(--lichen);box-shadow:inset 0 0 0 2px var(--ink),inset 0 0 0 6px var(--lichen)}
+.brand i{display:inline-block;width:17px;height:17px;flex:none;background:#33A867;clip-path:polygon(50% 2%,59.1% 33.1%,89.1% 20.8%,70.5% 47.3%,98.7% 63.1%,66.4% 65.1%,71.7% 97%,50% 73%,28.3% 97%,33.6% 65.1%,1.3% 63.1%,29.5% 47.3%,10.9% 20.8%,40.9% 33.1%)} /* estrella verde de siete puntas */
 .brand .acr{display:inline-flex;flex-wrap:wrap;align-items:baseline;row-gap:2px}
 .brand .l{display:inline-flex;align-items:baseline;color:var(--lichen);transition:margin .45s ease}
 .brand .x{display:inline-block;max-width:0;opacity:0;overflow:hidden;white-space:nowrap;vertical-align:bottom;font-weight:500;transition:max-width .45s ease,opacity .3s ease}
@@ -1580,7 +1580,7 @@ function drawQR(canvas,text){
 /* Código circular propio para el código corto de la etiqueta (base32 de Crockford, 8 caracteres de momento).
    3 anillos × 24 sectores = 72 bits: versión (4) + código (5 bits por carácter) + CRC con el resto.
    Versión 0 = 8 caracteres (CRC de 28 bits), 1 = 9 (23), 2 = 10 (18): los códigos podrán alargarse sin cambiar el dibujo.
-   Negro = 1. Radios en fracción del radio exterior R: espiral ocre (decorativa) < 0,20 · blanco 0,20–0,29 (referencia) ·
+   Negro = 1. Radios en fracción del radio exterior R: estrella verde (decorativa) < 0,20 · blanco 0,20–0,29 (referencia) ·
    datos 0,30–0,84 · blanco 0,84–0,88 · anillo negro 0,88–1 (localización y referencia de negro).
    No hace falta marca de orientación: el lector prueba los giros y acepta el que cuadra con el CRC (corrige un bit erróneo). */
 const GLIFO={anillos:3,sectores:24,r0:.30,r1:.84,bits:72};
@@ -1607,7 +1607,7 @@ function bitsACod(bits){
 function bitsACodCorr(bits,corregir){ const r=bitsACod(bits); if(r||!corregir) return r;
   for(let i=0;i<bits.length;i++){ bits[i]^=1; const t=bitsACod(bits); bits[i]^=1; if(t&&t.length===8) return t; } return null; }
 /* Dibujo: los sectores negros seguidos de un mismo anillo se unen en un solo arco */
-function glifoSVG(cod,{tinta="#111",ocre="#D6A300",fondo="#fff"}={}){
+function glifoSVG(cod,{tinta="#111",verde="#1E8A4C",fondo="#fff"}={}){
   const bits=glifoBits(cod); if(!bits) return "";
   const {anillos:A,sectores:S,r0,r1}=GLIFO, paso=(r1-r0)/A, g=.012, R=100;
   const P=(r,t)=>`${(R+r*R*Math.cos(t)).toFixed(2)} ${(R+r*R*Math.sin(t)).toFixed(2)}`;
@@ -1619,10 +1619,10 @@ function glifoSVG(cod,{tinta="#111",ocre="#D6A300",fondo="#fff"}={}){
     for(let k=0;k<S;){ const i=(ini+k)%S; if(!fila[i]){ k++; continue; }
       let n=0; while(n<S-k&&fila[(ini+k+n)%S]) n++;
       const da=.012/((ra+rb)/2); d+=sector(ra,rb,i*2*Math.PI/S+da,(i+n)*2*Math.PI/S-da); k+=n; } }
-  const esp=[]; for(let t=0;t<=5.2*Math.PI;t+=.12){ const r=.03+.15*t/(5.2*Math.PI); esp.push(P(r,t-Math.PI/2)); }
+  const est=Array.from({length:14},(_,i)=>P(i%2?.075:.175,-Math.PI/2+i*Math.PI/7)); // estrella verde de siete puntas, una por isla
   return `<svg viewBox="0 0 200 200" role="img" aria-label="Glifo de canarias.africa"><circle cx="100" cy="100" r="100" fill="${fondo}"/>
 <circle cx="100" cy="100" r="94" fill="none" stroke="${tinta}" stroke-width="12"/><path d="${d}" fill="${tinta}"/>
-<path d="M${esp.join("L")}" fill="none" stroke="${ocre}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+<path d="M${est.join("L")}Z" fill="${verde}" stroke="${verde}" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
 }
 /* Lectura: binariza, busca el anillo exterior entre las manchas oscuras y prueba centro, escala y giro */
 function leerGlifo(img){

@@ -1,6 +1,6 @@
 # CANARIAS.AFRICA
 
-Centro de Arte No Ubicado (Acciones, Relaciones, Investigaciones y Articulaciones Sociales). Museo distribuido de arte y memoria contemporánea. Un proyecto de Gofio Design.
+CANARIAS — Centro de Arte Nunáneo. Arqueologías de Relaciones e Intervenciones Artísticas Socializadas. «El arte no nos pertenece. Su memoria la construimos entre todos». Un proyecto de Gofio Design.
 
 **Estado:** prototipo con datos ficticios. Todavía no está publicado.
 

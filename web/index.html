@@ -10,7 +10,7 @@
 /* Layout: archivo de campo. Barra superior fija, una columna de lectura, el mapa como pieza central. */
 :root{
   --bg:#ECEFEA; --surface:#F7F8F5; --ink:#1B201E; --muted:#56605A; --line:#CBD2CA;
-  --lichen:#D6A300; --lichen-ink:#735400; --sea:#DCE5E6; --land:#C9CFC4; --land-edge:#9AA59B;
+  --lichen:#0A8A3A; --lichen-ink:#006B2B; --on-lichen:#fff; --azul:#0768A9; --amarillo:#FFCC00; /* bandera canaria: blanco, azul, amarillo; acento: verde de las estrellas */ --sea:#DCE5E6; --land:#C9CFC4; --land-edge:#9AA59B;
   --ph-gest:#8C8F86; --ph-crea:#3E7C5A; --ph-plen:#2F7A3E; --ph-desg:#B07A12; --ph-inte:#2D6C8C; --ph-tran:#7A4E8C; --ph-desa:#7E6F66; --ph-memo:#6B7470;
   --warn-bg:#FFF2C2; --warn-ink:#5C4400;
   --tile-filter:none;
@@ -21,12 +21,12 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#121614; --surface:#1A1F1C; --ink:#E4E9E2; --muted:#9BA69F; --line:#2D3631;
-  --lichen:#E5B51E; --lichen-ink:#F0CB5A; --sea:#17252A; --land:#2B332E; --land-edge:#4A564E;
+  --lichen:#2FA84F; --lichen-ink:#6FD38A; --on-lichen:#0B1A10; --azul:#5AA9E6; --amarillo:#FFD42A; --sea:#17252A; --land:#2B332E; --land-edge:#4A564E;
   --ph-gest:#9A9D94; --ph-crea:#62B285; --ph-plen:#5DBE6E; --ph-desg:#E0A73A; --ph-inte:#5AA9CF; --ph-tran:#B48AC6; --ph-desa:#A8988D; --ph-memo:#98A39E;
   --warn-bg:#3A3110; --warn-ink:#F2D98A; --n-obra:#E5B51E; --n-agente:#5AA9CF; --n-entidad:#B48AC6; --n-terr:#7DB866; --n-reg:#7C8781; --n-rec:#D9825E; --tile-filter:brightness(.72) contrast(1.08) saturate(.55); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121614; --surface:#1A1F1C; --ink:#E4E9E2; --muted:#9BA69F; --line:#2D3631;
-  --lichen:#E5B51E; --lichen-ink:#F0CB5A; --sea:#17252A; --land:#2B332E; --land-edge:#4A564E;
+  --lichen:#2FA84F; --lichen-ink:#6FD38A; --on-lichen:#0B1A10; --azul:#5AA9E6; --amarillo:#FFD42A; --sea:#17252A; --land:#2B332E; --land-edge:#4A564E;
   --ph-gest:#9A9D94; --ph-crea:#62B285; --ph-plen:#5DBE6E; --ph-desg:#E0A73A; --ph-inte:#5AA9CF; --ph-tran:#B48AC6; --ph-desa:#A8988D; --ph-memo:#98A39E;
   --warn-bg:#3A3110; --warn-ink:#F2D98A; --n-obra:#E5B51E; --n-agente:#5AA9CF; --n-entidad:#B48AC6; --n-terr:#7DB866; --n-reg:#7C8781; --n-rec:#D9825E; --tile-filter:brightness(.72) contrast(1.08) saturate(.55); color-scheme:dark}
 
@@ -61,7 +61,7 @@ p{margin:0}
 nav.main{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
 nav.main a{color:var(--bg);text-decoration:none;font-family:var(--f-display);font-weight:500;font-size:.95rem;padding:5px 10px;border-radius:4px;opacity:.82}
 nav.main a:hover{opacity:1}
-nav.main a[aria-current="page"]{background:var(--lichen);color:#1B201E;opacity:1}
+nav.main a[aria-current="page"]{background:var(--lichen);color:var(--on-lichen);opacity:1}
 .proto{background:var(--warn-bg);color:var(--warn-ink);font-family:var(--f-mono);font-size:.76rem}
 .proto .wrap{padding-block:6px}
 
@@ -154,7 +154,7 @@ textarea{min-height:110px;width:100%;resize:vertical}
 /* Botones */
 .btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-display);font-weight:700;font-size:1rem;background:var(--ink);color:var(--bg);border:0;border-radius:4px;padding:10px 16px;text-decoration:none;cursor:pointer}
 .btn.alt{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
-.btn.lichen{background:var(--lichen);color:#1B201E}
+.btn.lichen{background:var(--lichen);color:var(--on-lichen)}
 .btns{display:flex;flex-wrap:wrap;gap:10px}
 
 /* Formulario */
@@ -814,7 +814,7 @@ details.aviso summary{cursor:pointer;font-family:var(--f-mono);font-size:.85rem}
 .visor{position:relative;aspect-ratio:1;max-width:100%;background:var(--ink);display:grid;place-items:center;overflow:hidden}
 .visor video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .visor .guia{position:absolute;inset:14%;border:3px dashed var(--lichen);border-radius:50%;pointer-events:none}
-.visor .btn{position:relative;z-index:1;background:var(--lichen);color:#111}
+.visor .btn{position:relative;z-index:1;background:var(--lichen);color:var(--on-lichen)}
 .scan-alt{display:flex;flex-direction:column;gap:14px}
 .scan-alt label{display:flex;flex-direction:column;gap:6px;font-size:.8rem;color:var(--muted)}
 .scan-alt label span{display:flex;gap:8px}
@@ -1021,13 +1021,14 @@ footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .of .st{display:inline-block;width:fit-content;padding:3px 10px 2px;font-size:.6rem;color:var(--tape-ink)!important}
 .of.off .st{--tape:#8C8F86}
 .idbadge{padding:4px 12px 3px;font-size:.78rem;letter-spacing:.1em}
-.fake{--tape:var(--lichen);color:#1B201E;text-shadow:0 1px 0 rgba(255,255,255,.35);padding:3px 10px 2px}
-nav.main a[aria-current="page"]{--tape:var(--lichen);color:#1B201E;text-shadow:0 1px 0 rgba(255,255,255,.35),0 -1px 0 rgba(0,0,0,.25);font-size:.82rem;padding:6px 14px 5px}
+.fake{--tape:var(--lichen);color:var(--on-lichen);text-shadow:0 -1px 0 rgba(0,0,0,.3),0 1px 0 rgba(255,255,255,.18);padding:3px 10px 2px}
+nav.main a[aria-current="page"]{--tape:var(--lichen);color:var(--on-lichen);text-shadow:0 -1px 0 rgba(0,0,0,.3),0 1px 0 rgba(255,255,255,.18);font-size:.82rem;padding:6px 14px 5px}
 /* Etiqueta física: placa con cintas de etiquetadora y el QR, la cara del museo en la calle */
 .etiqueta{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 12px 12px;background:var(--surface);border:1px solid var(--line);box-shadow:0 1px 0 var(--line),0 8px 18px -12px rgba(0,0,0,.35);transform:rotate(-1.2deg)}
 .etiqueta .qr{border:0;padding:6px}
 .cinta{display:inline-block;padding:5px 12px 4px;font-size:.72rem;white-space:nowrap;max-width:100%}
-.cinta.id{--tape:var(--lichen);color:#1B201E;text-shadow:0 1px 0 rgba(255,255,255,.35),0 -1px 0 rgba(0,0,0,.25);font-size:.8rem;transform:rotate(1.5deg)}
+.bandera{height:6px;background:linear-gradient(90deg,#fff 0 33.34%,var(--azul) 0 66.67%,var(--amarillo) 0)}
+.cinta.id{--tape:var(--lichen);color:var(--on-lichen);text-shadow:0 -1px 0 rgba(0,0,0,.3),0 1px 0 rgba(255,255,255,.18);font-size:.8rem;transform:rotate(1.5deg)}
 .cinta.mini{font-size:.56rem;letter-spacing:.1em;transform:rotate(-.8deg)}
 @media (prefers-reduced-motion:no-preference){.etiqueta{transition:transform .3s}.etiqueta:hover{transform:rotate(0)}}
 .ciclo{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:14px;counter-reset:c}
@@ -1064,7 +1065,7 @@ a.of:hover::after{opacity:.9}
     </nav>
   </div>
 </header>
-<div class="qrband" aria-hidden="true" style="margin:0;opacity:.9;background-color:var(--ink);height:6px;--ink:var(--lichen)"></div><div class="proto"><div class="wrap">PROTOTIPO · Las obras, personas, fechas y observaciones son ficticias y sirven para probar el sistema. Las convocatorias de «Ayudas a artistas» son reales.</div></div>
+<div class="bandera" aria-hidden="true"></div><div class="proto"><div class="wrap">PROTOTIPO · Las obras, personas, fechas y observaciones son ficticias y sirven para probar el sistema. Las convocatorias de «Ayudas a artistas» son reales.</div></div>
 
 <main class="wrap" id="app" tabindex="-1"></main>
 
@@ -1553,9 +1554,9 @@ function initMaps(){
 function leyenda(){ return `<div class="legend">${["plenitud","desgaste","intervencion","transformacion","desaparicion","memoria"].map(f=>`<span><i class="sw" style="background:${css(FASES[f].c)}"></i>${FASES[f].n}</span>`).join("")}</div>`; }
 
 /* ---------- QR de canarias.africa ---------- */
-/* QR real (corrección de errores H) en negro y blanco. El ocre va en un sello alrededor del patrón central,
+/* QR real (corrección de errores H) en negro y blanco. El verde va en un sello alrededor del patrón central,
    que se conserva intacto: así el móvil lo sigue leyendo y el 30 % de redundancia cubre los módulos tapados. */
-const QR_OCRE="#D6A300";
+const QR_VERDE="#008000"; // verde de las estrellas
 function qrMatriz(text){
   if(typeof qrcode!=="function") return null;
   try{ const q=qrcode(0,"H"); q.addData(text); q.make(); const n=q.getModuleCount(), c=(n-1)/2;
@@ -1566,14 +1567,14 @@ function qrSVG(text){
   const m=qrMatriz(text); if(!m) return `<p class="muted mono" style="font-size:.7rem;word-break:break-all">${esc(text)}</p>`;
   const Q=4, W=m.n+2*Q; let neg="", oc="";
   for(let y=0;y<m.n;y++) for(let x=0;x<m.n;x++){ const k=m.celda(x,y); if(k==="n") neg+=`M${x+Q} ${y+Q}h1v1h-1z`; else if(k==="o") oc+=`M${x+Q} ${y+Q}h1v1h-1z`; }
-  return `<svg viewBox="0 0 ${W} ${W}" shape-rendering="crispEdges" role="img" aria-label="Código QR de ${esc(text)}"><rect width="${W}" height="${W}" fill="#fff"/><path d="${neg}" fill="#111"/><path d="${oc}" fill="${QR_OCRE}"/></svg>`;
+  return `<svg viewBox="0 0 ${W} ${W}" shape-rendering="crispEdges" role="img" aria-label="Código QR de ${esc(text)}"><rect width="${W}" height="${W}" fill="#fff"/><path d="${neg}" fill="#111"/><path d="${oc}" fill="${QR_VERDE}"/></svg>`;
 }
 function drawQR(canvas,text){
   const m=qrMatriz(text), c=canvas.getContext("2d");
   if(!m){ canvas.width=canvas.height=200; c.fillStyle="#fff"; c.fillRect(0,0,200,200); return; }
   const Q=4, M=6, W=(m.n+2*Q)*M; canvas.width=canvas.height=W;
   c.fillStyle="#fff"; c.fillRect(0,0,W,W);
-  for(let y=0;y<m.n;y++) for(let x=0;x<m.n;x++){ const k=m.celda(x,y); if(k==="b") continue; c.fillStyle=k==="o"?QR_OCRE:"#111"; c.fillRect((x+Q)*M,(y+Q)*M,M,M); }
+  for(let y=0;y<m.n;y++) for(let x=0;x<m.n;x++){ const k=m.celda(x,y); if(k==="b") continue; c.fillStyle=k==="o"?QR_VERDE:"#111"; c.fillRect((x+Q)*M,(y+Q)*M,M,M); }
 }
 
 /* ---------- Glifo de canarias.africa ---------- */
@@ -1675,10 +1676,10 @@ function azulejoSVG(cod,{qr=(typeof qrcode!=="undefined"?qrcode:null)}={}){
 <rect x=".3" y=".3" width="99.4" height="99.4" rx="1.6" fill="#fff" stroke="#cfcfc8" stroke-width=".6"/>
 ${g.replace("<svg ",'<svg x="3" y="3" width="68" height="68" ')}
 <text transform="translate(87.5 5) rotate(90)" font-family="${Mo}" font-size="4.2" textLength="63" lengthAdjust="spacingAndGlyphs" fill="#111">CENTRO DE ARTE NO UBICADO</text>
-<rect x="77" y="5" width="2.2" height="63" fill="#D6A300"/>
+<rect x="77" y="5" width="2.2" height="31.5" fill="#0768A9"/><rect x="77" y="36.5" width="2.2" height="31.5" fill="#FFCC00"/>
 <text x="4" y="83" font-family="${F}" font-weight="800" font-size="7.6" textLength="64" lengthAdjust="spacingAndGlyphs" fill="#111">CANARIAS.AFRICA</text>
 <text x="4" y="92.4" font-family="${Mo}" font-size="4.2" textLength="39" lengthAdjust="spacingAndGlyphs" fill="#111">canarias.africa/scan</text>
-<rect x="46" y="87.4" width="22" height="6.6" rx="1" fill="#111"/><text x="48" y="92.4" font-family="${Mo}" font-weight="700" font-size="4.4" textLength="18" lengthAdjust="spacingAndGlyphs" fill="#D6A300">${codBonito(cod)}</text>
+<rect x="46" y="87.4" width="22" height="6.6" rx="1" fill="#008000"/><text x="48" y="92.4" font-family="${Mo}" font-weight="700" font-size="4.4" textLength="18" lengthAdjust="spacingAndGlyphs" fill="#fff">${codBonito(cod)}</text>
 <rect x="73" y="73" width="26" height="26" fill="#fff"/><path d="${qp}" fill="#111"/></svg>`;
 }
 

@@ -1,0 +1,477 @@
+{
+ "revisado": "2026-10-27",
+ "fuente": "Hilo «Crear calendario público de ayudas a artistas»",
+ "convocatorias": [
+  {
+   "id": "rural",
+   "n": "Cultura en el medio rural",
+   "c": "Gobierno de Canarias",
+   "a": "canarias",
+   "t": "Ayuda a proyecto",
+   "para": [
+    "artista",
+    "entidad"
+   ],
+   "imp": "10.000–20.000 € (hasta el 80 %)",
+   "abre": "2026-10-14",
+   "cierres": [
+    "2026-11-04"
+   ],
+   "req": "Autónomos con actividad cultural y entidades culturales. Solo en 26 municipios rurales; proyecto mínimo de 12.500 €.",
+   "nota": "Actividad presencial en el municipio. BDNS 933060.",
+   "url": "https://www.gobiernodecanarias.org/boc/archivo/2026/204/pda/3527.html",
+   "v": "ok"
+  },
+  {
+   "id": "cme",
+   "n": "Culture Moves Europe, movilidad individual",
+   "c": "Comisión Europea (Europa Creativa)",
+   "a": "internacional",
+   "t": "Movilidad",
+   "para": [
+    "artista"
+   ],
+   "imp": "85 €/día + 400–800 € de viaje; +175 € por residir en región ultraperiférica",
+   "abre": "2026-10-01",
+   "cierres": [
+    "2026-10-31",
+    "2026-11-30",
+    "2027-01-31",
+    "2027-02-28",
+    "2027-03-31",
+    "2027-04-30"
+   ],
+   "req": "Mayores de 18 años residentes en un país de Europa Creativa. Estancias de 7 a 60 días con un socio de otro país.",
+   "nota": "Convocatoria continua con cierres mensuales. Solo una ayuda individual entre oct. 2025 y jul. 2028.",
+   "url": "https://culture.ec.europa.eu/culture-moves-europe/call-for-individual-mobility",
+   "v": "ok"
+  },
+  {
+   "id": "dakart",
+   "n": "Dak'Art 2026, Bienal de Dakar",
+   "c": "Bienal de Arte Africano Contemporáneo",
+   "a": "internacional",
+   "t": "Open call",
+   "para": [
+    "artista",
+    "entidad"
+   ],
+   "imp": "Sin dotación: inscripción en el programa OFF",
+   "evento": [
+    "2026-11-19",
+    "2026-12-19"
+   ],
+   "cierres": [],
+   "req": "El OFF admite eventos autónomos de artistas, colectivos e instituciones, sin selección curatorial.",
+   "nota": "Bienal del 19 de noviembre al 19 de diciembre de 2026. La inscripción en el OFF cerró el 13 de septiembre.",
+   "url": "https://biennaledakar.org/",
+   "v": "part"
+  },
+  {
+   "id": "rijks",
+   "n": "Residencia Rijksakademie 2028",
+   "c": "Rijksakademie van beeldende kunsten, Ámsterdam",
+   "a": "internacional",
+   "t": "Residencia",
+   "para": [
+    "artista"
+   ],
+   "imp": "Estudio + 19.800 €/año de beca + 2.500 € de producción",
+   "prox": {
+    "m": "2027-02",
+    "txt": "Abre el 1 ene 2027; cierre previsto el 1 feb"
+   },
+   "cierres": [],
+   "req": "Cualquier país y disciplina. Tasa de solicitud de 60 € y cuota de participación de 1.875 €/año.",
+   "nota": "Uno o dos años. Se espera que cada residente ayude a reunir unos 20.000 €/año de beca.",
+   "url": "https://rijksakademie.nl/en/residency-apply/apply",
+   "v": "part"
+  },
+  {
+   "id": "prince",
+   "n": "Prince Claus Seed Awards",
+   "c": "Prince Claus Fund",
+   "a": "internacional",
+   "t": "Premio",
+   "para": [
+    "artista"
+   ],
+   "imp": "5.000 € (100 premios)",
+   "prox": {
+    "m": "2027-01",
+    "txt": "Hacia enero de 2027 (en 2026 cerró el 8 ene)"
+   },
+   "cierres": [],
+   "req": "Artistas en sus primeros cinco años de carrera de África, Asia, América Latina, Caribe, Oriente Medio y Europa del Este. España no es elegible.",
+   "nota": "Útil para socios africanos de la red, no para residentes en Canarias.",
+   "url": "https://on-the-move.org/news/prince-claus-seed-awards-emerging-artists-and-cultural-practitioners-2026",
+   "v": "part"
+  },
+  {
+   "id": "thami",
+   "n": "Residencia Thami Mnyele",
+   "c": "Thami Mnyele Foundation, Ámsterdam",
+   "a": "internacional",
+   "t": "Residencia",
+   "para": [
+    "artista"
+   ],
+   "imp": "3 meses + 1.800 €/mes",
+   "cierres": [],
+   "req": "Artistas de África. Hasta dos residencias completas al año.",
+   "nota": "Ahora no admite solicitudes y no anuncia fecha.",
+   "url": "https://www.thami-mnyele.nl/residency",
+   "v": "part"
+  },
+  {
+   "id": "ecoop",
+   "n": "Europa Creativa, proyectos de cooperación",
+   "c": "Comisión Europea",
+   "a": "internacional",
+   "t": "Ayuda a proyecto",
+   "para": [
+    "entidad"
+   ],
+   "imp": "61 M€ en total en 2027",
+   "prox": {
+    "m": "2027-05",
+    "txt": "Convocatoria en T1 2027; en 2026 cerró el 5 may"
+   },
+   "cierres": [],
+   "req": "Consorcios de entidades de al menos tres países.",
+   "nota": "Último año antes del nuevo ciclo presupuestario de la UE.",
+   "url": "https://culture.ec.europa.eu/whats-new/news/creative-europe-in-2027-one-last-year-before-the-new-budget-cycle",
+   "v": "part"
+  },
+  {
+   "id": "mac",
+   "n": "Interreg MAC 2021-2027",
+   "c": "UE (FEDER): Madeira, Azores, Canarias y países africanos",
+   "a": "internacional",
+   "t": "Ayuda a proyecto",
+   "para": [
+    "entidad"
+   ],
+   "imp": "Cofinanciación de hasta el 85 % (ediciones anteriores)",
+   "cierres": [],
+   "req": "Partenariado con socios de Cabo Verde, Senegal, Mauritania u otros países del programa.",
+   "nota": "La 3.ª convocatoria cerró el 15 dic 2025. La 4.ª no tiene fecha.",
+   "url": "https://interregmac.org/3a-convocatoria/",
+   "v": "est"
+  },
+  {
+   "id": "plasticas",
+   "n": "Creación en artes plásticas y visuales",
+   "c": "Gobierno de Canarias (Canarias Crea)",
+   "a": "canarias",
+   "t": "Ayuda a proyecto",
+   "para": [
+    "artista"
+   ],
+   "imp": "Hasta 4.000 € por artista (200.000 € en total)",
+   "prox": {
+    "m": "2027-05",
+    "txt": "Hacia abril-mayo de 2027 (la de 2026 se anunció el 27 abr)"
+   },
+   "cierres": [],
+   "req": "Personas físicas residentes en Canarias y dadas de alta en el IAE.",
+   "nota": "Pintura, escultura, fotografía, vídeo, arte digital, instalación.",
+   "url": "https://sede.gobiernodecanarias.org/sede/tramites/10881",
+   "v": "ok"
+  },
+  {
+   "id": "movcan",
+   "n": "Movilidad de artistas (Canarias Crea)",
+   "c": "Gobierno de Canarias",
+   "a": "canarias",
+   "t": "Movilidad",
+   "para": [
+    "artista",
+    "entidad"
+   ],
+   "imp": "Hasta 15.000 € al año por solicitante",
+   "prox": {
+    "m": "2027-03",
+    "txt": "Tres periodos al año; el 3.º de 2026 cerró el 15 oct"
+   },
+   "cierres": [],
+   "req": "Artistas y profesionales de la cultura de Canarias, o quien los represente y pague el viaje.",
+   "nota": "Viajes a ferias, encuentros y residencias, también en África.",
+   "url": "https://sede.gobiernodecanarias.org/sede/tramites/10873",
+   "v": "ok"
+  },
+  {
+   "id": "teamat",
+   "n": "Residencias TEA × Matadero Madrid",
+   "c": "TEA Tenerife Espacio de las Artes (Cabildo de Tenerife)",
+   "a": "canarias",
+   "t": "Residencia",
+   "para": [
+    "artista"
+   ],
+   "imp": "7.500 € + viajes Tenerife–Madrid",
+   "prox": {
+    "m": "2027-02",
+    "txt": "Hacia enero-febrero de 2027 (en 2026 cerró el 19 feb)"
+   },
+   "cierres": [],
+   "req": "Nacidos o residentes en Canarias. Una plaza artística y una curatorial, de abril a julio.",
+   "nota": "",
+   "url": "https://teatenerife.es/descargar/announcements/nwBL2vEfAUgXkYf3KuAJ.pdf",
+   "v": "ok"
+  },
+  {
+   "id": "bienaltea",
+   "n": "Bienal Contemporánea TEA",
+   "c": "TEA Tenerife Espacio de las Artes",
+   "a": "canarias",
+   "t": "Open call",
+   "para": [
+    "artista",
+    "entidad"
+   ],
+   "imp": "Sin dotación indicada en la web",
+   "cierres": [],
+   "req": "Artistas y colectivos con proyectos sobre territorio y comunidad.",
+   "nota": "La edición 2026 cerró el 2 ene 2026 (exposición en noviembre de 2026). No consta si se repetirá.",
+   "url": "https://teatenerife.es/convocatoria/bienal-contemporanea-tea-2026/55",
+   "v": "part"
+  },
+  {
+   "id": "cabtf",
+   "n": "Proyectos culturales de asociaciones",
+   "c": "Cabildo de Tenerife",
+   "a": "canarias",
+   "t": "Ayuda a proyecto",
+   "para": [
+    "entidad"
+   ],
+   "imp": "Hasta 7.500 € en pequeño formato (674.000 € en total)",
+   "prox": {
+    "m": "2027-06",
+    "txt": "Hacia mayo-junio de 2027"
+   },
+   "cierres": [],
+   "req": "Solo asociaciones y fundaciones culturales; proyecto en Tenerife.",
+   "nota": "",
+   "url": "https://www.elalisio.es/el-cabildo-destina-674-000-euros-a-subvenciones-para-asociaciones-y-fundaciones-culturales-de-tenerife-en-2026/",
+   "v": "part"
+  },
+  {
+   "id": "cajac",
+   "n": "Proyectos culturales: artes visuales y plásticas",
+   "c": "Fundación CajaCanarias",
+   "a": "canarias",
+   "t": "Ayuda a proyecto",
+   "para": [
+    "artista",
+    "entidad"
+   ],
+   "imp": "Hasta 20.000 €",
+   "prox": {
+    "m": "2027-10",
+    "txt": "Hacia septiembre-octubre de 2027 (en 2026 cerró el 9 oct)"
+   },
+   "cierres": [],
+   "req": "Provincia de Santa Cruz de Tenerife. Autónomos dedicados a la creación, o entidades con al menos un año de antigüedad.",
+   "nota": "Ejecución en el año siguiente.",
+   "url": "https://www.cajacanarias.com/wp-content/uploads/2026/06/bases-proyectos-culturales-artes-visuales-y-plasticas-2026-fundacion-cajacanarias.pdf",
+   "v": "ok"
+  },
+  {
+   "id": "pice",
+   "n": "PICE: movilidad y residencias",
+   "c": "Acción Cultural Española (AC/E)",
+   "a": "nacional",
+   "t": "Movilidad",
+   "para": [
+    "artista",
+    "entidad"
+   ],
+   "imp": "Según bases (no comprobado)",
+   "prox": {
+    "m": "2027-01",
+    "txt": "Tres fases al año; la 1.ª de 2026 fue del 8 sep 2025 al 9 ene 2026"
+   },
+   "cierres": [],
+   "req": "Profesionales invitados por una institución extranjera.",
+   "nota": "Por el calendario de 2026, la fase 1 de 2027 podría estar abierta ya. Hay que comprobarlo en accioncultural.es.",
+   "url": "https://www.accioncultural.es/media/2026/PICE/Bases-Esp-Mov2026.pdf",
+   "v": "part"
+  },
+  {
+   "id": "accion",
+   "n": "Acción y promoción cultural",
+   "c": "Ministerio de Cultura",
+   "a": "nacional",
+   "t": "Ayuda a proyecto",
+   "para": [
+    "entidad"
+   ],
+   "imp": "Según bases (no comprobado)",
+   "prox": {
+    "m": "2027-02",
+    "txt": "Hacia enero-febrero de 2027 (en 2026 cerró el 11 feb)"
+   },
+   "cierres": [],
+   "req": "Entidades sin ánimo de lucro con memoria de actividad de los dos últimos años.",
+   "nota": "",
+   "url": "https://cultura.sede.gob.es/procedimiento/portada?idProc=133550",
+   "v": "part"
+  },
+  {
+   "id": "impacto",
+   "n": "Proyectos culturales con especial impacto social",
+   "c": "Ministerio de Cultura",
+   "a": "nacional",
+   "t": "Ayuda a proyecto",
+   "para": [
+    "entidad"
+   ],
+   "imp": "10.000–80.000 €",
+   "prox": {
+    "m": "2027-04",
+    "txt": "Hacia primavera de 2027 (la de 2026 se anunció en marzo)"
+   },
+   "cierres": [],
+   "req": "Entidades, también con ánimo de lucro. Participación ciudadana y comunidad.",
+   "nota": "",
+   "url": "https://www.lamoncloa.gob.es/serviciosdeprensa/notasprensa/cultura/Paginas/2026/120326-ayudas-proyectos-impacto-social.aspx",
+   "v": "part"
+  },
+  {
+   "id": "micelio",
+   "n": "Micelio: arte participativo y medio ambiente",
+   "c": "Concomitentes, con la Fundación Daniel y Nina Carasso",
+   "a": "nacional",
+   "t": "Ayuda a proyecto",
+   "para": [
+    "artista",
+    "entidad"
+   ],
+   "imp": "40.000 € por proyecto (dos proyectos)",
+   "prox": {
+    "m": "2027-03",
+    "txt": "Hacia febrero-marzo de 2027 (en 2026 cerró el 1 mar)"
+   },
+   "cierres": [],
+   "req": "Grupo ciudadano con una mediadora cultural; la artista se incorpora después. Proyecto en España.",
+   "nota": "Categoría propia para colectivos liderados por menores de 35 años.",
+   "url": "https://concomitentes.org/wp-content/uploads/2026/01/Micelio-2026-bases-maquetadas-2.pdf",
+   "v": "ok"
+  },
+  {
+   "id": "leonardo",
+   "n": "Becas Leonardo",
+   "c": "Fundación BBVA",
+   "a": "nacional",
+   "t": "Beca",
+   "para": [
+    "artista"
+   ],
+   "imp": "Hasta 50.000 €",
+   "prox": {
+    "m": "2027-03",
+    "txt": "Hacia marzo de 2027 (en 2026 cerró el 20 mar)"
+   },
+   "cierres": [],
+   "req": "De 30 a 45 años. Incluye el área de música, ópera y artes plásticas.",
+   "nota": "",
+   "url": "https://sgi.umh.es/files/2026/01/Resumen-Becas-Leonardo-2026-FBBVA.pdf",
+   "v": "ok"
+  },
+  {
+   "id": "botin",
+   "n": "Becas de Arte",
+   "c": "Fundación Botín",
+   "a": "nacional",
+   "t": "Beca",
+   "para": [
+    "artista"
+   ],
+   "imp": "23.000 € (seis becas)",
+   "prox": {
+    "m": "2027-05",
+    "txt": "Abre hacia finales de enero; en 2026 cerró el 8 may"
+   },
+   "cierres": [],
+   "req": "Cualquier nacionalidad y edad. Una beca reservada a menores de 30 años españoles o residentes que se formen fuera.",
+   "nota": "",
+   "url": "https://fundacionbotin.org/wp-content/uploads/2026/01/Bases-AAPP-Esp-2026.pdf",
+   "v": "ok"
+  },
+  {
+   "id": "roma",
+   "n": "Residencias en la Real Academia de España en Roma",
+   "c": "MAEC-AECID",
+   "a": "nacional",
+   "t": "Residencia",
+   "para": [
+    "artista"
+   ],
+   "imp": "1.400 €/mes + alojamiento, de 4 a 9 meses",
+   "prox": {
+    "m": "2027-06",
+    "txt": "Hacia mayo-junio de 2027 (en 2026, del 21 may al 3 jun)"
+   },
+   "cierres": [],
+   "req": "Nacionalidad española, de la UE o iberoamericana. Trayectoria demostrable.",
+   "nota": "",
+   "url": "https://www.becas.com/aecid/becas-roma-residencias-investigaciones-espanoles",
+   "v": "part"
+  },
+  {
+   "id": "matadero",
+   "n": "Residencias para artistas visuales",
+   "c": "Matadero Madrid",
+   "a": "nacional",
+   "t": "Residencia",
+   "para": [
+    "artista"
+   ],
+   "imp": "4.000 € + 2.400 € de alojamiento + viaje (artistas de fuera de Madrid)",
+   "prox": {
+    "m": "2027-09",
+    "txt": "Hacia septiembre de 2027 (para 2027 cerró el 11 sep 2026)"
+   },
+   "cierres": [],
+   "req": "Cuatro plazas trimestrales para artistas residentes en España fuera de Madrid.",
+   "nota": "",
+   "url": "https://www.mataderomadrid.org/sites/default/files/media/document/2026/07/Bases%20Artistas%20Visuales%202027.pdf",
+   "v": "ok"
+  },
+  {
+   "id": "generaciones",
+   "n": "Generaciones",
+   "c": "Fundación Montemadrid (La Casa Encendida)",
+   "a": "nacional",
+   "t": "Premio",
+   "para": [
+    "artista"
+   ],
+   "imp": "12.000 € por proyecto (seis proyectos)",
+   "cierres": [],
+   "req": "Artistas jóvenes (límite de edad sin comprobar).",
+   "nota": "No he localizado las fechas de la próxima edición.",
+   "url": "https://www.lacasaencendida.es/en/exhibitions/generacion-2026_english",
+   "v": "est"
+  },
+  {
+   "id": "injuve",
+   "n": "Ayudas para la Creación Joven",
+   "c": "Injuve",
+   "a": "nacional",
+   "t": "Ayuda a proyecto",
+   "para": [
+    "artista",
+    "entidad"
+   ],
+   "imp": "Según bases (no comprobado)",
+   "cierres": [],
+   "req": "Jóvenes creadores. Producción, movilidad, investigación, comisariado y emprendimiento.",
+   "nota": "La de 2025/26 se publicó en abril de 2025. Fechas de la siguiente sin comprobar.",
+   "url": "https://injuve.es/sites/default/files/adjuntos/2025/10/Prorroga%20convocatoria%2025-26_Ayudas%20Creacion.pdf.xsig_.pdf",
+   "v": "est"
+  }
+ ]
+}

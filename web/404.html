@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>canarias.africa</title>
+<script>
+  // Cada etiqueta tiene un código corto en base32 de Crockford (p. ej. 7KQ2M9XD) que se puede teclear como
+  // canarias.africa/<código>. GitHub Pages no tiene esa ruta y sirve esta página, que lo pasa a la web: /#/q/<código>.
+  // /scan (el QR común de los azulejos) tiene su propia página; cualquier otra ruta va a la portada.
+  (function () {
+    var p = location.pathname.replace(/^\/|\/$/g, "");
+    if (/^scan$/i.test(p)) { location.replace("/#scan"); return; }
+    var c = p.replace(/-/g, "").toUpperCase().replace(/O/g, "0").replace(/[IL]/g, "1");
+    location.replace("/" + (/^[0-9A-HJKMNP-TV-Z]{8,16}$/.test(c) ? "#/q/" + c : ""));
+  })();
+</script>
+<style>
+  :root { --bg:#faf6ee; --fg:#16130f; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#12100d; --fg:#f4eee2; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; padding:24px 16px; }
+  a { color:inherit; }
+</style>
+</head>
+<body>
+<p>Abriendo canarias.africa… Si no pasa nada, <a href="/">entra por la portada</a>.</p>
+</body>
+</html>

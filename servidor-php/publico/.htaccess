@@ -1,0 +1,7 @@
+# Todo pasa por index.php (Apache o LiteSpeed con mod_rewrite).
+RewriteEngine On
+# Muchos hostings con PHP en modo CGI/FPM no pasan la cabecera Authorization a PHP: así llega igualmente.
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L,QSA]
+Options -Indexes

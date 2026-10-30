@@ -1,68 +1,36 @@
-# canarias.africa
+# CANARIAS.AFRICA
 
-Directorio de entidades panafricanistas de Canarias. Un proyecto de Gofio Design.
+CANARIAS — Centro de Arte Nunáneo. Arqueologías de Relaciones e Intervenciones Artísticas Socializadas. «El arte no nos pertenece. Su memoria la construimos entre todos». Un proyecto de Gofio Design.
 
-**Estado:** página provisional ("próximamente"). El directorio todavía no está publicado.
-
-## Qué es
-
-Un directorio abierto y consultable de asociaciones, colectivos y espacios africanos, afrodescendientes y panafricanistas con actividad en Canarias: quiénes son, en qué isla están, a qué se dedican y cómo contactar con ellos.
+**Estado:** prototipo con datos ficticios. Todavía no está publicado.
 
 ## Estructura
 
 ```
-.
-├── index.html   Página provisional (HTML y CSS en un solo archivo, sin dependencias)
-├── CNAME        Dominio personalizado para GitHub Pages
-├── README.md
-└── .gitignore
+web/          La web (GitHub Pages): HTML único con rutas por hash, convocatorias.json y sellos de marca
+servidor-php/ api.canarias.africa en el hosting PHP: formularios, QR, moderación, caché de teselas, copia de uMap
+servidor/     Plan B para un VPS propio (nginx + PocketBase), anterior al sistema de etiquetas del 28-10-2026
+scripts/      Comprobación de que el catálogo no publica ubicaciones sensibles
+datos/        GeoJSON de ejemplo para importar en uMap
+docs/         Infraestructura, mapas (OSM y uMap) y formato de convocatorias.json
 ```
+
+`index.html` y `CNAME` en la raíz son la página provisional antigua. Se pueden borrar en cuanto GitHub Pages publique desde la acción `publicar-web.yml`.
 
 ## Verlo en local
 
-No hay paso de compilación. Abre `index.html` en el navegador o sirve la carpeta:
-
 ```bash
-python3 -m http.server 8000
+cd web && python3 -m http.server 8000
 # http://localhost:8000
 ```
 
-## Publicación
+En local las teselas no cargan (no hay caché) y el mapa muestra el contorno de las islas.
 
-El repositorio está preparado para GitHub Pages (por eso existe `CNAME`), pero sirve igual en Netlify, Cloudflare Pages o cualquier hosting estático.
+## Documentación
 
-Con GitHub Pages:
-
-1. Sube el repositorio a GitHub y activa Pages en *Settings → Pages* (rama `main`, carpeta raíz).
-2. En el registrador del dominio, crea estos registros DNS:
-
-   | Tipo  | Nombre | Valor                 |
-   |-------|--------|-----------------------|
-   | A     | @      | 185.199.108.153       |
-   | A     | @      | 185.199.109.153       |
-   | A     | @      | 185.199.110.153       |
-   | A     | @      | 185.199.111.153       |
-   | CNAME | www    | `<usuario>.github.io` |
-
-3. En *Settings → Pages*, indica `canarias.africa` como dominio y marca *Enforce HTTPS* cuando el certificado esté listo.
-
-## Hoja de ruta
-
-- [x] Repositorio, página provisional y README
-- [ ] Definir criterios de inclusión (qué cuenta como entidad panafricanista, africana o afrodescendiente)
-- [ ] Modelo de datos de la ficha: nombre, isla, municipio, tipo, descripción, web, redes, contacto público, fuente
-- [ ] Primera tanda de entidades investigadas y verificadas
-- [ ] Directorio con buscador y filtros por isla y tipo
-- [ ] Formulario para altas, correcciones y bajas
-- [ ] Aviso legal y política de privacidad
-
-## Datos y privacidad
-
-Solo se publicarán datos de contacto que las propias entidades ya hagan públicos, o que hayan facilitado para este directorio. Cualquier entidad podrá pedir la corrección o retirada de su ficha.
-
-## Contribuir
-
-Si conoces una entidad que debería estar, abre un *issue* con su nombre, isla y un enlace público (web o redes).
+- [Infraestructura y costes](docs/infraestructura.md)
+- [Mapas: OpenStreetMap en caché y nodos en uMap](docs/mapas-osm-umap.md)
+- [Formato de convocatorias.json](docs/convocatorias-formato.md)
 
 ## Licencia
 

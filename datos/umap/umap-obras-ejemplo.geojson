@@ -1,0 +1,257 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.497,
+     28.205
+    ]
+   },
+   "properties": {
+    "id": "24c6bc64-b62d-4e3f-be2b-3c4a62a16a4e",
+    "tipo": "obra",
+    "name": "Mural del lavadero",
+    "description": "Mural · Lavadero viejo, Villa de Arico · Arico. DATO FICTICIO.",
+    "fase": "desgaste",
+    "fase_nombre": "Desgaste",
+    "municipio": "Arico",
+    "ficha": "https://canarias.africa/ca-tf-ari-0001",
+    "ficticio": true
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.445,
+     28.168
+    ]
+   },
+   "properties": {
+    "id": "b05eca29-3b55-4955-bcc0-6abf1d11e57e",
+    "tipo": "obra",
+    "name": "Señales en el barranco",
+    "description": "Intervención en paisaje · Cauce del barranco, cerca de Poris · Arico. DATO FICTICIO.",
+    "fase": "plenitud",
+    "fase_nombre": "Plenitud",
+    "municipio": "Arico",
+    "ficha": "https://canarias.africa/ca-tf-ari-0002",
+    "ficticio": true
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.452,
+     28.238
+    ]
+   },
+   "properties": {
+    "id": "dbf12703-5acb-47ee-a6bc-dd731e4e9709",
+    "tipo": "obra",
+    "name": "Banco de picón",
+    "description": "Escultura · Plaza de la iglesia, Fasnia · Fasnia. DATO FICTICIO.",
+    "fase": "transformacion",
+    "fase_nombre": "Transformación",
+    "municipio": "Fasnia",
+    "ficha": "https://canarias.africa/ca-tf-fas-0001",
+    "ficticio": true
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.442,
+     28.228
+    ]
+   },
+   "properties": {
+    "id": "ca0fab1b-8810-4099-a9ad-6134dcec5aa0",
+    "tipo": "obra",
+    "name": "Inscripción de la era",
+    "description": "Inscripción · Era alta, camino de Los Roques · Fasnia. DATO FICTICIO.",
+    "fase": "desgaste",
+    "fase_nombre": "Desgaste",
+    "municipio": "Fasnia",
+    "ficha": "https://canarias.africa/ca-tf-fas-0002",
+    "ficticio": true
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.633,
+     28.162
+    ]
+   },
+   "properties": {
+    "id": "d0b447c0-cd66-47fe-b295-4221d18e633c",
+    "tipo": "obra",
+    "name": "Pinos de chapa",
+    "description": "Escultura · Entrada al pueblo, Vilaflor · Vilaflor. DATO FICTICIO.",
+    "fase": "plenitud",
+    "fase_nombre": "Plenitud",
+    "municipio": "Vilaflor",
+    "ficha": "https://canarias.africa/ca-tf-vil-0001",
+    "ficticio": true
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.62,
+     28.185
+    ]
+   },
+   "properties": {
+    "id": "37de1bf1-3851-4eea-83dc-fa8b01a5fd63",
+    "tipo": "obra",
+    "name": "Acción del cráter",
+    "description": "Acción efímera · Ladera sobre el pueblo · Vilaflor. DATO FICTICIO.",
+    "fase": "memoria",
+    "fase_nombre": "Memoria",
+    "municipio": "Vilaflor",
+    "ficha": "https://canarias.africa/ca-tf-vil-0002",
+    "ficticio": true
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.858,
+     28.368
+    ]
+   },
+   "properties": {
+    "id": "5a22f14c-03da-4c42-a7b9-d56bc954ddbb",
+    "tipo": "obra",
+    "name": "Mural de la cooperativa",
+    "description": "Mural · Fachada de la antigua cooperativa · Buenavista del Norte. DATO FICTICIO.",
+    "fase": "intervencion",
+    "fase_nombre": "Intervención",
+    "municipio": "Buenavista del Norte",
+    "ficha": "https://canarias.africa/ca-tf-bue-0001",
+    "ficticio": true
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -16.872,
+     28.348
+    ]
+   },
+   "properties": {
+    "id": "90cebcbc-aa61-4b46-959e-f2c038599ff7",
+    "tipo": "obra",
+    "name": "Palabras en Teno",
+    "description": "Instalación · Camino de Teno Alto · Buenavista del Norte. DATO FICTICIO.",
+    "fase": "plenitud",
+    "fase_nombre": "Plenitud",
+    "municipio": "Buenavista del Norte",
+    "ficha": "https://canarias.africa/ca-tf-bue-0002",
+    "ficticio": true
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -13.51,
+     29.158
+    ]
+   },
+   "properties": {
+    "id": "f89e8eb0-b995-4f0b-94af-36097f8a24d2",
+    "tipo": "obra",
+    "name": "Molino pintado",
+    "description": "Mural · Molino de Máguez · Haría. DATO FICTICIO.",
+    "fase": "desgaste",
+    "fase_nombre": "Desgaste",
+    "municipio": "Haría",
+    "ficha": "https://canarias.africa/ca-lz-har-0001",
+    "ficticio": true
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -13.492,
+     29.135
+    ]
+   },
+   "properties": {
+    "id": "430175f8-3b98-4337-95a8-c6bcc6eb0895",
+    "tipo": "obra",
+    "name": "Huella del palmeral",
+    "description": "Instalación · Palmeral, salida hacia Arrieta · Haría. DATO FICTICIO.",
+    "fase": "desaparicion",
+    "fase_nombre": "Desaparición",
+    "municipio": "Haría",
+    "ficha": "https://canarias.africa/ca-lz-har-0002",
+    "ficticio": true
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -13.684,
+     29.042
+    ]
+   },
+   "properties": {
+    "id": "d9003675-685a-4fa8-b436-76169cf2e4d6",
+    "tipo": "obra",
+    "name": "Caracolas de lava",
+    "description": "Escultura · Rotonda de Mancha Blanca · Tinajo. DATO FICTICIO.",
+    "fase": "plenitud",
+    "fase_nombre": "Plenitud",
+    "municipio": "Tinajo",
+    "ficha": "https://canarias.africa/ca-lz-tin-0001",
+    "ficticio": true
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -13.665,
+     29.092
+    ]
+   },
+   "properties": {
+    "id": "ed35d309-ae15-427c-8ea7-ed89582727c1",
+    "tipo": "obra",
+    "name": "Muro de La Santa",
+    "description": "Mural · Muro del puerto, La Santa · Tinajo. DATO FICTICIO.",
+    "fase": "desgaste",
+    "fase_nombre": "Desgaste",
+    "municipio": "Tinajo",
+    "ficha": "https://canarias.africa/ca-lz-tin-0002",
+    "ficticio": true
+   }
+  }
+ ]
+}

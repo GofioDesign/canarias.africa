@@ -1,0 +1,4 @@
+servidor.env
+pb_data/
+*.db
+.DS_Store

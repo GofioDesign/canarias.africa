@@ -1367,7 +1367,8 @@ const RELT = {
  cura:{n:"cura",de:"agente",a:"ruta",p:"rol: curaduría, cocuraduría"},
  recorre:{n:"recorre",de:"salida",a:"ruta",p:"fecha"},
  dialoga:{n:"dialoga con",de:"obra",a:"obra",p:"modo: continúa, responde a, se superpone a"},
- muestra_de:{n:"es muestra local de",de:"obra",a:"obra",p:"escala (local, glocal, global), lugar, fecha local. Un evento global puede dar lugar a muchas muestras locales"},
+ muestra_de:{n:"está ligada a la línea temporal de",de:"obra",a:"obra",p:"escala (local, zonal, regional, nacional, global), fecha local. Un evento global puede dar lugar a muchas muestras locales; una muestra puede ligarse a varias líneas"},
+ vinculo:{n:"se vincula con",de:"obra",a:"obra",p:"tipo abierto (responde a, inspirada en, cita, continúa…), nota"},
  ambito:{n:"tiene como ámbito",de:"convocatoria",a:"municipio",p:"condiciones"}
 };
 const FUTURAS = [
@@ -1513,18 +1514,26 @@ const histDe=o=>HIST&&HIST[o.id.toLowerCase()];
 function idFicha(o){
   const h=histDe(o);
   return `<span class="idbadge" title="Identificador permanente">${esc(o.id)}</span>`+
-    (h&&h.escala?`<span class="mono">${esc(h.escala)}</span>`:"")+
-    (h&&h.version?`<span class="mono">v${h.version} · ${esc(h.fecha.slice(0,10))}</span><a class="mono" href="/obra/${esc(o.id.toLowerCase())}/#arbol">árbol de modificaciones</a>`:"");
+    (h&&h.escala?`<span class="mono">${esc(h.escala)}${h.espacio&&h.espacio!=="lugar"?" · "+esc(ESPACIO_N[h.espacio]):""}</span>`:"")+
+    (h&&h.version&&h.fecha?`<span class="mono">v${h.version} · ${esc(h.fecha.slice(0,10))}</span><a class="mono" href="/obra/${esc(o.id.toLowerCase())}/#arbol">árbol de modificaciones</a>`:"");
 }
-/* Escalas y trazabilidad global → local: un evento global puede dar lugar a x muestras locales */
+/* Escalas, espacio y líneas temporales: una expresión siempre tiene tiempo, no siempre espacio (puede estar en la red o
+   en ninguno), y su línea temporal puede ligarse a otras de escala local, zonal, regional, nacional o global ("muestra_de").
+   Un evento global puede dar lugar a x muestras locales. El resto de vínculos son tipados y abiertos. */
+const ESCALA_N={local:"local",zonal:"zonal",regional:"regional",nacional:"nacional",global:"global",glocal:"glocal"};
+const ESPACIO_N={lugar:"en un lugar",red:"en la red",sin_espacio:"sin espacio"};
+const VINC_N={responde_a:["responde a","respuestas"],inspirada_en:["inspirada en","ha inspirado"],cita:["cita","citada por"],
+  continua:["continúa","continuada por"],se_superpone_a:["se superpone a","debajo"],dialoga:["dialoga con","dialoga con"]};
 function genealogiaObra(o){
-  const h=histDe(o); if(!h||(!(h.muestra_de||[]).length&&!(h.muestras||[]).length&&h.escala!=="global")) return "";
-  const nom=u=>{ const x=byId(u); return `<a href="/obra/${esc(u)}/">${esc(x?x.t:corto(u))}</a>${HIST[u]&&HIST[u].escala?` <span class="muted">(${esc(HIST[u].escala)})</span>`:""}`; };
+  const h=histDe(o); if(!h||(!(h.arriba||[]).length&&!(h.abajo||[]).length&&!(h.vinculos||[]).length)) return "";
+  const nom=u=>{ const x=byId(u), y=HIST[u]||{}; return `<a href="/obra/${esc(u)}/">${esc(x?x.t:(y.nombre||corto(u)))}</a> <span class="muted">(${[ESCALA_N[y.escala]||y.escala,ESPACIO_N[y.espacio],String((y.tiempo||{}).inicio||"").slice(0,10)].filter(Boolean).map(esc).join(" · ")})</span>`; };
+  const vn=v=>{ const n=VINC_N[v.tipo]; return n?n[v.sentido==="entra"?1:0]:v.tipo.replace(/_/g," "); };
   return `<section class="stack">
-    <h2>Escalas</h2>
-    ${(h.muestra_de||[]).length?`<p>Muestra local de ${h.muestra_de.map(nom).join(" ← ")}</p>`:""}
-    ${(h.muestras||[]).length||h.escala==="global"?`<p class="muted" style="font-size:.95rem">Muestras locales que ha generado (${(h.muestras||[]).length}):</p>
-      ${(h.muestras||[]).length?`<ul>${h.muestras.map(u=>`<li>${nom(u)}</li>`).join("")}</ul>`:`<p class="muted">Todavía ninguna.</p>`}`:""}
+    <h2>Líneas temporales y vínculos</h2>
+    <p class="muted" style="font-size:.9rem">Escala ${esc(ESCALA_N[h.escala]||h.escala)} · ${esc(ESPACIO_N[h.espacio]||"")}. <a href="/obra/${esc(o.id.toLowerCase())}/#lineas">Ver el árbol completo</a></p>
+    ${(h.arriba||[]).length?`<p>Ligada a la línea temporal de: ${h.arriba.map(nom).join(", ")}</p>`:""}
+    ${(h.abajo||[]).length?`<p class="muted" style="font-size:.95rem">Ha dado lugar a ${h.abajo.length} muestra(s):</p><ul>${h.abajo.map(u=>`<li>${nom(u)}</li>`).join("")}</ul>`:""}
+    ${(h.vinculos||[]).length?`<ul>${h.vinculos.map(v=>`<li>${esc(vn(v))}: ${nom(v.a)}${v.nota?` <span class="muted">— ${esc(v.nota)}</span>`:""}</li>`).join("")}</ul>`:""}
   </section>`;
 }
 function estratosObra(o){

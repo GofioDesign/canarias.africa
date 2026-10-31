@@ -44,5 +44,8 @@ Cada ficha (`/obra/<uuid>/` y la ficha de la web) muestra:
 
 - **Identificador** permanente (el UUID de la obra), **versión** y **fecha** de la última modificación.
 - **Árbol de modificaciones**: cada commit que cambia la obra en `web/datos/obras.geojson` es una versión, con los campos que cambiaron (antes → ahora), el enlace al cambio en GitHub, los datos tal como eran y la ficha archivada en ese momento. Los cambios de ubicación se anotan sin valores.
-- **Escala** (`"escala"`): `local`, `glocal` o `global`. En la web conviven las tres, cada una con su línea temporal.
-- **Trazabilidad global → local** (`"muestra_de": "<uuid>"`): un evento global puede dar lugar a muchas muestras locales. La ficha de la muestra enlaza hacia arriba (toda su ascendencia) y la del evento lista sus muestras. En el modelo nodal es la relación `muestra_de` (obra → obra). `comprobar-catalogo.py` rechaza escalas desconocidas y enlaces a obras que no están en el catálogo.
+- **Tiempo siempre, espacio no**: `"fecha"` (y `"fecha_fin"`) siempre; `"espacio"` puede ser `lugar`, `red` o `sin_espacio` (si falta, se deduce de la geometría, el municipio o la `url`).
+- **Escala** (`"escala"`): `local`, `zonal`, `regional`, `nacional`, `global` o `glocal`.
+- **Líneas temporales ligadas** (relación `muestra_de`, o el atajo `"muestra_de": "<uuid>"` o una lista): la línea temporal propia se liga a otras más generales, de cualquier escala y a la vez a varias. Un evento global puede dar lugar a x muestras locales. La ficha muestra el árbol hacia arriba (a qué se liga) y hacia abajo (qué ha generado).
+- **Vínculos abiertos** (`"relaciones": [{"tipo", "a", "nota"}]`): responde a, inspirada en, cita, continúa, se superpone a, dialoga con… o cualquier tipo nuevo en minúsculas con guiones bajos, sin tocar el código. Cada vínculo aparece en las dos fichas, con su nombre en los dos sentidos.
+- `comprobar-catalogo.py` rechaza escalas o espacios desconocidos, tipos mal escritos y vínculos a obras que no están en el catálogo.

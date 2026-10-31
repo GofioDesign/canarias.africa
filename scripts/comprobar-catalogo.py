@@ -5,6 +5,7 @@ y las «reservada» no pueden llevar coordenadas. Las coordenadas exactas de esa
 Uso: python3 scripts/comprobar-catalogo.py [web/datos/obras.geojson]
 """
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -17,12 +18,24 @@ if not ruta.exists():
 errores = []
 features = json.loads(ruta.read_text(encoding="utf-8")).get("features", [])
 ids = {str(f.get("properties", {}).get("id", "")).lower() for f in features}
+TIPO = re.compile(r"^[a-z][a-z0-9_]{1,40}$")
 for f in features:
     p = f.get("properties", {})
-    if p.get("escala") not in (None, "local", "glocal", "global"):
-        errores.append(f"{p.get('id')}: escala «{p['escala']}» no es local, glocal ni global")
-    if p.get("muestra_de") and str(p["muestra_de"]).lower() not in ids:
-        errores.append(f"{p.get('id')}: muestra_de apunta a {p['muestra_de']}, que no está en el catálogo")
+    ident = p.get("id", "¿sin id?")
+    if p.get("escala") not in (None, "local", "zonal", "regional", "nacional", "global", "glocal"):
+        errores.append(f"{ident}: escala «{p['escala']}» no es local, zonal, regional, nacional, global ni glocal")
+    if p.get("espacio") not in (None, "lugar", "red", "sin_espacio"):
+        errores.append(f"{ident}: espacio «{p['espacio']}» no es lugar, red ni sin_espacio")
+    md = p.get("muestra_de")
+    destinos = [("muestra_de", a) for a in (md if isinstance(md, list) else [md] if md else [])]
+    for r in p.get("relaciones") or []:
+        if not isinstance(r, dict) or not TIPO.match(str(r.get("tipo", ""))):
+            errores.append(f"{ident}: relación sin tipo válido (minúsculas y guiones bajos): {r}")
+        elif r.get("a"):
+            destinos.append((r["tipo"], r["a"]))
+    for tipo, a in destinos:
+        if str(a).lower() not in ids:
+            errores.append(f"{ident}: {tipo} apunta a {a}, que no está en el catálogo")
 for f in features:
     p, g = f.get("properties", {}), f.get("geometry")
     sens, ident = p.get("sensibilidad"), p.get("id", "¿sin id?")

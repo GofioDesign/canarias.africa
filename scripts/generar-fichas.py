@@ -7,11 +7,16 @@
 - web/datos/archivo.json: el mismo rastro para la web (sección «Estratos en archive.org» de cada ficha).
 - web/datos/historial.json: identificador, versión, fecha y árbol de modificaciones de cada obra,
   sacados del historial de git de web/datos/obras.geojson (cada commit que cambia la obra es una versión),
-  y su escala y genealogía: un evento global puede dar lugar a muestras locales (propiedad
-  "muestra_de": <uuid del evento>), y cada ficha enlaza hacia arriba y hacia abajo.
+  y su escala, espacio, líneas temporales y vínculos.
 
-Escalas ("escala"): local (sucede en un lugar de Canarias), glocal (local, en diálogo con algo global)
-y global (evento o convocatoria que sucede en muchos sitios a la vez o en la red).
+Modelo (propiedades de cada obra o expresión en el catálogo):
+- "fecha" (y "fecha_fin"): el tiempo siempre está; el espacio no.
+- "espacio": lugar, red o sin_espacio (si falta, se deduce de la geometría, el municipio o la url).
+- "escala": local, zonal, regional, nacional, global o glocal.
+- "relaciones": [{"tipo", "a": <uuid>, "nota"}]. El tipo "muestra_de" (o el atajo "muestra_de": <uuid> o
+  [<uuid>, …]) liga la línea temporal propia a otra más general: un evento global puede dar lugar a x
+  muestras locales, y una muestra puede estar ligada a varias líneas a la vez. Los demás tipos (responde_a,
+  inspirada_en, cita, continua, se_superpone_a, dialoga… o cualquiera nuevo) son vínculos abiertos.
 
 Lee web/datos/obras.geojson (ya sin coordenadas sensibles) y datos/archivo/registro.json.
 Las páginas se generan en cada publicación y no se suben al repositorio.
@@ -47,6 +52,8 @@ ol.estratos>li::before{content:"";position:absolute;left:-6px;top:11px;width:10p
 .idficha .mono{background:var(--fg);color:var(--bg);padding:2px 8px;border-radius:3px}
 ul.cambios{margin:4px 0;padding-left:18px;list-style:disc;font-size:.95rem} del{color:var(--muted)} ins{text-decoration:none;font-weight:600}
 .enlaces{font-size:.9rem}
+.tree ul{list-style:none;padding-left:16px;margin:2px 0;border-left:1px dashed var(--linea)}
+.tree>ul{border-left:0;padding-left:0}
 .mono{font-family:ui-monospace,monospace;font-size:.88rem;word-break:break-all}
 """
 
@@ -122,21 +129,65 @@ def historial():
     return hist
 
 
-ESCALAS = {"local": "Local", "glocal": "Glocal", "global": "Global"}
+# Escalas de las líneas temporales. Una expresión puede no tener espacio (en la red, o ninguno),
+# pero siempre tiene tiempo, y su línea temporal puede estar ligada a otras de cualquier escala.
+ESCALAS = {"local": "Local", "zonal": "Zonal", "regional": "Regional", "nacional": "Nacional",
+           "global": "Global", "glocal": "Glocal"}
+ESPACIOS = {"lugar": "En un lugar", "red": "En la red", "sin_espacio": "Sin espacio"}
+# Vínculos tipados y abiertos: estos tienen nombre en los dos sentidos; cualquier otro tipo se muestra tal cual,
+# así la comunidad puede proponer tipos nuevos sin tocar el código.
+VINCULOS = {
+    "muestra_de": ("muestra de", "muestras"),          # liga la línea temporal propia a una general
+    "responde_a": ("responde a", "respuestas"),
+    "inspirada_en": ("inspirada en", "ha inspirado"),
+    "cita": ("cita", "citada por"),
+    "continua": ("continúa", "continuada por"),
+    "se_superpone_a": ("se superpone a", "debajo"),
+    "dialoga": ("dialoga con", "dialoga con"),
+}
+
+
+def nombre_vinculo(tipo, inverso=False):
+    par = VINCULOS.get(tipo)
+    return (par[1] if inverso else par[0]) if par else tipo.replace("_", " ") + (" (recibido)" if inverso else "")
+
+
+def relaciones(p):
+    """Vínculos salientes de una obra: "relaciones": [{"tipo", "a", "nota"}] y el atajo "muestra_de"."""
+    rs = [r for r in p.get("relaciones") or [] if isinstance(r, dict) and r.get("tipo") and r.get("a")]
+    md = p.get("muestra_de")
+    for a in (md if isinstance(md, list) else [md] if md else []):
+        rs.append({"tipo": "muestra_de", "a": a})
+    return [{**r, "a": str(r["a"]).lower()} for r in rs]
+
+
+def espacio_de(f):
+    p = f.get("properties", {})
+    if p.get("espacio") in ESPACIOS:
+        return p["espacio"]
+    if f.get("geometry") or p.get("municipio") or p.get("sensibilidad") in ("difusa", "reservada"):
+        return "lugar"
+    return "red" if p.get("url") else "sin_espacio"
 
 
 def genealogia(feats):
-    """{uuid: {"escala", "muestra_de": [ascendencia, de la más cercana a la raíz], "muestras": [hijos]}}."""
+    """Escala, espacio, líneas temporales (arriba: a qué se liga; abajo: qué ha generado) y vínculos de cada obra."""
     props = {f["properties"]["id"].lower(): f["properties"] for f in feats if f.get("properties", {}).get("id")}
-    padre = {u: str(p["muestra_de"]).lower() for u, p in props.items() if p.get("muestra_de") and str(p["muestra_de"]).lower() in props}
-    gen = {}
+    esp = {f["properties"]["id"].lower(): espacio_de(f) for f in feats if f.get("properties", {}).get("id")}
+    gen = {u: {"nombre": p.get("name") or u, "escala": p.get("escala") or "local", "espacio": esp[u], "tiempo": {"inicio": p.get("fecha"), "fin": p.get("fecha_fin")},
+               "arriba": [], "abajo": [], "vinculos": []} for u, p in props.items()}
     for u, p in props.items():
-        linaje, x = [], u
-        while x in padre and padre[x] not in linaje and padre[x] != u:  # sin ciclos
-            x = padre[x]
-            linaje.append(x)
-        gen[u] = {"escala": p.get("escala") or "local", "muestra_de": linaje,
-                  "muestras": sorted((h for h, pa in padre.items() if pa == u), key=lambda h: props[h].get("fecha") or "")}
+        for r in relaciones(p):
+            if r["a"] not in props or r["a"] == u:
+                continue
+            if r["tipo"] == "muestra_de":
+                gen[u]["arriba"].append(r["a"])
+                gen[r["a"]]["abajo"].append(u)
+            else:
+                gen[u]["vinculos"].append({"tipo": r["tipo"], "a": r["a"], "sentido": "sale", **({"nota": r["nota"]} if r.get("nota") else {})})
+                gen[r["a"]]["vinculos"].append({"tipo": r["tipo"], "a": u, "sentido": "entra", **({"nota": r["nota"]} if r.get("nota") else {})})
+    for g in gen.values():
+        g["abajo"].sort(key=lambda h: props[h].get("fecha") or "")
     return gen, props
 
 
@@ -206,8 +257,17 @@ def main():
 
     def nodo(u):
         q = props.get(u, {})
-        extra = " · ".join(x for x in (ESCALAS.get(q.get("escala") or "local"), q.get("municipio"), (q.get("fecha") or "")[:10]) if x)
+        extra = " · ".join(x for x in (ESCALAS.get(q.get("escala") or "local", q.get("escala")), q.get("municipio") or ESPACIOS[gen[u]["espacio"]],
+                                       str(q.get("fecha") or "")[:10]) if x)
         return f'<a href="/obra/{e(u)}/">{e(q.get("name") or u)}</a> <span class="muted">({e(extra)})</span>'
+
+    def rama(u, clave, vistos):
+        """Árbol de líneas temporales hacia arriba o hacia abajo, sin repetir nodos (es un grafo, no siempre un árbol)."""
+        hijos = [h for h in gen[u][clave] if h not in vistos]
+        if not hijos:
+            return ""
+        vistos |= set(hijos)
+        return "<ul>" + "".join(f"<li>{nodo(h)}{rama(h, clave, vistos)}</li>" for h in hijos) + "</ul>"
 
     for f in feats:
         p = f.get("properties", {})
@@ -218,20 +278,25 @@ def main():
         info = obras_reg.get(uuid, {})
         filas = [("Municipio", p.get("municipio")), ("Fase", p.get("fase_nombre") or p.get("fase")),
                  ("Ubicación", {"abierta": "Pública", "difusa": "Zona aproximada (~2 km)", "reservada": "Reservada"}.get(p.get("sensibilidad")))]
-        filas.insert(0, ("Escala", ESCALAS.get(gen[uuid]["escala"], gen[uuid]["escala"])))
-        html_ok = {"Obra web", "Muestra de"}
+        g = gen[uuid]
+        tiempo = " – ".join(str(x)[:10] for x in (g["tiempo"]["inicio"], g["tiempo"]["fin"]) if x) or None
+        filas = [("Escala", ESCALAS.get(g["escala"], g["escala"])), ("Espacio", ESPACIOS[g["espacio"]]), ("Tiempo", tiempo)] + filas
+        html_ok = {"Obra web"}
         if p.get("url"):
             filas.append(("Obra web", f'<a href="{e(p["url"])}">{e(p["url"])}</a>'))
-        if gen[uuid]["muestra_de"]:
-            filas.append(("Muestra de", " ← ".join(nodo(x) for x in gen[uuid]["muestra_de"])))
         dl = "".join(f"<dt>{k}</dt><dd>{v if k in html_ok else e(v)}</dd>" for k, v in filas if v)
-        hijos = gen[uuid]["muestras"]
-        muestras = ""
-        if hijos or gen[uuid]["escala"] == "global":
-            muestras = (f'<h2 id="muestras">Muestras locales ({len(hijos)})</h2>'
-                        '<p class="muted">Lo que este evento ha generado en cada lugar, con su propia línea temporal.</p>'
-                        + ('<ol class="estratos">' + "".join(f"<li>{nodo(h)}</li>" for h in hijos) + "</ol>" if hijos
-                           else '<p class="muted">Todavía ninguna.</p>'))
+        lineas = ""
+        if g["arriba"] or g["abajo"]:
+            lineas = '<h2 id="lineas">Líneas temporales</h2>'
+            if g["arriba"]:
+                lineas += f'<p class="muted">Su línea temporal está ligada a:</p><div class="tree">{rama(uuid, "arriba", {uuid})}</div>'
+            if g["abajo"]:
+                lineas += f'<p class="muted">Ha dado lugar a {len(g["abajo"])} muestra(s), cada una con su línea temporal:</p><div class="tree">{rama(uuid, "abajo", {uuid})}</div>'
+        vinc = ""
+        if g["vinculos"]:
+            vinc = '<h2 id="vinculos">Vínculos</h2><ul>' + "".join(
+                f'<li>{e(nombre_vinculo(v["tipo"], v["sentido"] == "entra"))}: {nodo(v["a"])}'
+                + (f' <span class="muted">— {e(v["nota"])}</span>' if v.get("nota") else "") + "</li>" for v in g["vinculos"]) + "</ul>"
         if p.get("archivar") is False:
             rastro = '<p class="muted">Por decisión de su autoría, esta obra no se inscribe en archive.org.</p>'
         elif p.get("ficticio"):
@@ -250,7 +315,8 @@ def main():
 <p>{e(p.get('descripcion') or p.get('description'))}</p>
 <dl>{dl}</dl>
 <p><a href="/#obra-{e(uuid)}">Ficha completa, observaciones y mapa</a></p>
-{muestras}
+{lineas}
+{vinc}
 <h2 id="arbol">Árbol de modificaciones</h2>
 {arbol(versiones, capturas, uuid)}
 <h2>Estratos en archive.org</h2>

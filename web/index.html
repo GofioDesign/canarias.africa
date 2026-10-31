@@ -127,7 +127,7 @@ textarea{min-height:110px;width:100%;resize:vertical}
 /* Ficha */
 .ficha-head{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:28px;align-items:start}
 .idline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-.idbadge{font-family:var(--f-mono);font-weight:600;font-size:.9rem;background:var(--ink);color:var(--bg);padding:3px 8px;border-radius:3px}
+.idbadge{font-family:var(--f-mono);font-weight:600;overflow-wrap:anywhere;font-size:.9rem;background:var(--ink);color:var(--bg);padding:3px 8px;border-radius:3px}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
 .dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 16px;margin:0;font-size:.95rem}
 .dl dt{font-family:var(--f-mono);font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding-top:3px}
@@ -1367,6 +1367,7 @@ const RELT = {
  cura:{n:"cura",de:"agente",a:"ruta",p:"rol: curaduría, cocuraduría"},
  recorre:{n:"recorre",de:"salida",a:"ruta",p:"fecha"},
  dialoga:{n:"dialoga con",de:"obra",a:"obra",p:"modo: continúa, responde a, se superpone a"},
+ muestra_de:{n:"es muestra local de",de:"obra",a:"obra",p:"escala (local, glocal, global), lugar, fecha local. Un evento global puede dar lugar a muchas muestras locales"},
  ambito:{n:"tiene como ámbito",de:"convocatoria",a:"municipio",p:"condiciones"}
 };
 const FUTURAS = [
@@ -1502,9 +1503,29 @@ async function cargarObrasPublicas(){
 }
 /* Arqueología de la red: cada cambio y cada obra se inscriben en archive.org (scripts/archivar.py).
    El rastro se publica en /datos/archivo.json; aquí se muestran los estratos de cada obra. */
-let ARCHIVO=null;
+let ARCHIVO=null, HIST=null; // HIST: identificador, versión, fecha y árbol de modificaciones (scripts/generar-fichas.py)
 async function cargarArchivo(){
-  try{ const r=await fetch("/datos/archivo.json"); if(!r.ok) return; ARCHIVO=await r.json(); route(); }catch(e){}
+  const leer=async u=>{ try{ const r=await fetch(u); return r.ok?await r.json():null; }catch(e){ return null; } };
+  [ARCHIVO,HIST]=await Promise.all([leer("/datos/archivo.json"),leer("/datos/historial.json")]);
+  if(ARCHIVO||HIST) route();
+}
+const histDe=o=>HIST&&HIST[o.id.toLowerCase()];
+function idFicha(o){
+  const h=histDe(o);
+  return `<span class="idbadge" title="Identificador permanente">${esc(o.id)}</span>`+
+    (h&&h.escala?`<span class="mono">${esc(h.escala)}</span>`:"")+
+    (h&&h.version?`<span class="mono">v${h.version} · ${esc(h.fecha.slice(0,10))}</span><a class="mono" href="/obra/${esc(o.id.toLowerCase())}/#arbol">árbol de modificaciones</a>`:"");
+}
+/* Escalas y trazabilidad global → local: un evento global puede dar lugar a x muestras locales */
+function genealogiaObra(o){
+  const h=histDe(o); if(!h||(!(h.muestra_de||[]).length&&!(h.muestras||[]).length&&h.escala!=="global")) return "";
+  const nom=u=>{ const x=byId(u); return `<a href="/obra/${esc(u)}/">${esc(x?x.t:corto(u))}</a>${HIST[u]&&HIST[u].escala?` <span class="muted">(${esc(HIST[u].escala)})</span>`:""}`; };
+  return `<section class="stack">
+    <h2>Escalas</h2>
+    ${(h.muestra_de||[]).length?`<p>Muestra local de ${h.muestra_de.map(nom).join(" ← ")}</p>`:""}
+    ${(h.muestras||[]).length||h.escala==="global"?`<p class="muted" style="font-size:.95rem">Muestras locales que ha generado (${(h.muestras||[]).length}):</p>
+      ${(h.muestras||[]).length?`<ul>${h.muestras.map(u=>`<li>${nom(u)}</li>`).join("")}</ul>`:`<p class="muted">Todavía ninguna.</p>`}`:""}
+  </section>`;
 }
 function estratosObra(o){
   if(!ARCHIVO) return "";
@@ -1881,7 +1902,7 @@ function vObra(o){
   return `<p class="eyebrow"><a href="#archivo">← Archivo</a></p>
   <section class="ficha-head" style="margin-top:14px">
     <div class="stack">
-      <div class="idline"><span class="idbadge" title="${o.id}">${corto(o.id)}</span>${chip(o.fase)}${DEMO?`<span class="fake">datos ficticios</span>`:""}</div>
+      <div class="idline">${idFicha(o)}${chip(o.fase)}${DEMO?`<span class="fake">datos ficticios</span>`:""}</div>
       <h1>${esc(o.t)}</h1>
       <p class="lede muted">${o.tipo} · ${esc(o.lugar)} · ${M.n}, ${ISLAS[M.isla]}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}
       <div class="btns"><a class="btn lichen" href="#contexto-${o.id.toLowerCase()}">Aportar contexto</a></div>
@@ -1927,11 +1948,12 @@ function vObra(o){
     <div class="stack"><h2>Vecindario</h2>${ego(o.id)}<p class="muted" style="font-size:.9rem"><a href="#red">Ver la red completa</a></p></div>
   </section>
 
+  ${genealogiaObra(o)}
   ${estratosObra(o)}
 
   <section class="stack">
     <h3>Cómo citar esta ficha</h3>
-    <div class="cite">CANARIAS.AFRICA. «${esc(o.t)}». Ficha ${o.id}, versión ${o.fen.length+o.obs.length}. canarias.africa/#${slug(o.id)}. Consultado el ${fd(HOY)}. Para imágenes: «Título», Autoría, año. Foto: nombre o alias (fecha) / CANARIAS.AFRICA.</div>
+    <div class="cite">CANARIAS.AFRICA. «${esc(o.t)}». Ficha ${o.id}, versión ${histDe(o)?histDe(o).version:o.fen.length+o.obs.length}${histDe(o)?` (${histDe(o).fecha.slice(0,10)})`:""}. canarias.africa/#${slug(o.id)}. Consultado el ${fd(HOY)}. Para imágenes: «Título», Autoría, año. Foto: nombre o alias (fecha) / CANARIAS.AFRICA.</div>
   </section>`;
 }
 

@@ -37,3 +37,12 @@ Los items se crean en la colección comunitaria `opensource_media` con `mediatyp
 python3 scripts/archivar.py --simular   # lista lo que capturaría
 python3 scripts/generar-fichas.py       # genera /obra/, /estratos/ y /datos/archivo.json en web/
 ```
+
+## Fichas: identificador, versión, árbol y escalas
+
+Cada ficha (`/obra/<uuid>/` y la ficha de la web) muestra:
+
+- **Identificador** permanente (el UUID de la obra), **versión** y **fecha** de la última modificación.
+- **Árbol de modificaciones**: cada commit que cambia la obra en `web/datos/obras.geojson` es una versión, con los campos que cambiaron (antes → ahora), el enlace al cambio en GitHub, los datos tal como eran y la ficha archivada en ese momento. Los cambios de ubicación se anotan sin valores.
+- **Escala** (`"escala"`): `local`, `glocal` o `global`. En la web conviven las tres, cada una con su línea temporal.
+- **Trazabilidad global → local** (`"muestra_de": "<uuid>"`): un evento global puede dar lugar a muchas muestras locales. La ficha de la muestra enlaza hacia arriba (toda su ascendencia) y la del evento lista sus muestras. En el modelo nodal es la relación `muestra_de` (obra → obra). `comprobar-catalogo.py` rechaza escalas desconocidas y enlaces a obras que no están en el catálogo.

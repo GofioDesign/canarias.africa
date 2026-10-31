@@ -15,7 +15,15 @@ if not ruta.exists():
     sys.exit(0)
 
 errores = []
-for f in json.loads(ruta.read_text(encoding="utf-8")).get("features", []):
+features = json.loads(ruta.read_text(encoding="utf-8")).get("features", [])
+ids = {str(f.get("properties", {}).get("id", "")).lower() for f in features}
+for f in features:
+    p = f.get("properties", {})
+    if p.get("escala") not in (None, "local", "glocal", "global"):
+        errores.append(f"{p.get('id')}: escala «{p['escala']}» no es local, glocal ni global")
+    if p.get("muestra_de") and str(p["muestra_de"]).lower() not in ids:
+        errores.append(f"{p.get('id')}: muestra_de apunta a {p['muestra_de']}, que no está en el catálogo")
+for f in features:
     p, g = f.get("properties", {}), f.get("geometry")
     sens, ident = p.get("sensibilidad"), p.get("id", "¿sin id?")
     if sens not in ("abierta", "difusa", "reservada"):
@@ -30,6 +38,6 @@ for f in json.loads(ruta.read_text(encoding="utf-8")).get("features", []):
                 break
 
 if errores:
-    print("El catálogo publicaría ubicaciones sensibles:\n- " + "\n- ".join(errores))
+    print("El catálogo tiene errores (ubicaciones sensibles o relaciones rotas):\n- " + "\n- ".join(errores))
     sys.exit(1)
 print(f"{ruta}: correcto.")

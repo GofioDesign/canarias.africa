@@ -2,3 +2,8 @@ servidor.env
 pb_data/
 *.db
 .DS_Store
+
+# Se generan al publicar (scripts/generar-fichas.py)
+web/obra/
+web/estratos/
+web/datos/archivo.json

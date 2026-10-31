@@ -18,6 +18,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Comprobar que el catálogo no publica ubicaciones sensibles
         run: python3 scripts/comprobar-catalogo.py
+      - name: Comprobar que las fichas y los estratos se generan
+        run: python3 scripts/generar-fichas.py
 
   publicar:
     if: github.event_name != 'pull_request'
@@ -35,6 +37,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Fichas estáticas y estratos de archive.org
+        run: python3 scripts/generar-fichas.py
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web

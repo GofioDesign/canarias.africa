@@ -1500,6 +1500,23 @@ async function cargarObrasPublicas(){
     route();
   }catch(e){ /* vista previa: datos de ejemplo */ }
 }
+/* Arqueología de la red: cada cambio y cada obra se inscriben en archive.org (scripts/archivar.py).
+   El rastro se publica en /datos/archivo.json; aquí se muestran los estratos de cada obra. */
+let ARCHIVO=null;
+async function cargarArchivo(){
+  try{ const r=await fetch("/datos/archivo.json"); if(!r.ok) return; ARCHIVO=await r.json(); route(); }catch(e){}
+}
+function estratosObra(o){
+  if(!ARCHIVO) return "";
+  const id=o.id.toLowerCase(), caps=(ARCHIVO.capturas||[]).filter(c=>c.obra===id&&c.wayback).sort((a,b)=>b.fecha<a.fecha?-1:1), it=(ARCHIVO.obras||{})[id]||{};
+  return `<section class="stack">
+    <h2>Estratos en archive.org <span class="count">(${caps.length})</span></h2>
+    <p class="muted" style="font-size:.95rem">Cada versión de esta ficha se inscribe en la Wayback Machine a medida que cambia. <a href="/estratos/">Todos los estratos</a></p>
+    ${it.item?`<p>Capas en Internet Archive: <a href="${esc(it.item)}" target="_blank" rel="noopener">${esc(it.item.replace("https://",""))}</a></p>`:""}
+    ${caps.length?`<ul>${caps.map(c=>`<li><span class="mono">${esc(c.fecha.slice(0,10))}</span> · <a href="${esc(c.wayback)}" target="_blank" rel="noopener">${esc(c.motivo)}</a>${c.pantalla?` · <a href="${esc(c.pantalla)}" target="_blank" rel="noopener">captura de pantalla</a>`:""}</li>`).join("")}</ul>`
+      :`<p class="muted">Aún sin estratos: se depositará el primero tras la próxima publicación.</p>`}
+  </section>`;
+}
 /* Ficha: descripción y relaciones vienen del catálogo estático; las observaciones aprobadas, de la API */
 async function cargarFicha(o){
   if(DEMO||o._ficha) return false;
@@ -1909,6 +1926,8 @@ function vObra(o){
     <div class="stack"><h2>Relaciones en la red</h2>${relList(o.id,["observa"])}</div>
     <div class="stack"><h2>Vecindario</h2>${ego(o.id)}<p class="muted" style="font-size:.9rem"><a href="#red">Ver la red completa</a></p></div>
   </section>
+
+  ${estratosObra(o)}
 
   <section class="stack">
     <h3>Cómo citar esta ficha</h3>
@@ -2945,6 +2964,6 @@ document.addEventListener("click",e=>{
 addEventListener("hashchange",route);
 buildGraph();
 route();
-cargarObrasPublicas().then(cargarUMap);
+cargarObrasPublicas().then(cargarUMap).then(cargarArchivo);
 cargarConvocatorias();
 </script>

@@ -27,7 +27,8 @@ if (empty($_SESSION['admin'])) pagina('Entrar', $hash
 if ($metodo === 'POST' && !hash_equals($_SESSION['csrf'], (string) ($_POST['csrf'] ?? ''))) error_publico('Sesión caducada.', 403);
 $db = db();
 
-if ($sub === '/salir') { session_destroy(); header('Location: /admin', true, 303); exit; }
+// Salir solo por POST (con el token CSRF): un enlace o una imagen de otra web no pueden cerrar la sesión.
+if ($sub === '/salir' && $metodo === 'POST') { session_destroy(); header('Location: /admin', true, 303); exit; }
 
 if ($sub === '/estado' && $metodo === 'POST') {
   $estado = (string) $_POST['estado'];
@@ -95,19 +96,41 @@ if ($sub === '/participa.csv') {
   exit;
 }
 
-if ($sub === '/copia') {
+// Copia de la base de datos: contiene los correos de las personas colaboradoras. Se pide confirmación, se descarga
+// por POST y cada descarga queda registrada (fecha, IP y navegador).
+if ($sub === '/copia' && $metodo === 'POST') {
+  if (($_POST['confirmo'] ?? '') !== '1') { header('Location: /admin/copia?falta=1', true, 303); exit; }
   $f = PRIVADO . '/copias/canarias-' . date('Y-m-d') . '.sqlite';
   @mkdir(dirname($f), 0700, true);
   @unlink($f);
   $db->exec('VACUUM INTO ' . $db->quote($f));
+  $db->prepare('INSERT INTO admin_registro (accion, detalle, ip, agente) VALUES (?, ?, ?, ?)')
+     ->execute(['descarga_copia', basename($f) . ' · ' . filesize($f) . ' bytes', $_SERVER['REMOTE_ADDR'] ?? '', mb_substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 300)]);
   header('Content-Type: application/octet-stream');
   header('Content-Disposition: attachment; filename="' . basename($f) . '"');
+  header('Cache-Control: no-store');
   readfile($f);
+  @unlink($f);
   exit;
 }
 
 $csrf = $_SESSION['csrf'];
 $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES);
+
+if ($sub === '/salir') pagina('Salir', "<form method=post action=/admin/salir><input type=hidden name=csrf value=$csrf><button>Cerrar la sesión</button></form>");
+
+if ($sub === '/copia') {
+  $html = (!empty($_GET['falta']) ? '<p class=error>Marca la casilla para confirmar la descarga.</p>' : '')
+    . "<p>La copia es la base de datos completa: incluye <strong>los correos de las personas colaboradoras y de la lista</strong>, las coordenadas exactas de las obras protegidas y los nombres que no se publican. Guárdala cifrada y no la compartas.</p>
+    <form method=post action=/admin/copia><input type=hidden name=csrf value=$csrf>
+    <p><label><input type=checkbox name=confirmo value=1> Entiendo que contiene datos personales y la guardaré de forma segura.</label></p>
+    <p><button class=aprobada>Descargar la copia</button></p></form><h2>Últimas descargas</h2>";
+  $filas = $db->query("SELECT * FROM admin_registro WHERE accion = 'descarga_copia' ORDER BY id DESC LIMIT 20")->fetchAll();
+  $html .= $filas ? '<table><tr><th>Fecha (UTC)</th><th>IP</th><th>Navegador</th><th>Archivo</th></tr>' . implode('', array_map(fn($r) => "<tr><td>{$h($r['fecha'])}</td><td>{$h($r['ip'])}</td><td>{$h(mb_substr($r['agente'], 0, 80))}</td><td>{$h($r['detalle'])}</td></tr>", $filas)) . '</table>'
+    : '<p class=meta>Todavía no se ha descargado ninguna copia.</p>';
+  pagina('Copia de la base de datos', $html);
+}
+
 require PRIVADO . '/admin-catalogo.php';
 
 if ($sub === '/qr') {
@@ -119,16 +142,16 @@ if ($sub === '/qr') {
   foreach ($db->query("SELECT * FROM qr_codigos WHERE estado != 'libre' ORDER BY creado DESC LIMIT 300") as $q) {
     $html .= "<tr><td><code>{$h($q['codigo'])}</code></td><td>{$h($q['estado'])}</td><td>" . ($q['soporte'] ? "<a href='/admin/soporte?id={$h($q['soporte'])}'>soporte</a>" : "<code>{$h($q['obra'])}</code>") . "</td><td>{$h($q['ultima_verificacion'])}</td></tr>";
   }
-  pagina('Etiquetas QR', $html . '</table>');
+  pagina('Etiquetas QR', tabla_o_vacio($html, 'Ninguna etiqueta asignada ni colocada todavía. Genera un lote de códigos libres arriba y repártelos a las personas colaboradoras.'));
 }
 
 if ($sub === '/personas') {
-  $html = '<table><tr><th>Alias</th><th>Correo</th><th>Nivel</th><th>Méritos</th><th></th></tr>';
+  $html = '<table class=filtrable><tr><th>Alias</th><th>Correo</th><th>Nivel</th><th>Méritos</th><th></th></tr>';
   foreach ($db->query('SELECT * FROM colaboradores ORDER BY meritos DESC, alias') as $c) {
     $html .= "<tr><td>{$h($c['alias'])}</td><td>{$h($c['correo'])}</td><td>{$h(nivel($c))}" . ($c['verificado'] ? '' : ' (sin verificar)') . "</td><td>{$c['meritos']}</td><td>
       <form method=post action=/admin/custodia><input type=hidden name=csrf value=$csrf><input type=hidden name=id value={$c['id']}><input type=hidden name=valor value=" . ($c['custodia'] ? 0 : 1) . "><button>" . ($c['custodia'] ? 'Quitar custodia' : 'Dar custodia') . "</button></form></td></tr>";
   }
-  pagina('Personas colaboradoras', $html . '</table>');
+  pagina('Personas colaboradoras', tabla_o_vacio($html, 'Todavía no se ha dado de alta nadie. Las personas colaboradoras se registran desde <a href="https://canarias.africa/prototipo/#colabora">canarias.africa → Colabora</a>.'));
 }
 
 if ($sub === '/participa') {
@@ -171,7 +194,7 @@ $st = $db->prepare('SELECT * FROM envios WHERE estado = ? ORDER BY creado DESC L
 $st->execute([$estado]);
 $html = "<nav><a href='/admin'>Pendientes</a> · <a href='/admin?estado=aprobada'>Aprobados</a> · <a href='/admin?estado=rechazada'>Rechazados</a></nav>";
 $envios = $st->fetchAll();
-if (!$envios) $html .= '<p>No hay envíos en este estado.</p>';
+if (!$envios) $html .= '<div class=vacio>No hay envíos en este estado. Aquí llegan las propuestas de obras y rutas, las observaciones hechas con el QR, las aportaciones de contexto y los datos que completa el público.</div>';
 foreach ($envios as $e) {
   $html .= "<article><strong>{$h($nombres[$e['formulario']] ?? $e['formulario'])}</strong> <span class=meta>{$h($e['obra'])} · {$h($e['creado'])}</span><dl>";
   foreach (json_decode($e['datos'], true) as $k => $v) $html .= "<dt>{$h($k)}</dt><dd>{$h($v)}</dd>";
@@ -185,23 +208,46 @@ foreach ($envios as $e) {
   }
   $html .= '</article>';
 }
-pagina('Moderación', $html);
+pagina('Envíos', $html);
+
+// Una tabla sin filas se sustituye por un mensaje con el primer paso.
+function tabla_o_vacio(string $html, string $vacio): string {
+  $i = strrpos($html, '<table');
+  return $i !== false && !str_contains(substr($html, $i), '<td') ? substr($html, 0, $i) . "<div class=vacio>$vacio</div>" : $html . '</table>';
+}
 
 function pagina(string $titulo, string $cuerpo): never {
-  $menu = empty($_SESSION['admin']) ? '' : "<p class=meta><a href=/admin>Envíos</a> · <a href=/admin/qr>Etiquetas QR</a> · <a href=/admin/personas>Personas</a> · <a href=/admin/catalogo>Catálogo</a> · <a href=/admin/soportes>Soportes</a> · <a href=/admin/rutas>Rutas</a> · <a href=/admin/artistas>Artistas</a> · <a href=/admin/obras>Obras propuestas</a> · <a href=/admin/participa>Lista y votos</a> · <a href=/admin/copia>Descargar copia de la base de datos</a> · <a href=/admin/salir>Salir</a></p>";
+  $menu = '';
+  if (!empty($_SESSION['admin'])) {
+    // Contadores: lo que espera revisión y el tamaño del archivo, para ver de un vistazo cómo va.
+    $n = db()->query("SELECT (SELECT COUNT(*) FROM envios WHERE estado = 'pendiente'), (SELECT COUNT(*) FROM obras WHERE publicada = 1), (SELECT COUNT(*) FROM obras),
+      (SELECT COUNT(*) FROM soportes), (SELECT COUNT(*) FROM qr_codigos WHERE estado = 'libre'), (SELECT COUNT(*) FROM obras_propuestas WHERE estado = 'pendiente')")->fetch(PDO::FETCH_NUM);
+    $c = fn($v, $t = '') => " <span class=cuenta" . ($t ? " title='$t'" : '') . ">$v</span>";
+    $menu = "<nav class=menu><a href=/admin>Envíos{$c($n[0], 'pendientes de revisar')}</a> <a href=/admin/catalogo>Obras{$c("$n[1]/$n[2]", 'publicadas / total')}</a> <a href=/admin/soportes>Soportes{$c($n[3])}</a> <a href=/admin/qr>Etiquetas QR{$c($n[4], 'libres en el pool')}</a>"
+      . " <a href=/admin/rutas>Rutas</a> <a href=/admin/artistas>Artistas</a> <a href=/admin/personas>Personas</a> <a href=/admin/obras>Obras propuestas{$c($n[5], 'pendientes')}</a> <a href=/admin/participa>Lista y votos</a> <a href=/admin/copia>Copia de la base de datos</a>"
+      . "<form method=post action=/admin/salir class=inline><input type=hidden name=csrf value={$_SESSION['csrf']}><button class=enlace>Salir</button></form></nav>";
+  }
   header('Content-Type: text/html; charset=utf-8');
   echo <<<HTML
 <!doctype html><html lang=es><head><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1"><meta name=robots content=noindex>
 <title>$titulo · canarias.africa</title><style>
 :root{--bg:#faf6ee;--fg:#16130f;--muted:#6b6257;--rule:#d9d0c1;--ok:#007a3d;--no:#c8102e}
 @media (prefers-color-scheme:dark){:root{--bg:#12100d;--fg:#f4eee2;--muted:#a39a8c;--rule:#2e2a24;--ok:#2aa866;--no:#e5354f}}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}main{max-width:860px;margin:0 auto;padding:24px 16px}
-a{color:inherit}.meta{color:var(--muted);font-size:14px}article{border-top:1px solid var(--rule);padding:16px 0}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}main{max-width:860px;margin:0 auto;padding:24px 16px}html,body{overflow-x:hidden}td,th{overflow-wrap:anywhere}
+a{color:inherit}.menu{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;margin:0 0 18px;padding:0 0 10px;border-bottom:1px solid var(--rule)}.cuenta{display:inline-block;min-width:1.4em;padding:0 6px;border-radius:9px;background:var(--rule);font-size:12px;text-align:center}.enlace{border:0;padding:0;text-decoration:underline;font-size:14px;color:inherit}.vacio{border:1px dashed var(--rule);border-radius:4px;padding:16px;text-align:center;margin:12px 0}.boton{display:inline-block;margin:8px 0;padding:6px 12px;border:1px solid var(--ok);color:var(--ok);border-radius:4px;text-decoration:none}.error{border:1px solid var(--no);color:var(--no);padding:8px 12px;border-radius:4px}.meta{color:var(--muted);font-size:14px}article{border-top:1px solid var(--rule);padding:16px 0}
 dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px}dt{color:var(--muted)}dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
 img{max-width:220px;border-radius:4px;margin:4px 8px 0 0}.inline{display:inline}table{border-collapse:collapse;width:100%}td,th{border-top:1px solid var(--rule);padding:6px;text-align:left;font-size:14px}
 button,input,select,textarea{font:inherit;padding:6px 10px;border:1px solid var(--rule);background:transparent;color:inherit;border-radius:4px}button{cursor:pointer}
 .aprobada{border-color:var(--ok);color:var(--ok)}.rechazada{border-color:var(--no);color:var(--no)}
-</style></head><body><main><h1>$titulo</h1>$menu$cuerpo</main></body></html>
+</style></head><body><main><h1>$titulo</h1>$menu$cuerpo</main>
+<script>
+// Buscador en las listas: filtra las filas por cualquier texto (título, municipio, fase, estado…).
+document.querySelectorAll('table.filtrable').forEach(t=>{ const filas=[...t.rows].slice(1); if(filas.length<2) return;
+  const i=document.createElement('input'); i.type='search'; i.placeholder='Buscar en '+filas.length+' filas…'; i.style.cssText='width:100%;box-sizing:border-box;margin:8px 0';
+  const n=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  i.oninput=()=>{ const q=n(i.value.trim()); filas.forEach(f=>f.hidden=!!q&&!n(f.textContent).includes(q)); };
+  t.before(i); });
+</script></body></html>
 HTML;
   exit;
 }

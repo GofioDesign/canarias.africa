@@ -2,8 +2,11 @@
 // /admin: catálogo de obras, rutas y artistas. Lo que se guarda aquí es la fuente de /datos/*.geojson,
 // que leen la web y las capas de uMap. Se incluye desde admin.php con $sub, $metodo, $db, $csrf y $h ya definidos.
 
-$ETIQUETAS_FASE = ['gestacion' => 'Gestación', 'creacion' => 'Creación', 'plenitud' => 'Plenitud', 'desgaste' => 'Desgaste',
-  'intervencion' => 'Intervención', 'transformacion' => 'Transformación', 'desaparicion' => 'Desaparición', 'memoria' => 'Memoria'];
+// Fases de vida de una obra, con una pista breve de cuándo usar cada una.
+$ETIQUETAS_FASE = ['gestacion' => 'Gestación: en proyecto o boceto', 'creacion' => 'Creación: se está haciendo', 'plenitud' => 'Plenitud: terminada y en buen estado',
+  'desgaste' => 'Desgaste: sol, sal, humedad o roces', 'intervencion' => 'Intervención: restaurada, repintada o tapada en parte',
+  'transformacion' => 'Transformación: otra obra encima o al lado la cambia', 'desaparicion' => 'Desaparición: borrada, retirada o destruida',
+  'memoria' => 'Memoria: ya no existe; queda su registro'];
 $ETIQUETAS_SENS = ['abierta' => 'Abierta (punto exacto)', 'difusa' => 'Difusa (zona de ~2 km)', 'reservada' => 'Reservada: obra delicada (solo la isla, con un punto simbólico; sin QR)'];
 
 // Si viene una foto del formulario (la cámara del móvil o un archivo), la guarda sin metadatos y devuelve su URL pública.
@@ -30,13 +33,14 @@ $lista = function (string $nombre, string $etiqueta, array $opciones, string $va
   return "<label class=campo><span>$etiqueta</span><select name=$nombre>$ops</select></label>";
 };
 
-// Mapa para marcar el punto (o tomarlo del GPS del móvil). Usa Leaflet de la web y las teselas cacheadas de este servidor.
+// Mapa para marcar el punto (o tomarlo del GPS del móvil). Leaflet y las teselas se sirven desde este mismo servidor.
+// El recuadro lleva overflow:hidden propio para que nunca se salga aunque falle la hoja de estilos de Leaflet.
 $mapa = function (): string {
-  $web = rtrim(config()['web'], '/');
   return <<<HTML
-<div id=mapa style="height:320px;border:1px solid var(--rule);border-radius:4px;margin:8px 0"></div>
+<div id=mapa style="height:320px;max-width:100%;overflow:hidden;position:relative;border:1px solid var(--rule);border-radius:4px;margin:8px 0;background:var(--rule)"></div>
 <p><button type=button id=gps>Usar mi ubicación</button> <span class=meta>Pulsa en el mapa para colocar el punto. Puedes arrastrarlo.</span></p>
-<link rel=stylesheet href="$web/vendor/leaflet-1.9.4/leaflet.css"><script src="$web/vendor/leaflet-1.9.4/leaflet.js"></script>
+<link rel=stylesheet href="/vendor/leaflet-1.9.4/leaflet.css"><script src="/vendor/leaflet-1.9.4/leaflet.js"></script>
+<style>.punto{width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#007a3d;border:3px solid #fff;box-shadow:0 0 0 1px #0006;cursor:grab}</style>
 <script>
 (function(){
   const la=document.querySelector('[name=lat]'), lo=document.querySelector('[name=lon]');
@@ -45,7 +49,7 @@ $mapa = function (): string {
   L.tileLayer('/teselas/osm/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(m);
   let p=null;
   const poner=(lat,lon,zoom)=>{ la.value=(+lat).toFixed(6); lo.value=(+lon).toFixed(6);
-    if(p) p.setLatLng([lat,lon]); else { p=L.marker([lat,lon],{draggable:true}).addTo(m); p.on('dragend',e=>{const g=e.target.getLatLng(); poner(g.lat,g.lng);}); }
+    if(p) p.setLatLng([lat,lon]); else { p=L.marker([lat,lon],{draggable:true,icon:L.divIcon({className:'punto',iconSize:null})}).addTo(m); p.on('dragend',e=>{const g=e.target.getLatLng(); poner(g.lat,g.lng);}); }
     if(zoom) m.setView([lat,lon],zoom); };
   if(la.value&&lo.value) poner(la.value,lo.value,16);
   m.on('click',e=>poner(e.latlng.lat,e.latlng.lng));
@@ -69,7 +73,7 @@ $nodos = function (string $nombre, string $titulo, string $ayuda, array $campos,
 };
 $js_nodos = <<<'HTML'
 <script>
-document.querySelectorAll('fieldset.nodos').forEach(fs=>{
+document.querySelectorAll('fieldset.nodos[data-campos]').forEach(fs=>{
   const campos=JSON.parse(fs.dataset.campos), oculto=fs.querySelector('input[type=hidden]'), cont=fs.querySelector('.filas');
   const guardar=()=>{ oculto.value=JSON.stringify([...cont.children].map(f=>Object.fromEntries(campos.map(([k,t])=>{ const i=f.querySelector(`[data-k="${k}"]`); return [k,t==='check'?i.checked:i.value.trim()]; })))); };
   const lista=f=>{ const n=f.querySelector('[data-k=naturaleza]'), e=f.querySelector('[data-k=entidad]'); if(!n||!e) return;
@@ -95,7 +99,9 @@ $estilo_form = '<style>.nodos{border:1px solid var(--rule);border-radius:4px;mar
 .campo{display:block;margin:10px 0}.campo span{display:block;font-weight:600;font-size:14px}.campo small{display:block;color:var(--muted);font-size:13px}
 .campo input:not([type=checkbox]),.campo textarea,.campo select{width:100%;box-sizing:border-box;font:inherit;padding:6px 10px;border:1px solid var(--rule);background:transparent;color:inherit;border-radius:4px}
 .par{display:grid;grid-template-columns:1fr 1fr;gap:12px}.error{border:1px solid var(--no);color:var(--no);padding:8px 12px;border-radius:4px}.hecho{border:1px solid var(--ok);color:var(--ok);padding:8px 12px;border-radius:4px}
-.foto-actual{max-width:320px;display:block;margin:6px 0}</style>';
+.foto-actual{max-width:320px;display:block;margin:6px 0}
+.seccion{border:1px solid var(--rule);border-radius:4px;margin:12px 0;padding:0 12px}.seccion>summary{cursor:pointer;font-weight:600;padding:10px 0}.seccion[open]>summary{border-bottom:1px solid var(--rule);margin-bottom:6px}
+.guardar{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--rule);padding:4px 0;z-index:500}.guardar .campo{margin:6px 0}</style>';
 
 // Aviso de publicación en canarias.africa tras guardar (se muestra una vez en la página siguiente).
 $aviso_pub = function () use ($h): string {
@@ -115,12 +121,12 @@ if ($sub === '/catalogo') {
     <form method=post action=/admin/publicar><input type=hidden name=csrf value=' . $csrf . '><button>Publicar ahora en canarias.africa</button>
     <span class=meta>Al guardar se publica solo; este botón fuerza una copia nueva.</span></form>
     <p class=meta>La fuente es este servidor (<a href=/datos/obras.geojson>/datos/obras.geojson</a>); canarias.africa sirve una copia en /datos/, que leen la web y uMap.</p>
-    <table><tr><th>Obra</th><th>Municipio</th><th>Fase</th><th>Sensibilidad</th><th>Publicada</th><th>Versión</th></tr>';
+    <table class=filtrable><tr><th>Obra</th><th>Municipio</th><th>Fase</th><th>Sensibilidad</th><th>Publicada</th><th>Versión</th></tr>';
   foreach ($db->query('SELECT * FROM obras ORDER BY publicada DESC, actualizado DESC') as $o) {
     $html .= "<tr><td><a href='/admin/obra?id={$h($o['uuid'])}'>{$h($o['titulo'] ?: 'Sin título')}</a></td><td>{$h($o['municipio'])}</td><td>{$h($o['fase'])}</td>
       <td>{$h($o['sensibilidad'])}</td><td>" . ($o['publicada'] ? 'sí' : 'no') . "</td><td><a href='/admin/obra/versiones?id={$h($o['uuid'])}'>v{$o['version']}</a></td></tr>";
   }
-  pagina('Catálogo de obras', $html . '</table>');
+  pagina('Catálogo de obras', tabla_o_vacio($html, 'El archivo está vacío. <a class=boton href=/admin/obra>+ Añadir la primera obra</a><br><span class=meta>Desde el móvil, junto a la obra: marca el punto con «Usar mi ubicación» y saca la foto en el mismo formulario.</span>'));
 }
 
 if ($sub === '/obra') {
@@ -224,36 +230,52 @@ if ($sub === '/obra') {
   $html = $estilo_form . ($error ? "<p class=error>{$h($error)}</p>" : '') . (!empty($_GET['ok']) ? '<p class=hecho>Guardada.</p>' . $aviso_pub() : '')
     . "<form method=post action=/admin/obra enctype=multipart/form-data><input type=hidden name=csrf value=$csrf><input type=hidden name=id value=\"{$h($id)}\">$origen"
     . ($id ? "<p class=meta>Id: <code>{$h($id)}</code>" . (isset($o['version']) ? " · versión {$o['version']} · <a href='/admin/obra/versiones?id={$h($id)}'>historial</a>" : '') . '</p>' : '')
+    . '<details class=seccion open><summary>Lo esencial: qué es, dónde está y foto</summary>'
     . $campo('titulo', 'Título', $v('titulo'), 'text', '', ['required' => 'required'])
-    . '<div class=par>' . $lista('fase', 'Fase', $ETIQUETAS_FASE, (string) $v('fase')) . $lista('sensibilidad', 'Sensibilidad', $ETIQUETAS_SENS, (string) $v('sensibilidad')) . '</div>'
-    . $lista('isla', 'Isla', ['' => 'La del punto (o Canarias si no hay punto)'] + ISLAS_CODIGO, (string) $v('isla'))
+    . $campo('foto_archivo', 'Sacar o subir una foto', '', 'file', 'En el móvil abre la cámara. Se guarda sin la ubicación del GPS y sustituye a la anterior.', ['accept' => 'image/*', 'capture' => 'environment'])
+    . ($v('foto') ? "<img class=foto-actual src=\"{$h($v('foto'))}\" alt='Foto actual'>" : '')
     . '<div class=par>' . $campo('municipio', 'Municipio', $v('municipio'), 'text', 'No se publica si la obra es reservada.') . $campo('lugar', 'Lugar', $v('lugar'), 'text', 'Calle, plaza o paraje. Solo se publica si la obra es abierta.') . '</div>'
-    . '<div class=par>' . $campo('lat', 'Latitud', $v('lat'), 'text', '', ['inputmode' => 'decimal']) . $campo('lon', 'Longitud', $v('lon'), 'text', '', ['inputmode' => 'decimal']) . '</div>'
+    . $lista('isla', 'Isla', ['' => 'La del punto (o Canarias si no hay punto)'] + ISLAS_CODIGO, (string) $v('isla'))
+    . '<div class=par>' . $campo('lat', 'Latitud', $v('lat'), 'number', 'Entre 27,4 y 29,6 (norte). Ej.: 28.4682', ['step' => 'any', 'min' => '27.4', 'max' => '29.6', 'inputmode' => 'decimal']) . $campo('lon', 'Longitud', $v('lon'), 'number', 'Entre −18,4 y −13,2 (oeste, en negativo). Ej.: -16.2546', ['step' => 'any', 'min' => '-18.4', 'max' => '-13.2', 'inputmode' => 'decimal']) . '</div>'
     . $mapa()
-    . '<div class=par>' . $campo('tipo', 'Tipo', $v('tipo'), 'text', 'Mural, escultura, grafiti, instalación, grabado, acción, obra web…') . $campo('autoria', 'Autoría (texto libre, antiguo)', $v('autoria'), 'text', 'Mejor usa «Personas y colectivos».') . '</div>'
+    . '<div class=par>' . $lista('fase', 'Fase', $ETIQUETAS_FASE, (string) $v('fase')) . $lista('sensibilidad', 'Sensibilidad', $ETIQUETAS_SENS, (string) $v('sensibilidad')) . '</div>'
+    . '<p class=meta>Sensibilidad: <b>abierta</b> si está en un espacio público y no corre peligro; <b>difusa</b> si conviene no dar el punto exacto (terreno privado, obra frágil); <b>reservada</b> para patrimonio delicado, como los grabados aborígenes: no se publica el municipio y no lleva QR.</p>'
+    . '</details>'
+    . '<details class=seccion' . ($id ? ' open' : '') . '><summary>Qué es y cuándo se hizo</summary>'
+    . $campo('tipo', 'Tipo', $v('tipo'), 'text', 'Mural, escultura, grafiti, instalación, grabado, acción, obra web…')
+    // El campo de autoría en texto libre es el antiguo: solo aparece si la obra ya lo tiene relleno.
+    . ($v('autoria') !== '' ? $campo('autoria', 'Autoría (texto antiguo)', $v('autoria'), 'text', 'Pásalo a «Personas y colectivos» y vacía este campo.') : '')
     . '<div class=par>' . $campo('fecha_obra', 'Fecha de la obra', $v('fecha_obra'), 'text', 'Año, década o época.') . $lista('fecha_precision', 'Precisión de la fecha', PRECISIONES_FECHA, (string) $v('fecha_precision')) . '</div>'
     . $campo('descripcion', 'Descripción', $v('descripcion'), 'textarea')
+    . '</details>'
+    . '<details class=seccion' . ($id ? ' open' : '') . '><summary>Quién la hizo y quién la pagó</summary>'
     . $nodos('agentes', 'Personas y colectivos', 'Quién la hizo, la encargó, la restauró o la cuida. «Visible» solo si ha aceptado figurar o es una figura pública; si no, se guarda aquí pero no se publica.',
         [['nombre', 'text', 'Nombre o colectivo', ''], ['rol', 'select', 'Rol', ROLES_AGENTE], ['certeza', 'select', 'Certeza', CERTEZAS], ['visible', 'check', 'Visible', '']], (string) $v('agentes'), '+ Añadir persona o colectivo')
     . $nodos('pagadores', 'Quién la pagó', 'Entidad pública o privada: elige de la lista (entidades de otras obras) o escribe una nueva. Un particular se guarda pero su nombre no se publica.',
         [['naturaleza', 'select', 'Naturaleza', NATURALEZAS], ['entidad', 'text', 'Entidad', 'ent-publica'], ['modalidad', 'select', 'Modalidad', MODALIDADES]], (string) $v('pagadores'), '+ Añadir pagador')
+    . $datalists
+    . '</details>'
+    . '<details class=seccion' . ($id ? ' open' : '') . '><summary>Relaciones con otras obras y soportes</summary>'
     . $nodos('relaciones', 'Relación con otras obras', 'Solo se publican las relaciones con obras publicadas.',
         [['modo', 'select', 'Relación', MODOS_RELACION], ['obra', 'select', 'Obra', $obras_ops], ['nota', 'text', 'Nota (opcional)', '']], (string) $v('relaciones'), '+ Añadir relación')
-    . ($id ? '<h2>Soportes</h2>' . (implode('', array_map(fn($x) => "<p><a href='/admin/soporte?id={$h($x['soporte'])}'>{$h($x['nombre'] ?: 'Soporte')}</a> <span class=meta>" . ($x['tipo'] ? '· ' . $h(TIPOS_SOPORTE[$x['tipo']] ?? '') : '') . "" . ($x['desde'] ? " · desde {$h($x['desde'])}" : '') . ($x['hasta'] ? " · hasta {$h($x['hasta'])}" : ' · ahora') . '</span></p>',
+    . ($id ? '<h3>Soportes</h3>' . (implode('', array_map(fn($x) => "<p><a href='/admin/soporte?id={$h($x['soporte'])}'>{$h($x['nombre'] ?: 'Soporte')}</a> <span class=meta>" . ($x['tipo'] ? '· ' . $h(TIPOS_SOPORTE[$x['tipo']] ?? '') : '') . "" . ($x['desde'] ? " · desde {$h($x['desde'])}" : '') . ($x['hasta'] ? " · hasta {$h($x['hasta'])}" : ' · ahora') . '</span></p>',
         (function () use ($db, $id) { $st = $db->prepare('SELECT os.*, s.nombre, s.tipo FROM obra_soporte os JOIN soportes s ON s.uuid = os.soporte WHERE os.obra = ? ORDER BY os.hasta != \'\', os.id DESC'); $st->execute([$id]); return $st->fetchAll(); })()))
         ?: '<p class=meta>Sin soporte. Sin punto propio, la obra toma el de su soporte actual.</p>') . "<p><a href='/admin/soporte?obra={$h($id)}'>+ Nuevo soporte para esta obra</a> <span class=meta>(o añádela a uno que ya existe desde <a href=/admin/soportes>Soportes</a>)</span></p>" : '')
+    . '</details>'
+    . '<details class=seccion><summary>Lo que no se sabe y las fuentes</summary>'
     . '<fieldset class=nodos><legend>Datos desconocidos</legend><p class=meta>Marca lo que no se sabe. La ficha pública lo muestra como desconocido e invita a completarlo a quien la mira o escanea su QR. Al rellenar un campo, deja de ser desconocido.</p>'
       . implode(' ', array_map(fn($k, $t) => "<label class=chk style='margin-right:12px'><input type=checkbox name='desconocidos[]' value=$k" . (in_array($k, explode(',', (string) $v('desconocidos')), true) ? ' checked' : '') . "> {$h($t)}</label>",
         array_keys(CAMPOS_DESCONOCIBLES), CAMPOS_DESCONOCIBLES)) . '</fieldset>'
     . $campo('fuentes', 'Fuentes', $v('fuentes'), 'textarea', 'Cómo se sabe: testimonios, documentos, placas, prensa. Uno por línea. No se publica.')
-    . $datalists
-    . ($v('foto') ? "<img class=foto-actual src=\"{$h($v('foto'))}\" alt='Foto actual'>" : '')
-    . $campo('foto_archivo', 'Sacar o subir una foto', '', 'file', 'En el móvil abre la cámara. Se guarda sin la ubicación del GPS y sustituye a la anterior.', ['accept' => 'image/*', 'capture' => 'environment'])
+    . '</details>'
+    . '<details class=seccion><summary>Foto por enlace, crédito y enlace externo</summary>'
     . $campo('foto', 'O enlace a la foto', $v('foto'), 'url', 'https:// directo a la imagen, por ejemplo de Wikimedia Commons.')
     . $campo('foto_credito', 'Crédito de la foto', $v('foto_credito'), 'text', 'Autoría y licencia: «Foto: Ana Pérez · CC BY-SA 4.0».')
     . $campo('ficha', 'Enlace externo', $v('ficha'), 'text', 'Opcional: artículo, web del artista…')
+    . '</details>'
+    . '<div class=guardar>'
     . $campo('publicada', 'Publicada en la web y en uMap', $v('publicada'), 'checkbox')
-    . '<p><button class=aprobada>Guardar</button> <a href=/admin/catalogo>Volver al catálogo</a></p></form>' . $js_nodos;
+    . '<p><button class=aprobada>Guardar</button> <a href=/admin/catalogo>Volver al catálogo</a></p></div></form>' . $js_nodos;
   pagina($id ? 'Editar obra' : 'Nueva obra', $html);
 }
 
@@ -277,12 +299,12 @@ if ($sub === '/obra/versiones') {
 
 // ---------------- Rutas ----------------
 if ($sub === '/rutas') {
-  $html = '<p><a href=/admin/ruta>+ Nueva ruta</a> · <a href=/admin/catalogo>Obras</a></p><p class=meta>Se publican en <a href=/datos/rutas.geojson>/datos/rutas.geojson</a>. Solo cuentan las paradas publicadas y con punto (nunca las reservadas).</p><table><tr><th>Ruta</th><th>Paradas</th><th>Publicada</th></tr>';
+  $html = '<p><a href=/admin/ruta>+ Nueva ruta</a> · <a href=/admin/catalogo>Obras</a></p><p class=meta>Se publican en <a href=/datos/rutas.geojson>/datos/rutas.geojson</a>. Solo cuentan las paradas publicadas y con punto (nunca las reservadas).</p><table class=filtrable><tr><th>Ruta</th><th>Paradas</th><th>Publicada</th></tr>';
   foreach ($db->query('SELECT * FROM rutas ORDER BY nombre') as $r) {
     $n = count(array_filter(explode(',', $r['paradas'])));
     $html .= "<tr><td><a href='/admin/ruta?id={$h($r['id'])}'>{$h($r['nombre'])}</a></td><td>$n</td><td>" . ($r['publicada'] ? 'sí' : 'no') . '</td></tr>';
   }
-  pagina('Rutas', $html . '</table>');
+  pagina('Rutas', tabla_o_vacio($html, 'No hay rutas todavía. <a class=boton href=/admin/ruta>+ Crear la primera ruta</a><br><span class=meta>Una ruta une obras ya catalogadas: añade antes algunas obras.</span>'));
 }
 
 if ($sub === '/ruta') {
@@ -365,11 +387,11 @@ HTML
 
 // ---------------- Artistas ----------------
 if ($sub === '/artistas') {
-  $html = '<p><a href=/admin/artista>+ Nuevo perfil</a> · <a href=/admin/catalogo>Obras</a></p><p class=meta>Galería de artistas. Su tienda se alojará en canarias.africa (fase siguiente); mientras, el campo «Tienda» puede enlazar a la suya. Se publica en <a href=/datos/artistas.geojson>/datos/artistas.geojson</a>, solo con su consentimiento.</p><table><tr><th>Artista</th><th>Disciplina</th><th>Municipio</th><th>Publicada</th></tr>';
+  $html = '<p><a href=/admin/artista>+ Nuevo perfil</a> · <a href=/admin/catalogo>Obras</a></p><p class=meta>Galería de artistas. Su tienda se alojará en canarias.africa (fase siguiente); mientras, el campo «Tienda» puede enlazar a la suya. Se publica en <a href=/datos/artistas.geojson>/datos/artistas.geojson</a>, solo con su consentimiento.</p><table class=filtrable><tr><th>Artista</th><th>Disciplina</th><th>Municipio</th><th>Publicada</th></tr>';
   foreach ($db->query('SELECT * FROM artistas ORDER BY nombre') as $a) {
     $html .= "<tr><td><a href='/admin/artista?id={$h($a['id'])}'>{$h($a['nombre'])}</a></td><td>{$h($a['disciplina'])}</td><td>{$h($a['municipio'])}</td><td>" . ($a['publicada'] ? 'sí' : 'no') . '</td></tr>';
   }
-  pagina('Artistas', $html . '</table>');
+  pagina('Artistas', tabla_o_vacio($html, 'No hay perfiles de artistas. <a class=boton href=/admin/artista>+ Crear el primer perfil</a><br><span class=meta>Solo se publica con su consentimiento anotado.</span>'));
 }
 
 if ($sub === '/artista') {
@@ -402,7 +424,7 @@ if ($sub === '/artista') {
     . $campo('obras', 'Obras del archivo', $v('obras'), 'text', 'Ids de obras separados por comas.')
     . '<h2>Punto en el mapa (opcional)</h2><p class=meta>Solo para un espacio que la persona quiera mostrar: taller abierto, galería, tienda. Nunca su domicilio. Sin punto, sale solo el municipio.</p>'
     . $campo('espacio', 'Qué espacio es', $v('espacio'))
-    . '<div class=par>' . $campo('lat', 'Latitud', $v('lat'), 'text', '', ['inputmode' => 'decimal']) . $campo('lon', 'Longitud', $v('lon'), 'text', '', ['inputmode' => 'decimal']) . '</div>'
+    . '<div class=par>' . $campo('lat', 'Latitud', $v('lat'), 'number', 'Entre 27,4 y 29,6 (norte). Ej.: 28.4682', ['step' => 'any', 'min' => '27.4', 'max' => '29.6', 'inputmode' => 'decimal']) . $campo('lon', 'Longitud', $v('lon'), 'number', 'Entre −18,4 y −13,2 (oeste, en negativo). Ej.: -16.2546', ['step' => 'any', 'min' => '-18.4', 'max' => '-13.2', 'inputmode' => 'decimal']) . '</div>'
     . $mapa()
     . $campo('consentimiento', 'Consentimiento', $v('consentimiento'), 'text', 'Obligatorio para publicar: fecha y cómo lo dio («2026-11-02, por correo»).')
     . $campo('publicada', 'Publicado', $v('publicada'), 'checkbox')
@@ -415,7 +437,7 @@ if ($sub === '/artista') {
 if ($sub === '/soportes') {
   $html = $aviso_pub() . '<p><a href=/admin/soporte>+ Nuevo soporte</a> · <a href=/admin/catalogo>Obras</a></p>
     <p class=meta>La etiqueta QR identifica el soporte, no una obra: en un mismo muro puede haber varias obras, o unas encima de otras con el tiempo. Se publica en <a href=/datos/soportes.geojson>/datos/soportes.geojson</a> (los soportes con punto y alguna obra publicada).</p>
-    <table><tr><th>Soporte</th><th>Tipo</th><th>Municipio</th><th>Obras ahora</th><th>Etiquetas</th></tr>';
+    <table class=filtrable><tr><th>Soporte</th><th>Tipo</th><th>Municipio</th><th>Obras ahora</th><th>Etiquetas</th></tr>';
   foreach ($db->query('SELECT * FROM soportes ORDER BY actualizado DESC') as $s) {
     $ob = obras_de_soporte($s['uuid']);
     $ahora = count(array_filter($ob, fn($o) => $o['hasta'] === ''));
@@ -423,7 +445,7 @@ if ($sub === '/soportes') {
     $st->execute([$s['uuid']]);
     $html .= "<tr><td><a href='/admin/soporte?id={$h($s['uuid'])}'>{$h($s['nombre'] ?: 'Sin nombre')}</a></td><td>{$h($s['tipo'] ? TIPOS_SOPORTE[$s['tipo']] ?? '' : '')}</td><td>{$h($s['municipio'])}</td><td>$ahora de " . count($ob) . "</td><td>{$st->fetchColumn()}</td></tr>";
   }
-  pagina('Soportes', $html . '</table>');
+  pagina('Soportes', tabla_o_vacio($html, 'No hay soportes. <a class=boton href=/admin/soporte>+ Crear el primer soporte</a><br><span class=meta>También se crean solos al colocar una etiqueta con la app, o desde la ficha de una obra.</span>'));
 }
 
 if ($sub === '/soporte') {
@@ -468,7 +490,7 @@ if ($sub === '/soporte') {
     . $campo('url', 'URL (si es una web o tiene página propia)', $v('url'), 'url', 'Obligatoria para el tipo «Web o soporte digital», que no necesita punto. Una obra de realidad aumentada lleva URL y punto: su etiqueta se coloca y se verifica con el GPS.')
     . $lista('isla', 'Isla', ['' => 'La del punto'] + ISLAS_CODIGO, (string) $v('isla'))
     . '<div class=par>' . $campo('municipio', 'Municipio', $v('municipio')) . $campo('lugar', 'Lugar', $v('lugar'), 'text', 'Solo se publica si es abierto.') . '</div>'
-    . '<div class=par>' . $campo('lat', 'Latitud', $v('lat'), 'text', '', ['inputmode' => 'decimal']) . $campo('lon', 'Longitud', $v('lon'), 'text', '', ['inputmode' => 'decimal']) . '</div>'
+    . '<div class=par>' . $campo('lat', 'Latitud', $v('lat'), 'number', 'Entre 27,4 y 29,6 (norte). Ej.: 28.4682', ['step' => 'any', 'min' => '27.4', 'max' => '29.6', 'inputmode' => 'decimal']) . $campo('lon', 'Longitud', $v('lon'), 'number', 'Entre −18,4 y −13,2 (oeste, en negativo). Ej.: -16.2546', ['step' => 'any', 'min' => '-18.4', 'max' => '-13.2', 'inputmode' => 'decimal']) . '</div>'
     . $mapa()
     . $campo('descripcion', 'Descripción', $v('descripcion'), 'textarea', 'Material, estado, quién lo cuida… No se publica.')
     . $nodos('obras', 'Obras en este soporte', 'Las de ahora sin «hasta». Si una se pintó encima de otra, la de debajo lleva «hasta» con la fecha (estratigrafía). Si una obra se trasladó, se cierra aquí con «hasta» y se añade en su soporte nuevo.',

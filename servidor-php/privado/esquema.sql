@@ -285,3 +285,13 @@ CREATE TABLE IF NOT EXISTS participa_envios (
   ip_hash  TEXT,
   creado   TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Registro de acciones delicadas en /admin (por ahora, descargas de la copia de la base de datos).
+CREATE TABLE IF NOT EXISTS admin_registro (
+  id       INTEGER PRIMARY KEY,
+  accion   TEXT NOT NULL,
+  detalle  TEXT NOT NULL DEFAULT '',
+  ip       TEXT NOT NULL DEFAULT '',
+  agente   TEXT NOT NULL DEFAULT '',
+  fecha    TEXT NOT NULL DEFAULT (datetime('now'))
+);

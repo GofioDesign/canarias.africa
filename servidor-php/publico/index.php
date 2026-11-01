@@ -17,6 +17,13 @@ if ($metodo === 'POST' && !str_starts_with($ruta, '/admin') && $ruta !== '/api/p
 }
 
 try {
+  // Leaflet servido desde este mismo dominio (el mapa de /admin y la app sin conexión no dependen de otro sitio).
+  if ($metodo === 'GET' && preg_match('#^/vendor/leaflet-1\.9\.4/(leaflet\.(?:css|js))$#', $ruta, $m)) {
+    header('Content-Type: ' . (str_ends_with($m[1], '.css') ? 'text/css' : 'application/javascript') . '; charset=utf-8');
+    header('Cache-Control: public, max-age=31536000, immutable');
+    readfile(PRIVADO . '/vendor/leaflet-1.9.4/' . $m[1]);
+    exit;
+  }
   if ($metodo === 'GET' && preg_match('#^/teselas/osm/(\d{1,2})/(\d+)/(\d+)\.png$#', $ruta, $m)) teselas((int) $m[1], (int) $m[2], (int) $m[3]);
   // Datos públicos en GeoJSON: los leen la web y las capas de uMap («datos remotos»). /datos/umap/ es el nombre antiguo.
   // qr.geojson es el nombre anterior de soportes.geojson: la etiqueta identifica un soporte, no una obra.

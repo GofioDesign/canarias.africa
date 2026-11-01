@@ -57,7 +57,8 @@ p{margin:0}
 .def-nunea{margin:14px 0 0;max-width:34em;font-size:.95rem;color:var(--muted)}
 .lema{padding-block:8px 48px}
 .lema blockquote{margin:0;font-family:var(--f-body);font-style:italic;font-size:clamp(1.5rem,3.6vw,2.4rem);line-height:1.25;max-width:26ch;text-wrap:balance}
-.lema blockquote::before{content:"";display:block;width:34px;height:34px;margin-bottom:14px;background:var(--verde);clip-path:polygon(50% 4%,61.2% 38.5%,97.6% 38.5%,68.2% 59.9%,79.4% 94.5%,50% 73.1%,20.6% 94.5%,31.8% 59.9%,2.4% 38.5%,38.8% 38.5%)}
+/* Separador sobre la cita: tres estrellas (inicio, medio y fin) unidas por trazos de pluma */
+.lema .separador{display:block;width:min(300px,100%);height:auto;margin-bottom:18px;fill:var(--verde)}
 
 /* Declaración */
 section{padding-block:40px;border-top:1px solid var(--line)}
@@ -155,7 +156,7 @@ footer svg{display:block;width:100%;height:auto}
       </ol>
       <p class="def-nunea"><b>Núnea</b>: palabra nueva, eco de «nunáneo» (lo que no está en un solo lugar) y de «nueva». Nombra cualquier expresión artística y cultural, antigua o reciente, que deja huella en el territorio.</p>
     </div>
-    <div class="lema"><blockquote>El arte no nos pertenece. Su memoria la construimos entre todos.</blockquote></div>
+    <div class="lema"><svg class="separador" viewBox="0 0 300 40" role="presentation" aria-hidden="true" focusable="false"><polygon points="12.0,10.0 14.2,16.9 21.5,16.9 15.6,21.2 17.9,28.1 12.0,23.8 6.1,28.1 8.4,21.2 2.5,16.9 9.8,16.9"/><path d="M25,20 C55,11 95,20 133,19 C95,25 55,20 25,20 Z"/><polygon points="150.0,6.0 153.1,15.7 163.3,15.7 155.1,21.7 158.2,31.3 150.0,25.3 141.8,31.3 144.9,21.7 136.7,15.7 146.9,15.7"/><path d="M275,20 C245,11 205,20 167,19 C205,25 245,20 275,20 Z"/><polygon points="288.0,10.0 290.2,16.9 297.5,16.9 291.6,21.2 293.9,28.1 288.0,23.8 282.1,28.1 284.4,21.2 278.5,16.9 285.8,16.9"/></svg><blockquote>El arte no nos pertenece. Su memoria la construimos entre todos.</blockquote></div>
   </div>
 
   <section><div class="wrap decl">

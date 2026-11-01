@@ -19,7 +19,9 @@ try {
   if ($metodo === 'GET' && preg_match('#^/datos/umap/(qr|rutas)\.geojson$#', $ruta, $m)) capa_umap($m[1]);
   if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)$#', $ruta, $m)) observaciones_publicas($m[1]);
   if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)/vinculos$#', $ruta, $m)) vinculos_obra_publicos($m[1]);
-  if ($metodo === 'POST' && preg_match('#^/api/publico/obras/([\w-]+)/huella$#', $ruta, $m)) huella_visita($m[1]);
+  if ($metodo === 'POST' && preg_match('#^/api/obras/([\w-]+)/huella$#', $ruta, $m)) huella_visita($m[1]);
+  if ($metodo === 'POST' && preg_match('#^/api/publico/obras/([\w-]+)/visita$#', $ruta, $m)) visita_anonima($m[1]);
+  if ($metodo === 'GET' && $ruta === '/api/publico/calor') calor();
   if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)/huellas$#', $ruta, $m)) huellas_publicas($m[1]);
   if ($metodo === 'POST' && $ruta === '/api/vinculos') vinculo_crear();
   if ($metodo === 'GET' && $ruta === '/api/vinculos/mios') vinculos_mios();

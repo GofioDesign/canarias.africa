@@ -1558,13 +1558,31 @@ function estratosObra(o){
       :`<p class="muted">Aún sin estratos: se depositará el primero tras la próxima publicación.</p>`}
   </section>`;
 }
-/* Quien mira la obra también se convierte en su trazo: al abrir la ficha se suma una huella anónima (sin cookies ni IP;
-   una por día). No se envía si el navegador pide no ser rastreado. */
+/* Quien mira la obra también se convierte en su trazo, pero solo se traza con la sesión iniciada: al abrir la ficha se
+   suma una huella anónima (el servidor solo guarda el recuento del día). Sin sesión, o si el navegador pide no ser
+   rastreado, no se envía nada. */
 const HUELLAS=new Set();
 function dejarHuella(o){
   if(DEMO||!o||HUELLAS.has(o.id)) return; HUELLAS.add(o.id);
   if(navigator.doNotTrack==="1"||navigator.globalPrivacyControl) return;
-  try{ fetch(API_BASE+"/api/publico/obras/"+encodeURIComponent(o.id.toLowerCase())+"/huella",{method:"POST",keepalive:true,mode:"cors"}).catch(()=>{}); }catch(e){}
+  const id=encodeURIComponent(o.id.toLowerCase());
+  /* Con sesión: trazo en el glifo. Sin sesión: no es trazo, solo suma al mapa de calor agregado y anónimo. */
+  if(SES&&SES.token) api("/api/obras/"+id+"/huella",{metodo:"POST"});
+  else try{ fetch(API_BASE+"/api/publico/obras/"+id+"/visita",{method:"POST",keepalive:true}).catch(()=>{}); }catch(e){}
+}
+/* Mapa de calor: visitas sin sesión de los últimos 90 días, agregadas (solo obras con 5 o más). Nunca las reservadas. */
+let CALOR=null;
+async function cargarCalor(){
+  if(DEMO) return;
+  try{ const r=await fetch(API_BASE+"/api/publico/calor"); if(!r.ok) return; CALOR=(await r.json()).obras||{}; route(); }catch(e){}
+}
+function capaCalor(m,obras){
+  if(!CALOR) return;
+  const max=Math.max(1,...Object.values(CALOR));
+  obras.filter(o=>sensOf(o)!=="reservada"&&CALOR[o.id.toLowerCase()]).forEach(o=>{
+    const k=Math.sqrt(CALOR[o.id.toLowerCase()]/max);
+    L.circle([o.lat,o.lon],{radius:700+3300*k,stroke:false,fill:true,fillColor:"#e8590c",fillOpacity:.18+.32*k,interactive:false,className:"calor"}).addTo(m);
+  });
 }
 /* Tus vínculos con esta obra (api.canarias.africa): solo los ves tú y las otras partes. Públicos solo si todas lo consienten. */
 const TIPOS_VINC_OBRA={colaboracion:"Colaboré en ella",participacion:"Participé en ella",recuerdo:"Forma parte de mi memoria"};
@@ -1645,6 +1663,7 @@ function initMaps(){
       islas.forEach(i=>L.polygon(OUT[i].poly.map(([lon,lat])=>[lat,lon]),{className:"isle-fb",interactive:false}).addTo(m).bringToBack());
       Object.values(MUNIS).filter(x=>islas.includes(x.isla)).forEach(x=>L.marker([x.lat,x.lon],{interactive:false,icon:L.divIcon({className:"mlab",html:x.n,iconSize:null,iconAnchor:[-10,22]})}).addTo(m)); });
     if(c.opt.route){ const pts=c.opt.route.map(byId).filter(o=>MUNIS[o.m].isla===c.isla).map(o=>[o.lat,o.lon]); if(pts.length>1) L.polyline(pts,{className:"route-line",interactive:false}).addTo(m); }
+    capaCalor(m,c.obras.filter(o=>islas.includes(MUNIS[o.m].isla)&&enMapa(o)));
     c.obras.filter(o=>islas.includes(MUNIS[o.m].isla)&&enMapa(o)).forEach(o=>{
       if(sensOf(o)==="difusa"){ L.circle([o.lat,o.lon],{radius:1100,className:`mk-zona mk-${o.fase}`}).addTo(m).bindTooltip(`${esc(o.t)} · zona aproximada`).on("click",()=>{ location.hash=slug(o.id); }); return; }
       const on=!c.opt.only||c.opt.only.includes(o.id), big=c.opt.focus===o.id;
@@ -3056,6 +3075,6 @@ document.addEventListener("click",e=>{
 addEventListener("hashchange",route);
 buildGraph();
 route();
-cargarObrasPublicas().then(cargarUMap).then(cargarArchivo);
+cargarObrasPublicas().then(cargarUMap).then(cargarArchivo).then(cargarCalor);
 cargarConvocatorias();
 </script>

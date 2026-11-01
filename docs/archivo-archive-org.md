@@ -74,6 +74,8 @@ A quien no forma parte de un vínculo, el servidor le responde que no existe. Al
 
 Quien mira, escanea, verifica u observa una obra también se convierte en trazo de ella. En el glifo aparecen como un polvo de puntos alrededor del mundo de vínculos (más puntos cuantas más huellas, en escala logarítmica).
 
-- `POST /api/publico/obras/<uuid>/huella`: la web la envía al abrir una ficha, salvo que el navegador pida no ser rastreado (Do Not Track o Global Privacy Control). El escaneo de una etiqueta colocada suma otra huella.
-- `GET /api/publico/obras/<uuid>/huellas`: `{visitas, escaneos, verificaciones, observaciones, meses}`.
-- Solo se guardan recuentos por obra, día y tipo. Para no contar dos veces la misma visita en el día se guarda un hash con una sal diaria que no se conserva, y el cron borra esos hashes cada día. Ni IP, ni cookies, ni cuenta.
+- **Solo se traza con la sesión iniciada** (decisión del 01-11-2026). Sin cuenta no se registra nada, y así nadie puede inflar el contador.
+- `POST /api/obras/<uuid>/huella` (con sesión): la web la envía al abrir una ficha, salvo que el navegador pida no ser rastreado (Do Not Track o Global Privacy Control). El escaneo de una etiqueta colocada con sesión suma otra huella.
+- **Sin sesión no hay trazo, pero sí mapa de calor**: la visita se suma sin identificar a `POST /api/publico/obras/<uuid>/visita` (una por navegador, obra y día) y solo alimenta `GET /api/publico/calor`, el recuento agregado de los últimos 90 días, que la web dibuja como manchas de calor en el mapa. Solo aparecen obras con 5 visitas o más y nunca las reservadas; las difusas, en el centro de su celda.
+- `GET /api/publico/obras/<uuid>/huellas` (solo trazos con sesión): `{visitas, escaneos, verificaciones, observaciones, meses}`.
+- Solo se guardan recuentos por obra, día y tipo. Para no contar dos veces la misma visita en el día se guarda un hash con una sal diaria que no se conserva, y el cron borra esos hashes cada día. No se guarda quién fue ni su IP.

@@ -153,12 +153,13 @@ CREATE INDEX IF NOT EXISTS vinculos_de ON vinculos(de);
 CREATE INDEX IF NOT EXISTS vinculos_a ON vinculos(a);
 
 -- Huellas de espectadores (01-11-2026): quien mira, escanea, verifica u observa una obra también se convierte en
--- trazo de ella. Solo se guardan recuentos por obra, día y tipo: ni IP, ni cookies, ni cuenta.
+-- trazo de ella. Solo se traza con la sesión iniciada ('visita', 'escaneo'), y solo se guardan recuentos por obra, día
+-- y tipo: ni quién, ni IP. Las visitas sin sesión ('anonima') no son trazo: solo alimentan el mapa de calor agregado.
 -- huellas_vistas evita contar dos veces la misma visita en el día; guarda un hash con sal diaria y el cron la vacía.
 CREATE TABLE IF NOT EXISTS huellas (
   obra   TEXT NOT NULL,
   dia    TEXT NOT NULL,
-  tipo   TEXT NOT NULL CHECK (tipo IN ('visita','escaneo')),
+  tipo   TEXT NOT NULL CHECK (tipo IN ('visita','escaneo','anonima')),
   n      INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (obra, dia, tipo)
 );

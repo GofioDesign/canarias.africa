@@ -1,0 +1,53 @@
+# Publica web/ en GitHub Pages cada vez que cambia main, y cada 6 horas para refrescar los votos
+# de GitHub (las reacciones en los issues no disparan acciones).
+# Requisitos (una vez): Settings → Pages → Source: «GitHub Actions», y crear la etiqueta «propuesta».
+name: Publicar la web
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  comprobar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Comprobar que el catálogo no publica ubicaciones sensibles
+        run: python3 scripts/comprobar-catalogo.py
+      - name: Comprobar las propuestas
+        run: python3 scripts/propuestas.py --comprobar
+
+  publicar:
+    if: github.event_name != 'pull_request'
+    needs: comprobar
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Generar propuestas.json y abrir el debate de las propuestas nuevas
+        run: python3 scripts/propuestas.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: despliegue
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,12 @@
+servidor.env
+pb_data/
+*.db
+.DS_Store
+# Lo genera scripts/propuestas.py al publicar
+web/propuestas.json
+servidor-php/privado/config.php
+servidor-php/privado/datos/
+servidor-php/privado/cache/
+servidor-php/privado/fotos/
+servidor-php/privado/copias/
+servidor-php/privado/umap/

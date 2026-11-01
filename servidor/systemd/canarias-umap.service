@@ -1,0 +1,8 @@
+[Unit]
+Description=Copia las capas públicas de uMap a la web de canarias.africa
+
+[Service]
+Type=oneshot
+User=canarias
+EnvironmentFile=/srv/canarias.africa/servidor.env
+ExecStart=/srv/canarias.africa/servidor/scripts/sincronizar-umap.sh

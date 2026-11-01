@@ -1,0 +1,8 @@
+[Unit]
+Description=Copia de seguridad cifrada de canarias.africa (restic)
+
+[Service]
+Type=oneshot
+User=root
+EnvironmentFile=/srv/canarias.africa/servidor.env
+ExecStart=/srv/canarias.africa/servidor/scripts/copia-seguridad.sh

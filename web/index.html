@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CANARIAS.AFRICA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="CANARIAS, Catálogo Atlántico de Núnea Arqueología · Registro de Intervenciones Artísticas Socializado. Declaración de intenciones y participación abierta.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Página única de lanzamiento: manifiesto arriba, las ideas como papeleta que se vota en el sitio, alta abajo */
+:root{
+  --bg:#ECEFEA; --surface:#F7F8F5; --ink:#1B201E; --muted:#56605A; --line:#CBD2CA;
+  --verde:#0A8A3A; --verde-ink:#006B2B; --on-verde:#fff; --azul:#0768A9; --amarillo:#FFCC00;
+  --ok:#2F7A3E; --error:#B0402A;
+  --f-display:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121614; --surface:#1A1F1C; --ink:#E4E9E2; --muted:#9BA69F; --line:#2D3631;
+  --verde:#2FA84F; --verde-ink:#6FD38A; --on-verde:#0B1A10; --azul:#5AA9E6; --amarillo:#FFD42A; --ok:#5DBE6E; --error:#EE8A73; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121614; --surface:#1A1F1C; --ink:#E4E9E2; --muted:#9BA69F; --line:#2D3631;
+  --verde:#2FA84F; --verde-ink:#6FD38A; --on-verde:#0B1A10; --azul:#5AA9E6; --amarillo:#FFD42A; --ok:#5DBE6E; --error:#EE8A73; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ink)}
+a{color:var(--verde-ink);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.08;text-wrap:balance;margin:0;letter-spacing:-.01em}
+p{margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mono{font-family:var(--f-mono);font-size:.82em}
+.muted{color:var(--muted)}
+.eyebrow{font-family:var(--f-mono);font-size:.74rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+
+/* Cabecera */
+.top{background:var(--ink);color:var(--bg)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:14px}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-weight:800;font-size:1.15rem;color:var(--bg);text-decoration:none}
+.brand i{width:18px;height:18px;flex:none;background:#2FA84F;clip-path:polygon(50% 4%,61.2% 38.5%,97.6% 38.5%,68.2% 59.9%,79.4% 94.5%,50% 73.1%,20.6% 94.5%,31.8% 59.9%,2.4% 38.5%,38.8% 38.5%)}
+.brand b{color:#2FA84F;font-weight:800}
+.nav{display:flex;align-items:center;gap:6px 18px}
+.nav a:not(.cta){font-family:var(--f-display);font-weight:700;font-size:.95rem;color:var(--bg);text-decoration:none;padding:7px 2px}
+.nav a:not(.cta):hover{text-decoration:underline}
+.top .cta{font-family:var(--f-display);font-weight:700;font-size:.95rem;color:var(--ink);background:var(--bg);padding:7px 14px;border-radius:4px;text-decoration:none;white-space:nowrap}
+.bandera{height:6px;background:linear-gradient(90deg,#fff 0 33.34%,var(--azul) 0 66.67%,var(--amarillo) 0)}
+
+/* Portada */
+.hero{padding-block:56px 40px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;align-items:end}
+.hero h1{font-size:clamp(2.6rem,7vw,5rem);font-weight:800;letter-spacing:-.03em}
+.hero h1 small{display:block;font-size:.36em;font-weight:700;letter-spacing:0;margin-top:14px;color:var(--muted)}
+.acro{list-style:none;margin:0;padding:0 0 0 18px;border-left:3px solid var(--verde);font-family:var(--f-display);font-size:clamp(1.05rem,2.1vw,1.35rem);line-height:1.3}
+.acro b{color:var(--verde-ink);font-weight:800}
+.acro li+li.sep{margin-top:10px}
+.def-nunea{margin:14px 0 0;max-width:34em;font-size:.95rem;color:var(--muted)}
+.lema{padding-block:8px 48px}
+.lema blockquote{margin:0;font-family:var(--f-body);font-style:italic;font-size:clamp(1.5rem,3.6vw,2.4rem);line-height:1.25;max-width:26ch;text-wrap:balance}
+.lema blockquote::before{content:"";display:block;width:34px;height:34px;margin-bottom:14px;background:var(--verde);clip-path:polygon(50% 4%,61.2% 38.5%,97.6% 38.5%,68.2% 59.9%,79.4% 94.5%,50% 73.1%,20.6% 94.5%,31.8% 59.9%,2.4% 38.5%,38.8% 38.5%)}
+
+/* Declaración */
+section{padding-block:40px;border-top:1px solid var(--line)}
+.decl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:32px}
+.decl ol{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:18px;counter-reset:d}
+.decl li{counter-increment:d;display:grid;grid-template-columns:2.2em minmax(0,1fr);gap:6px;max-width:64ch}
+.decl li::before{content:counter(d);font-family:var(--f-mono);font-size:.8rem;color:var(--verde-ink);padding-top:.35em}
+.decl li b{font-family:var(--f-display);font-weight:700}
+.boceto{margin-top:18px;font-size:.95rem}
+
+/* Ideas y votación */
+.ideas-cab{display:flex;flex-direction:column;gap:10px;max-width:68ch;margin-bottom:22px}
+.ideas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.idea{background:var(--surface);border:1px solid var(--line);padding:16px 16px 14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.idea h3{font-size:1.08rem}
+.idea p{font-size:.95rem;color:var(--muted)}
+.voto{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;border:0;padding:0}
+.voto legend{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.voto label{position:relative}
+.voto input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.voto span{display:inline-block;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.04em;text-transform:uppercase;padding:6px 10px;border:1.5px solid var(--line);border-radius:3px;color:var(--muted);background:var(--bg)}
+.voto input:hover+span{border-color:var(--ink);color:var(--ink)}
+.voto input:focus-visible+span{outline:3px solid var(--verde);outline-offset:2px}
+.voto input[value="prioritaria"]:checked+span{background:var(--verde);border-color:var(--verde);color:var(--on-verde)}
+.voto input[value="interesante"]:checked+span{background:var(--surface);border-color:var(--verde);color:var(--verde-ink);box-shadow:inset 0 0 0 1px var(--verde)}
+.voto input[value="no"]:checked+span{border-color:var(--muted);color:var(--ink);text-decoration:line-through}
+.idea .meta{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+.estado{text-transform:uppercase;letter-spacing:.05em;padding:2px 6px;border-radius:2px;border:1px solid var(--line)}
+.estado.aprobada,.estado.en-marcha{border-color:var(--verde);color:var(--verde-ink)}
+.estado.hecha{background:var(--verde);border-color:var(--verde);color:var(--on-verde)}
+.idea details{font-size:.95rem}
+.idea summary{cursor:pointer;font-family:var(--f-mono);font-size:.74rem;color:var(--verde-ink);width:max-content}
+.cuerpo{display:flex;flex-direction:column;gap:8px;padding-top:8px}
+.cuerpo h4{font-family:var(--f-display);font-size:1rem;margin:4px 0 0}
+.cuerpo ul,.cuerpo ol{margin:0;padding-left:1.2em}
+.gh{font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.res{display:flex;flex-direction:column;gap:4px;font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.barra{height:6px;background:var(--line);display:flex;overflow:hidden;border-radius:3px}
+.barra i{display:block;height:100%}
+.barra .p{background:var(--verde)} .barra .n{background:color-mix(in srgb,var(--verde) 40%,var(--line))}
+
+/* Participar */
+.part{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:32px;align-items:start}
+.part .nota{display:flex;flex-direction:column;gap:12px;max-width:52ch}
+form .campos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px;background:var(--surface);border:1px solid var(--line);padding:20px}
+.full{grid-column:1/-1}
+label.c{display:flex;flex-direction:column;gap:6px;font-family:var(--f-mono);font-size:.78rem;color:var(--muted)}
+input[type=text],input[type=email],select,textarea{font:inherit;font-family:var(--f-body);font-size:1rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);padding:9px 10px;width:100%;border-radius:2px}
+textarea{min-height:76px;resize:vertical}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.92rem}
+.check input{margin-top:5px;flex:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:var(--f-display);font-weight:700;font-size:1.05rem;padding:12px 20px;border:0;border-radius:4px;background:var(--verde);color:var(--on-verde);cursor:pointer;text-decoration:none}
+.btn:hover{filter:brightness(1.07)}
+.btn[disabled]{opacity:.6;cursor:wait}
+#p-msg{font-size:.95rem}
+.ok{background:var(--surface);border:1px solid var(--ok);border-left:4px solid var(--ok);padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+.ok h3{font-size:1.15rem}
+.fake{font-family:var(--f-mono);font-size:.72rem;background:var(--amarillo);color:#1B201E;padding:2px 6px;border-radius:2px}
+
+footer{border-top:1px solid var(--line);padding-block:26px 40px;font-size:.88rem;color:var(--muted)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:14px 28px;justify-content:space-between;align-items:center}
+footer a.gofio{display:block;width:190px;max-width:100%}
+footer svg{display:block;width:100%;height:auto}
+
+@media (max-width:820px){
+  .hero,.decl,.part{grid-template-columns:minmax(0,1fr)}
+  .hero{padding-block:36px 28px;gap:26px}
+  .ideas{grid-template-columns:minmax(0,1fr)}
+  form .campos{grid-template-columns:minmax(0,1fr)}
+}
+.cta .q2{display:none}
+@media (max-width:460px){.brand span{display:none}.brand::after{content:"CANARIAS";color:#2FA84F}.nav{gap:12px}.cta .q{display:none}.cta .q2{display:inline}}
+@media (prefers-reduced-motion:no-preference){.voto span{transition:background .15s,border-color .15s,color .15s}}
+</style>
+
+<header class="top"><div class="wrap">
+  <a class="brand" href="#inicio" aria-label="CANARIAS.AFRICA, Catálogo Atlántico de Núnea Arqueología · Registro de Intervenciones Artísticas Socializado"><i aria-hidden="true"></i><span><b>CANARIAS</b>.AFRICA</span></a>
+  <nav class="nav"><a href="#propuestas">Propuestas</a><a class="cta" href="#participa"><span class="q">Quiero p</span><span class="q2">P</span>articipar</a></nav>
+</div></header>
+<div class="bandera" aria-hidden="true"></div>
+
+<main id="inicio">
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <p class="eyebrow">Declaración de intenciones · octubre de 2026</p>
+        <h1 style="margin-top:12px">CANARIAS<small>Catálogo Atlántico de Núnea Arqueología</small></h1>
+      </div>
+      <ol class="acro" aria-label="Qué significa CANARIAS">
+        <li><b>C</b>atálogo <b>A</b>tlántico de <b>N</b>únea <b>A</b>rqueología</li>
+        <li class="sep"><b>R</b>egistro de</li>
+        <li><b>I</b>ntervenciones</li>
+        <li><b>A</b>rtísticas</li>
+        <li><b>S</b>ocializado</li>
+      </ol>
+      <p class="def-nunea"><b>Núnea</b>: palabra nueva, eco de «nunáneo» (lo que no está en un solo lugar) y de «nueva». Nombra cualquier expresión artística y cultural, antigua o reciente, que deja huella en el territorio.</p>
+    </div>
+    <div class="lema"><blockquote>El arte no nos pertenece. Su memoria la construimos entre todos.</blockquote></div>
+  </div>
+
+  <section><div class="wrap decl">
+    <div><p class="eyebrow">Qué queremos hacer</p><h2 style="margin-top:8px">Un museo sin edificio, hecho entre todos</h2></div>
+    <div>
+      <ol>
+        <li><span><b>Las obras se quedan donde están.</b> Murales, esculturas, intervenciones y grabados en plazas, barrancos, molinos y muros de Canarias. Queremos registrarlos, conectarlos y seguir cómo cambian con el tiempo, con la gente que vive junto a ellos.</span></li>
+        <li><span><b>La memoria es colectiva.</b> Quien conoce una obra puede contar su historia, quién la hizo y cómo está hoy. Nadie es dueño del archivo: crece con lo que aporta cada persona y lo que la comunidad comprueba.</span></li>
+        <li><span><b>Abierto y por méritos, como una wiki.</b> Cualquiera puede empezar a colaborar. La confianza y las responsabilidades crecen con lo que cada cual aporta.</span></li>
+        <li><span><b>Sin vender nada.</b> No cobramos comisiones. Si apoyamos a artistas, es enlazando a sus propios canales.</span></li>
+        <li><span><b>Con cuidado.</b> El patrimonio frágil, como los grabados aborígenes, no se expone: su ubicación no se publica.</span></li>
+        <li><span><b>Empezamos por decidir juntos.</b> Estas son las ideas que tenemos. Antes de construir nada, queremos saber cuáles te parecen importantes y qué falta.</span></li>
+      </ol>
+      <p class="boceto muted">Hay un <a id="enlace-boceto" href="prototipo/">boceto de cómo podría ser la web</a>, con datos ficticios.</p>
+    </div>
+  </div></section>
+
+  <section id="propuestas"><div class="wrap">
+    <div class="ideas-cab">
+      <p class="eyebrow">Propuestas · vota las que quieras</p>
+      <h2>¿Qué te parece interesante y qué es prioritario?</h2>
+      <p class="muted">Marca cada propuesta como prioritaria, interesante o no me interesa. Puedes dejar alguna sin marcar. Los votos se envían con el botón «Quiero participar», más abajo.</p>
+      <p class="muted">Si tienes cuenta en GitHub, también puedes votar y debatir allí, o <a href="https://github.com/GofioDesign/canarias.africa/blob/main/propuestas/README.md">añadir tu propia propuesta</a>. Las nuevas aparecen aquí en cuanto el colectivo las acepta.</p>
+    </div>
+    <div class="ideas" id="lista-ideas"></div>
+  </div></section>
+
+  <section id="participa"><div class="wrap part">
+    <div class="nota">
+      <p class="eyebrow">Quiero participar</p>
+      <h2>Súmate desde el principio</h2>
+      <p>Te apuntamos a la lista de correo del colectivo. Te escribiremos para contar cómo va la votación, convocar las primeras salidas de mapeo y decidir los siguientes pasos.</p>
+      <p class="muted">Recibirás un correo para confirmar tu dirección. Puedes darte de baja cuando quieras desde cualquier mensaje.</p>
+      <p class="muted" id="cuenta-part"></p>
+    </div>
+    <form id="partf" novalidate>
+      <div id="p-ok"></div>
+      <div class="campos">
+        <label class="c" for="p-correo">Correo<input id="p-correo" type="email" required autocomplete="email" placeholder="tu@correo.es"></label>
+        <label class="c" for="p-alias">Nombre o alias (opcional)<input id="p-alias" type="text" autocomplete="nickname"></label>
+        <label class="c" for="p-isla">Isla (opcional)<select id="p-isla"><option value="">Elige</option><option>El Hierro</option><option>La Palma</option><option>La Gomera</option><option>Tenerife</option><option>Gran Canaria</option><option>Fuerteventura</option><option>Lanzarote</option><option>La Graciosa</option><option value="fuera">Fuera de Canarias</option></select></label>
+        <label class="c" for="p-perfil">Me interesa como (opcional)<select id="p-perfil"><option value="">Elige</option><option value="artista">Artista o colectivo</option><option value="vecindad">Vecina o vecino</option><option value="investigacion">Investigación o docencia</option><option value="entidad">Ayuntamiento o entidad</option><option value="otro">Otro</option></select></label>
+        <label class="c full" for="p-ideas">¿Añadirías otra idea en la misma línea, más prioritaria? (opcional)<textarea id="p-ideas" placeholder="Por ejemplo: talleres en colegios para documentar los murales del barrio."></textarea></label>
+        <label class="check full" for="p-priv"><input id="p-priv" type="checkbox" required> <span>Acepto que CANARIAS.AFRICA guarde mi correo y mis respuestas para enviarme noticias del colectivo y contar los votos. Mis datos no se ceden a nadie. <a href="#privacidad">Privacidad</a></span></label>
+        <p class="full" id="p-msg" role="status"></p>
+        <div class="full"><button class="btn" type="submit">Quiero participar</button></div>
+      </div>
+    </form>
+  </div></section>
+
+  <section id="privacidad"><div class="wrap" style="max-width:760px;display:flex;flex-direction:column;gap:10px">
+    <p class="eyebrow">Privacidad</p>
+    <p class="muted" style="font-size:.95rem">Responsable: Gofio Design. Guardamos tu correo, tu alias si lo das, tu isla y perfil si los indicas, y tus votos. Los usamos para enviarte noticias del colectivo y para publicar resultados agregados de la votación, nunca con tu nombre ni tu correo. No los cedemos a terceros. Puedes pedir que los borremos escribiendo a la dirección desde la que te escribamos, o darte de baja desde cualquier mensaje.</p>
+  </div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>CANARIAS.AFRICA · Catálogo Atlántico de Núnea Arqueología · Registro de Intervenciones Artísticas Socializado · «El arte no nos pertenece. Su memoria la construimos entre todos».</span>
+  <a class="gofio" href="https://gofiodesign.eu" target="_blank" rel="noopener" aria-label="Un proyecto de Gofio Design"><svg class="sello" viewBox="0 0 560 200" aria-hidden="true"><rect x="5" y="5" width="550" height="190" rx="22" fill="#F2E9D7" stroke="#62381F" stroke-width="6"/><rect x="17" y="17" width="526" height="166" rx="14" fill="none" stroke="#62381F" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round"/><g transform="translate(34 34) scale(0.3539) translate(-322 -141)"><path d="M671.03 506.91C666.93 507.67 617.89 507.98 509.57 507.94C359.18 507.89 353.8 507.82 347.96 505.97C340.24 503.52 334.38 498.48 330.81 491.22L328 485.5V167.5L330.77 162.24C333.94 156.22 339.25 151.95 346.82 149.31C351.73 147.59 360.28 147.5 511.5 147.5C667.23 147.5 671.14 147.55 677 149.46C681.32 150.87 684.31 152.72 687.67 156.09C688.85 157.26 689.85 158.01 690.7 158.91C695.58 164.03 695.58 173.8 695.54 293.97C695.53 304.32 695.53 315.5 695.53 327.56C695.52 338 695.53 347.78 695.53 356.94C695.53 481.37 695.53 490.53 690.97 495.47C690.27 496.23 689.47 496.89 688.54 497.84C683.6 502.93 678.62 505.51 671.03 506.91Z" fill="#62381F"/><path d="M361.86 476.54C360.71 475.74 359.25 473.81 358.61 472.26C357.73 470.14 357.51 433.58 357.72 325.24L358 181.04L360.65 178.4L363.3 175.75L454.57 175.92C541.11 176.08 546.37 176.19 556.13 178.07C574.08 181.54 588.51 187.04 601.11 195.22C604.9 197.69 608.9 200.18 610 200.77C613.95 202.87 633.86 223.93 640.12 232.63C651.27 248.12 660.37 268.63 664.01 286.5C667.46 303.39 667.47 334.96 664.04 350.02C662.26 357.82 655.75 379.4 654.38 382C653.95 382.83 651.99 386.81 650.02 390.86C645.6 399.97 642.06 405.15 633.47 415.1C613.99 437.69 584.22 454.57 556 459.04C541.09 461.41 520.14 461.75 508.98 459.81C494.53 457.29 479.94 453.35 472.77 450.02C458.7 443.48 438.1 428.02 429.84 417.8C413.12 397.11 404.8 375.13 403.02 347C400.8 312 419.15 274.77 447.73 256.28C457.62 249.89 473.8 242.46 482.21 240.46C492.52 238.01 521.49 238.83 533 241.9C558.74 248.75 578.7 266.91 589.59 293.36C594.41 305.07 595.94 313.89 595.16 325.45C594.38 337.04 592.4 344.52 587.48 354.5C579.1 371.48 564.67 384.25 547.02 390.29C538.53 393.2 517.69 393.36 509 390.59C495.22 386.19 482.03 376.24 476.72 366.24C467.25 348.39 468.92 330.84 481.41 316.79C497.91 298.24 528.5 303.8 528.5 325.34C528.5 327.66 527.79 330.56 526.93 331.79C524.93 334.65 519.32 337 514.49 337C509.66 337 506.63 339.48 505.54 344.34C503.97 351.27 508.04 358.49 515.22 361.57C521.15 364.1 532.55 363.02 540.07 359.2C547.06 355.65 550.31 352.4 554 345.24C557.51 338.45 559.61 324.88 558.45 316.62C555.99 299.26 538.92 280.77 521.39 276.47C507.93 273.17 487.93 276.4 474.79 283.99C467.37 288.27 457.28 298.06 451.84 306.25C439.2 325.25 437.35 348.63 446.62 372C453.87 390.25 470.23 407.33 488.77 415.99C500.68 421.55 508.06 423.22 522.5 423.58C535.8 423.92 544.87 422.67 556.47 418.89C588.29 408.54 612.96 381.24 622.21 346.13C625.75 332.71 625.94 310.71 622.62 298C617.2 277.2 607.84 259.94 593.5 244.32C579.79 229.38 556.91 216.75 534 211.49C518.91 208.02 486.23 208.81 470 213.03C459.67 215.71 445.47 222.1 433.5 229.45C420.69 237.31 405.72 252.5 395.44 268.06C379.43 292.29 373.44 312.75 373.36 343.5C373.31 359.43 374.85 371.55 378.44 383.65C390.31 423.6 415.34 454.34 450.81 472.56C455.04 474.73 458.49 476.84 458.5 477.25C458.5 477.66 437.23 478 411.22 478C371.39 478 363.62 477.77 361.86 476.54ZM619.5 478.06L597 477.5L607.63 472.38C613.48 469.56 621.47 465.17 625.4 462.63C633.81 457.19 649.38 442.1 659.39 429.68L666.5 420.87L666.47 446.68C666.44 473.59 666.3 474.48 662 476.71C659.06 478.23 644.9 478.68 619.5 478.06Z" fill="#BA6F36"/></g><text x="196" y="86" font-family="Bricolage Grotesque, Lexend, sans-serif" font-size="27" font-weight="600" letter-spacing="7" fill="#BA6F36">UN PROYECTO</text><text x="194" y="146" font-family="Bricolage Grotesque, Lexend, sans-serif" font-size="56" font-weight="800" fill="#62381F">Gofio Design</text></svg></a>
+</div></footer>
+
+<script>
+/* Las propuestas salen de propuestas/*.md del repositorio (scripts/propuestas.py genera propuestas.json).
+   Aquí va una copia para que la página funcione aunque ese archivo no cargue. Los id son estables: el servidor cuenta los votos por id. */
+let PROP={"generado":"2026-10-30T11:09:38+00:00","repositorio":"GofioDesign/canarias.africa","propuestas":[{"id":"apoyo","titulo":"Apoyo directo a artistas","resumen":"Enlazar a las tiendas, encargos y campañas de cada artista, sin comisiones. Más adelante, micromecenazgo colectivo.","autoria":"Colectivo CANARIAS","estado":"abierta","fecha":"2026-10-30","cuerpo":"## Qué propongo\n\nDesde cada ficha, enlazar a los canales de la propia artista o colectivo: tienda, encargos, campañas.\n\n## Por qué\n\nApoyar sin intermediar ni cobrar comisiones, coherente con que el arte no nos pertenece.\n\n## Cómo empezaríamos\n\n- Solo enlaces que la persona artista confirme.\n- El micromecenazgo colectivo, en una fase posterior."},{"id":"archivo","titulo":"Archivo colaborativo de obras","resumen":"Fichas permanentes de obras en el espacio público y rural: quién las hizo, quién las pagó y cómo han cambiado.","autoria":"Colectivo CANARIAS","estado":"abierta","fecha":"2026-10-30","cuerpo":"## Qué propongo\n\nCrear una ficha para cada obra de arte en el espacio público y rural de Canarias: murales, esculturas, intervenciones, grabados. La ficha recoge autoría, fecha, encargo o financiación, materiales, fotos de distintas épocas y el estado actual.\n\n## Por qué\n\nMucha obra pública no está catalogada en ningún sitio. Cuando se borra un mural o se retira una escultura, desaparece también su historia.\n\n## Cómo empezaríamos\n\n- Una ficha mínima: título, autoría, año, lugar aproximado y una foto.\n- Las aportaciones se revisan entre varias personas antes de publicarse.\n- Cada cambio queda en el historial de la ficha."},{"id":"ayudas","titulo":"Calendario de ayudas para artistas","resumen":"Convocatorias, becas, residencias y premios para artistas y colectivos de Canarias, en un solo sitio.","autoria":"Colectivo CANARIAS","estado":"abierta","fecha":"2026-10-30","cuerpo":"## Qué propongo\n\nMantener un calendario público de convocatorias, becas, residencias y premios para artistas y colectivos de Canarias.\n\n## Por qué\n\nLa información está dispersa y los plazos se pasan. Un calendario compartido ahorra tiempo a todo el mundo.\n\n## Cómo empezaríamos\n\n- Cualquier persona puede avisar de una convocatoria.\n- Revisión antes de publicar y aviso de plazos."},{"id":"comunidad","titulo":"Espacio para artistas","resumen":"Un lugar privado donde artistas y colectivos se conocen, comparten oportunidades y preparan proyectos.","autoria":"Colectivo CANARIAS","estado":"abierta","fecha":"2026-10-30","cuerpo":"## Qué propongo\n\nUn espacio privado para artistas y colectivos del archivo: presentarse, compartir oportunidades y preparar proyectos juntos.\n\n## Por qué\n\nEl archivo conecta obras; este espacio conecta a las personas que las hacen.\n\n## Cómo empezaríamos\n\n- Empezar con un grupo de mensajería.\n- Más adelante, un foro propio."},{"id":"datos","titulo":"Datos abiertos","resumen":"Que investigadores, docentes y ayuntamientos puedan consultar y reutilizar el archivo con reglas claras.","autoria":"Colectivo CANARIAS","estado":"abierta","fecha":"2026-10-30","cuerpo":"## Qué propongo\n\nPublicar el archivo como datos abiertos, con licencia clara, para investigación, docencia y gestión pública.\n\n## Por qué\n\nUn archivo que se puede reutilizar tiene más vida y más usos que uno cerrado.\n\n## Cómo empezaríamos\n\n- Descarga del catálogo público.\n- Sin ubicaciones exactas de patrimonio frágil."},{"id":"desaparecidas","titulo":"Memoria de obras desaparecidas","resumen":"Recuperar obras borradas o destruidas a partir de restos, fotos antiguas, documentos y testimonios.","autoria":"Colectivo CANARIAS","estado":"abierta","fecha":"2026-10-30","cuerpo":"## Qué propongo\n\nDocumentar obras que ya no existen como una arqueología artística contemporánea: restos en el lugar, fotos de archivo, prensa, proyectos y recuerdos de vecinas y vecinos.\n\n## Por qué\n\nLo que se pierde sin registro se olvida. Contar qué hubo y por qué desapareció también es memoria colectiva.\n\n## Cómo empezaríamos\n\n- Una ficha especial para obra desaparecida, con fuentes citadas.\n- Convocatoria abierta de fotos antiguas por municipio."},{"id":"etiquetas","titulo":"Etiquetas QR y azulejos junto a las obras","resumen":"Una etiqueta junto a cada obra abre su ficha. Solo escaneándola se puede contar cómo está hoy.","autoria":"Colectivo CANARIAS","estado":"abierta","fecha":"2026-10-30","cuerpo":"## Qué propongo\n\nColocar un azulejo de 10 × 10 cm con un glifo propio y un QR pequeño junto a cada obra. Al escanearlo se abre su ficha, y quien está delante puede contar cómo está hoy.\n\n## Por qué\n\nUne la obra física con su memoria digital y evita informes falsos hechos desde casa: para informar del estado hay que estar allí.\n\n## Cómo empezaríamos\n\n- Pedir permiso a la propiedad o al ayuntamiento antes de colocar nada.\n- Empezar con pocas obras en un municipio de prueba.\n- Probar la calcomanía cerámica al sol y la sal."},{"id":"red","titulo":"Red de relaciones","resumen":"Ver cómo se conectan obras, personas, lugares, fuentes y financiación.","autoria":"Colectivo CANARIAS","estado":"abierta","fecha":"2026-10-30","cuerpo":"## Qué propongo\n\nMostrar las conexiones entre obras, artistas, colectivos, lugares, fuentes y quién financió cada obra, como una red que se puede explorar.\n\n## Por qué\n\nLas relaciones explican el arte público: quién encarga, quién ejecuta, qué se repite y qué falta.\n\n## Cómo empezaríamos\n\n- Empezar con las relaciones que ya recoge cada ficha.\n- Vista de red sencilla junto al mapa."},{"id":"rutas","titulo":"Rutas curatoriales a pie","resumen":"Recorridos propuestos por la comunidad sobre obras ya catalogadas, con una lectura propia.","autoria":"Colectivo CANARIAS","estado":"abierta","fecha":"2026-10-30","cuerpo":"## Qué propongo\n\nQue cualquier persona pueda proponer un recorrido a pie que una varias obras catalogadas, con un texto que explique su mirada.\n\n## Por qué\n\nLa colección está repartida por el territorio: las rutas la convierten en algo que se visita.\n\n## Cómo empezaríamos\n\n- Rutas revisadas por el colectivo antes de publicarse.\n- Indicar duración, dificultad y accesibilidad."},{"id":"salidas","titulo":"Salidas colectivas de mapeo","resumen":"Recorridos por municipios para localizar y documentar obras entre vecinas, vecinos y artistas.","autoria":"Colectivo CANARIAS","estado":"abierta","fecha":"2026-10-30","cuerpo":"## Qué propongo\n\nOrganizar salidas abiertas por municipios para localizar obras, fotografiarlas y escuchar a quienes viven junto a ellas.\n\n## Por qué\n\nEl archivo crece más rápido en grupo, y las salidas hacen comunidad desde el principio.\n\n## Cómo empezaríamos\n\n- Primeras salidas en Tenerife.\n- Formulario de inscripción y fechas por votación."}]};
+const REPO="https://github.com/GofioDesign/canarias.africa";
+const ESTADO={abierta:"Abierta","aprobada":"Aprobada","en-marcha":"En marcha",hecha:"Hecha",archivada:"Archivada"};
+const API_BASE="https://api.canarias.africa";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const OPC=[["prioritaria","Prioritaria"],["interesante","Interesante"],["no","No me interesa"]];
+let RES=null, DEMO=false;
+
+/* Markdown mínimo de las propuestas: se escapa todo y solo se interpretan títulos, listas, negrita, cursiva, código y enlaces http(s) */
+function md(t){
+  const lin=s=>esc(s).replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").replace(/\*([^*]+)\*/g,"<i>$1</i>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(m,x,u)=>`<a href="${u}" target="_blank" rel="noopener">${x}</a>`);
+  return String(t||"").split(/\n{2,}/).map(b=>{ b=b.trim(); if(!b) return "";
+    const h=b.match(/^#{1,4}\s+(.*)$/); if(h&&!b.includes("\n")) return `<h4>${lin(h[1])}</h4>`;
+    const ls=b.split("\n");
+    if(ls.every(l=>/^\s*[-*]\s+/.test(l))) return `<ul>${ls.map(l=>`<li>${lin(l.replace(/^\s*[-*]\s+/,""))}</li>`).join("")}</ul>`;
+    if(ls.every(l=>/^\s*\d+[.)]\s+/.test(l))) return `<ol>${ls.map(l=>`<li>${lin(l.replace(/^\s*\d+[.)]\s+/,""))}</li>`).join("")}</ol>`;
+    return `<p>${ls.map(lin).join("<br>")}</p>`; }).join("");
+}
+const votable=p=>p.estado==="abierta"||p.estado==="aprobada";
+function pintarIdeas(){
+  const marcados={}; document.querySelectorAll('.voto input:checked').forEach(el=>marcados[el.name]=el.value);
+  $("#lista-ideas").innerHTML=PROP.propuestas.map(p=>{
+    const id=p.id, r=RES&&RES.ideas&&RES.ideas[id], g=p.debate||null;
+    const pr=(r?.prioritaria||0)+(g?.prioritaria||0), it=(r?.interesante||0)+(g?.interesante||0), no=(r?.no||0)+(g?.no||0), tot=pr+it+no;
+    return `<article class="idea"><div class="meta"><span class="estado ${esc(p.estado)}">${ESTADO[p.estado]||esc(p.estado)}</span><span>${esc(p.autoria)}</span></div>
+      <h3>${esc(p.titulo)}</h3><p>${esc(p.resumen)}</p>
+      ${p.cuerpo?`<details><summary>Leer la propuesta</summary><div class="cuerpo">${md(p.cuerpo)}</div></details>`:""}
+      ${votable(p)?`<fieldset class="voto"><legend>Tu voto sobre «${esc(p.titulo)}»</legend>${OPC.map(([v,n])=>`<label><input type="radio" name="v-${esc(id)}" value="${v}"><span>${n}</span></label>`).join("")}</fieldset>`:""}
+      ${tot?`<div class="res"><span>${pr} prioritaria · ${it} interesante · ${no} no</span><div class="barra" aria-hidden="true"><i class="p" style="width:${100*pr/tot}%"></i><i class="n" style="width:${100*it/tot}%"></i></div></div>`:""}
+      <p class="gh">${g?`<a href="${esc(g.url)}">Debate en GitHub</a> · 🚀 ${g.prioritaria} · 👍 ${g.interesante} · 💬 ${g.comentarios}`:`<a href="${REPO}/blob/main/propuestas/${esc(id)}.md">Ver en GitHub</a>`}</p>
+    </article>`; }).join("");
+  let v={}; try{ v=JSON.parse(localStorage.getItem("ca-votos")||"{}"); }catch(e){}
+  Object.entries({...v,...Object.fromEntries(Object.entries(marcados).map(([k,x])=>[k.slice(2),x]))}).forEach(([id,val])=>{ const el=document.querySelector(`input[name="v-${CSS.escape(id)}"][value="${val}"]`); if(el) el.checked=true; });
+  $("#cuenta-part").textContent=RES&&RES.participantes?`Ya se han sumado ${RES.participantes} personas.`:"";
+}
+document.addEventListener("change",e=>{ if(!e.target.name||!e.target.name.startsWith("v-")) return;
+  try{ const v=JSON.parse(localStorage.getItem("ca-votos")||"{}"); v[e.target.name.slice(2)]=e.target.value; localStorage.setItem("ca-votos",JSON.stringify(v)); }catch(err){} });
+
+async function cargarPropuestas(){
+  try{ const r=await fetch("propuestas.json",{cache:"no-cache"}); if(r.ok){ const d=await r.json(); if(d&&Array.isArray(d.propuestas)&&d.propuestas.length){ PROP=d; pintarIdeas(); } } }catch(e){}
+}
+async function cargarResultados(){
+  try{ const r=await fetch(API_BASE+"/api/participa/resultados"); if(!r.ok) throw 0; RES=await r.json(); }
+  catch(e){ DEMO=true; RES=null; }
+  pintarIdeas();
+}
+const pinta=(t,bien)=>{ const m=$("#p-msg"); m.textContent=t; m.style.color=bien?"var(--ok)":"var(--error)"; };
+async function participar(e){
+  e.preventDefault();
+  const correo=$("#p-correo").value.trim();
+  if(!/^\S+@\S+\.\S+$/.test(correo)) return pinta("Escribe un correo válido para poder apuntarte.");
+  if(!$("#p-priv").checked) return pinta("Marca la casilla de privacidad para poder apuntarte.");
+  const votos={}; PROP.propuestas.filter(votable).forEach(({id})=>{ const el=document.querySelector(`input[name="v-${CSS.escape(id)}"]:checked`); if(el) votos[id]=el.value; });
+  const ideas=$("#p-ideas").value.trim();
+  const datos={correo,alias:$("#p-alias").value.trim(),isla:$("#p-isla").value,perfil:$("#p-perfil").value,votos,ideas_nuevas:ideas?[ideas]:[],acepta_privacidad:true};
+  const b=e.target.querySelector("button"); b.disabled=true; pinta("Enviando…",true);
+  let ok=true, error="";
+  if(!DEMO){ try{ const r=await fetch(API_BASE+"/api/participa",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(datos)});
+      if(!r.ok){ ok=false; try{ error=(await r.json()).error||""; }catch(x){} } }
+    catch(x){ ok=false; error="No hay conexión con canarias.africa. Inténtalo de nuevo en un rato."; } }
+  b.disabled=false;
+  if(!ok) return pinta(error||"No se ha podido enviar. Inténtalo de nuevo en un rato.");
+  const n=Object.keys(votos).length;
+  $("#p-ok").innerHTML=`<div class="ok" style="margin-bottom:16px"><h3>¡Gracias por sumarte!</h3><p>Te hemos enviado un correo a <b>${esc(correo)}</b>. Ábrelo y confirma tu dirección para entrar en la lista${n?` y que cuenten tus ${n} votos`:""}.${DEMO?` <span class="fake">vista previa: no se envía nada</span>`:""}</p></div>`;
+  $("#p-msg").textContent=""; $("#p-ideas").value="";
+  $("#p-ok").scrollIntoView({behavior:"smooth",block:"start"});
+}
+/* Enlace de confirmación del correo: canarias.africa/#confirmar?t=… */
+async function confirmar(){
+  const h=location.hash; if(!h.startsWith("#confirmar")) return;
+  const t=new URLSearchParams(h.split("?")[1]||"").get("t"); if(!t) return;
+  let ok=false; try{ const r=await fetch(API_BASE+"/api/participa/confirmar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({t})}); ok=r.ok; }catch(e){}
+  $("#p-ok").innerHTML=ok?`<div class="ok" style="margin-bottom:16px"><h3>Correo confirmado</h3><p>Ya estás en la lista del colectivo y tus votos cuentan. Gracias.</p></div>`
+    :`<div class="ok" style="margin-bottom:16px;border-color:var(--error)"><h3>No se ha podido confirmar</h3><p>El enlace ha caducado o ya se usó. Si no recibes nuestros correos, vuelve a apuntarte.</p></div>`;
+  $("#participa").scrollIntoView({block:"start"}); cargarResultados();
+}
+if(location.hostname!=="canarias.africa"&&location.hostname!=="www.canarias.africa") $("#enlace-boceto").href="https://claude.ai/artifact/DpSAHErsV8WgAiyWv1prKM";
+$("#partf").addEventListener("submit",participar);
+addEventListener("hashchange",confirmar);
+pintarIdeas(); cargarPropuestas(); cargarResultados().then(confirmar);
+</script>

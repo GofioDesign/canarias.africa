@@ -1,0 +1,2 @@
+# Si esta carpeta queda dentro de la parte pública del hosting, que nadie pueda leerla.
+Require all denied

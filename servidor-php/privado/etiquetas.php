@@ -321,7 +321,7 @@ function qr_mapa_features(): array {
       [$lat, $lon] = array_map(fn($v) => round(floor($v / $paso) * $paso + $paso / 2, 4), [$lat, $lon]);
     }
     return ['type' => 'Feature', 'geometry' => ['type' => 'Point', 'coordinates' => [$lon, $lat]],
-            'properties' => ['obra' => $q['obra'], 'estado' => $q['estado'], 'ultima_verificacion' => $q['ultima_verificacion'],
+            'properties' => ['obra' => $q['obra'], 'estado' => $q['estado'], 'ultima_verificacion' => fecha_iso($q['ultima_verificacion']),
                              'precision' => $q['sensibilidad'] === 'abierta' ? 'exacta' : 'zona']];
   }, $filas);
   return $features;

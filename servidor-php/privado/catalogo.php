@@ -157,6 +157,11 @@ function punto_publico(array $o): ?array {
   return [$c((float) $o['lon']), $c((float) $o['lat'])];
 }
 
+// Fechas de SQLite (UTC, «AAAA-MM-DD HH:MM:SS») en ISO 8601, que uMap y los navegadores leen como fecha y hora.
+function fecha_iso(?string $f): ?string {
+  return $f ? str_replace(' ', 'T', $f) . 'Z' : null;
+}
+
 function enviar_geojson(array $features): never {
   header('Access-Control-Allow-Origin: *');  // datos públicos: los lee la web, uMap y quien quiera reutilizarlos
   header('Content-Type: application/geo+json; charset=utf-8');
@@ -175,7 +180,7 @@ function catalogo_geojson_features(): array {
     $p = punto_publico($o);
     $props = ['id' => $o['uuid'], 'name' => $o['titulo'], 'sensibilidad' => $o['sensibilidad'],
       'precision' => $o['sensibilidad'] === 'reservada' ? (($o['isla'] ?: 'CAN') === 'CAN' ? 'canarias' : 'isla') : ($p === null ? 'municipio' : ($o['sensibilidad'] === 'abierta' ? 'exacta' : 'zona')),
-      'version' => (int) $o['version'], 'actualizado' => $o['actualizado']];
+      'version' => (int) $o['version'], 'actualizado' => fecha_iso($o['actualizado'])];
     foreach (['fase', 'municipio', 'tipo', 'descripcion', 'autoria', 'fecha_obra', 'fecha_precision', 'foto', 'foto_credito', 'ficha'] as $k) {
       if ($o[$k] !== '' && $o[$k] !== null) $props[$k] = $o[$k];
     }

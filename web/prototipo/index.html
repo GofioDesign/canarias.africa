@@ -1245,7 +1245,7 @@ function trazaEtiqueta(o){
    difusa: punto ajustado a una cuadrícula fija de ~2 km (no se puede promediar); reservada: solo el municipio. */
 const SENS={abierta:{n:"Abierta",d:"Ubicación exacta pública, QR en el sitio."},
  difusa:{n:"Difusa",d:"Se muestra una zona de unos 2 km. No entra en rutas. Para obras sin protección suficiente o en terreno privado."},
- reservada:{n:"Reservada",d:"Solo se muestra el municipio. Sin QR en el sitio. Las coordenadas exactas solo las ve el equipo y la investigación acreditada. Para patrimonio protegido, como el arte rupestre aborigen."}};
+ reservada:{n:"Reservada",d:"Obra delicada: solo se publica la isla, ni el municipio ni el punto. Sin QR en el sitio. Las coordenadas exactas solo las ve el equipo y la investigación acreditada. Para patrimonio protegido, como el arte rupestre aborigen."}};
 const sensOf=o=>(o.sens&&o.sens.n)||"abierta";
 OBRAS.forEach(o=>{ const n=sensOf(o);
   if(n==="difusa"){ const c=.02; o.lat=(Math.floor(o.lat/c)+.5)*c; o.lon=(Math.floor(o.lon/c)+.5)*c; }
@@ -1550,7 +1550,10 @@ function obraDeCatalogo(f){
   if(p.foto&&/^https:\/\//i.test(String(p.foto).trim())){ o.foto=String(p.foto).trim(); o.fotoCredito=p.foto_credito?String(p.foto_credito):""; }
   o.precision=p.precision; // exacta | zona | municipio: el servidor ya ha ocultado; aquí no se recalcula nada
   if(pt){ [o.lon,o.lat]=pt.map(Number); }
-  const m=muniDe(p.municipio, pt?o.lat:null, pt?o.lon:null) || (o.m&&MUNIS[o.m]?o.m:null);
+  let m=muniDe(p.municipio, pt?o.lat:null, pt?o.lon:null) || (o.m&&MUNIS[o.m]?o.m:null);
+  /* Obra reservada (delicada): el servidor solo da la isla. Se sitúa en el centro de la isla, sin punto en el mapa. */
+  if(!m&&ISLAS[p.isla]){ const b=ISLA_BOX[p.isla]; m="IS-"+p.isla;
+    MUNIS[m]=MUNIS[m]||{n:ISLAS[p.isla]+" (ubicación protegida)",isla:p.isla,lon:(b[0]+b[1])/2,lat:(b[2]+b[3])/2}; }
   if(!m) return null; // sin punto ni municipio no se puede situar
   o.m=m; if(!pt){ o.lat=MUNIS[m].lat; o.lon=MUNIS[m].lon; }
   if(!o.lugar||!byId(o.id)) o.lugar=p.lugar?String(p.lugar):MUNIS[m].n;
@@ -1977,7 +1980,7 @@ function vObra(o){
         <dt>Autoría</dt><dd>${o.aut.map(a=>`<div>${cert(a.c)}<b>${esc(a.n)}</b>${a.rol?` · ${a.rol}`:""}<br><span class="muted" style="font-size:.88rem">${CERTEZA[a.c].n}${a.f?`: ${esc(a.f)}`:""}</span></div>`).join("")}</dd>
         <dt>Financiación</dt><dd>${o.pags&&o.pags.length?o.pags.map(x=>`<div>${FIN[x.naturaleza]}${x.entidad?` <span class="muted">· ${esc(x.entidad)}</span>`:""}${x.modalidad&&MODAL[x.modalidad]?` <span class="muted">· ${MODAL[x.modalidad]}</span>`:""}</div>`).join(""):`${FIN[o.fin.t]}${o.fin.e?` <span class="muted">· ${esc(o.fin.e)}</span>`:""}`}</dd>
         <dt>Ubicación</dt><dd>${sensOf(o)==="abierta"?`<span class="mono">${o.lat.toFixed(4)}° N, ${Math.abs(o.lon).toFixed(4)}° O · ±25 m</span>`
-          :`<span class="sens">${sensOf(o)==="reservada"?"Reservada":"Zona aproximada (~2 km)"}</span><br><span class="muted" style="font-size:.88rem">${SENS[sensOf(o)].d}${o.sens.m?` Motivo: ${esc(o.sens.m)}.`:""}</span>`}</dd>
+          :`<span class="sens">${sensOf(o)==="reservada"?`Reservada · solo se indica la isla (${ISLAS[MUNIS[o.m].isla]})`:"Zona aproximada (~2 km)"}</span><br><span class="muted" style="font-size:.88rem">${SENS[sensOf(o)].d}${o.sens.m?` Motivo: ${esc(o.sens.m)}.`:""}</span>`}</dd>
         <dt>QR</dt><dd>${qrTxt2}${o.qr.inst?`<br><span class="muted" style="font-size:.88rem">Instalado ${fd(o.qr.inst)} · última revisión ${fd(o.qr.rev)} · próxima ${fd(prox)}${prox&&prox<HOY?" <b>(vencida)</b>":""}</span>`:""}</dd>
         <dt>Derechos</dt><dd>Obra © su autoría · ficha © CANARIAS.AFRICA · <a href="#derechos">uso y permisos</a></dd>
       </dl>
@@ -2070,7 +2073,7 @@ function vAportar(){
     <label for="o-n-fase">Cómo está hoy<select id="o-n-fase">${Object.entries(FASES).map(([k,f])=>`<option value="${k}"${k==="plenitud"?" selected":""}>${f.n}</option>`).join("")}</select></label>
     <label for="o-n-fec">Cuándo se hizo<input id="o-n-fec" type="text" placeholder="1987, años 80, época aborigen…"></label>
     <label for="o-n-fp">Precisión de la fecha<select id="o-n-fp">${Object.entries(PREC_FECHA).map(([k,n])=>`<option value="${k}">${k?n:"No lo sé"}</option>`).join("")}</select></label>
-    <label for="o-n-mun">Municipio<input id="o-n-mun" type="text" required list="munlist" placeholder="Escribe el municipio"><datalist id="munlist">${MUN_TF.map(m=>`<option value="${m}">`).join("")}</datalist></label>
+    <label for="o-n-mun">Municipio<input id="o-n-mun" type="text" required list="munlist" placeholder="Escribe el municipio"><datalist id="munlist">${MUNIS_CANARIAS.map(m=>`<option value="${m[0]}">`).join("")}</datalist></label>
     <label for="o-n-lug">Dónde está<input id="o-n-lug" type="text" required placeholder="Calle, barrio o paraje"></label>
     <div class="full gps"><button class="btn alt mini" type="button" id="o-gps">Tomar mis coordenadas</button><span class="muted" id="o-gps-txt" style="font-size:.9rem">Si estás junto a la obra, guarda su punto exacto con el GPS del móvil.</span><input type="hidden" id="o-lat"><input type="hidden" id="o-lon"><input type="hidden" id="o-prec"></div>
     ${repBloque("agentes","Quién la hizo o participó","Autoría, encargo, restauración, cuidado… Las personas que nombres no se publican hasta que el equipo lo revise con ellas.","+ Añadir persona o colectivo")}
@@ -2081,8 +2084,11 @@ function vAportar(){
     <label class="full" for="o-n-fue">Cómo lo sabes (opcional)<textarea id="o-n-fue" placeholder="Testimonio de vecinos, placa, artículo, documento… No se publica: ayuda a verificar."></textarea></label>
     <label for="o-foto">Foto (opcional)<input id="o-foto" type="file" accept="image/*" capture="environment"></label>
     ${ALIAS}
-    <label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-sens" style="margin-top:4px"> Puede ser una obra sensible (grabado aborigen, yacimiento, obra sin protección): no publiquéis su ubicación exacta.</label>
-    <p class="full muted" style="font-size:.88rem">La ubicación de una obra nueva no se publica hasta que el equipo la revisa y decide su nivel de protección.</p>
+    <fieldset class="full"><legend>¿Se puede publicar dónde está?</legend><div class="radios" style="flex-direction:column;gap:8px">
+      <label><input type="radio" name="o-ubic" value="abierta" checked> Sí, el punto exacto: está en un espacio público y no corre peligro.</label>
+      <label><input type="radio" name="o-ubic" value="difusa"> Solo la zona (unos 2 km): obra sin protección o en terreno privado.</label>
+      <label><input type="radio" name="o-ubic" value="reservada"> No, es una obra delicada (grabado aborigen, yacimiento, patrimonio frágil): solo se publicará la isla.</label>
+    </div><p class="muted" style="font-size:.88rem;margin:8px 0 0">Las coordenadas y el lugar que nos des los guarda solo el equipo. Nada se publica hasta revisarlo, y el equipo puede proteger más una obra, nunca menos de lo que pidas.</p></fieldset>
     ${LIC}${PRIV}
     <p class="full muted" id="o-err" style="font-size:.9rem"></p>
     <div class="full btns"><button class="btn" type="submit">Enviar propuesta</button></div>
@@ -2138,11 +2144,12 @@ async function enviar(e){
   const txt=$("#o-txt").value.trim(), alias=$("#o-alias").value.trim()||"anónimo";
   if(modo==="nueva"){
     if(!$("#o-n-tit").value.trim()||!$("#o-n-lug").value.trim()||!$("#o-n-mun").value.trim()) return bad("Falta decir qué es, dónde está o el municipio.");
-    const v=sel=>$(sel).value.trim();
+    const v=sel=>$(sel).value.trim(), ubic=(document.querySelector('input[name="o-ubic"]:checked')||{}).value||"abierta";
     if(!await enviarAPI("nueva",{titulo:v("#o-n-tit"),tipo:v("#o-n-tipo"),fase:v("#o-n-fase"),fecha_obra:v("#o-n-fec"),fecha_precision:v("#o-n-fp"),
       lugar:v("#o-n-lug"),municipio:v("#o-n-mun"),lat:v("#o-lat"),lon:v("#o-lon"),precision_gps:v("#o-prec"),
       agentes:repValor("agentes"),pagadores:repValor("pagadores"),relaciones:repValor("relaciones"),
-      descripcion:txt,texto:txt,fuentes:v("#o-n-fue"),alias,posible_sensible:$("#o-sens").checked?"1":"",foto:archivo("#o-foto"),acepta_derechos:"1",acepta_privacidad:"1"})) return bad("No se ha podido enviar. Inténtalo de nuevo en un rato.");
+      descripcion:txt,texto:txt,fuentes:v("#o-n-fue"),alias,sensibilidad:ubic,posible_sensible:ubic!=="abierta"?"1":"",
+      isla:(()=>{ const f=MUNIS_CANARIAS.find(x=>normNombre(x[0])===normNombre(v("#o-n-mun"))); return (v("#o-lat")?islaDe(+v("#o-lat"),+v("#o-lon")):null)||(f?islaDe(f[2],f[3]):""); })(),foto:archivo("#o-foto"),acepta_derechos:"1",acepta_privacidad:"1"})) return bad("No se ha podido enviar. Inténtalo de nuevo en un rato.");
     $("#okbox").innerHTML=`<div class="ok"><h3>Propuesta recibida</h3><p>El equipo la revisará y abrirá una ficha con identificador nuevo.${DEMO?" En este prototipo no se envía a ningún sitio.":""}</p></div>`;
   } else {
     const id=f.dataset.obra, o=byId(id);

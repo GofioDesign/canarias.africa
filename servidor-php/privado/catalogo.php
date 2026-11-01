@@ -5,7 +5,7 @@
 
 const FASES = ['gestacion', 'creacion', 'plenitud', 'desgaste', 'intervencion', 'transformacion', 'desaparicion', 'memoria'];
 const SENSIBILIDADES = ['abierta', 'difusa', 'reservada'];
-const CAMPOS_OBRA = ['titulo', 'sensibilidad', 'lat', 'lon', 'fase', 'municipio', 'lugar', 'tipo', 'descripcion', 'autoria',
+const CAMPOS_OBRA = ['titulo', 'sensibilidad', 'lat', 'lon', 'fase', 'isla', 'municipio', 'lugar', 'tipo', 'descripcion', 'autoria',
   'fecha_obra', 'fecha_precision', 'agentes', 'pagadores', 'relaciones', 'fuentes', 'foto', 'foto_credito', 'ficha', 'publicada'];
 // Vocabularios de los nodos de una obra. Son los mismos en /admin y en el formulario público de la web.
 const ROLES_AGENTE = ['autoria' => 'Autoría', 'coautoria' => 'Coautoría', 'ejecucion' => 'Ejecución', 'encargo' => 'Encargo',
@@ -17,7 +17,18 @@ const MODALIDADES = ['' => 'Sin indicar', 'encargo' => 'Encargo', 'subvencion' =
   'donacion' => 'Donación', 'autofinanciada' => 'Autofinanciada'];
 const MODOS_RELACION = ['continua' => 'continúa', 'responde' => 'responde a', 'superpone' => 'se superpone a', 'serie' => 'forma serie con'];
 const PRECISIONES_FECHA = ['' => 'Sin indicar', 'exacta' => 'Exacta', 'aproximada' => 'Aproximada', 'decada' => 'Década', 'epoca' => 'Época'];
-const PASO_DIFUSA = 0.02;  // cuadrícula fija de ~2 km para las obras difusas
+const PASO_DIFUSA = 0.02;
+// Islas: una obra reservada (delicada) solo publica su isla, ni municipio ni punto. [lon mín, lon máx, lat mín, lat máx]
+const ISLAS = ['TF' => 'Tenerife', 'GC' => 'Gran Canaria', 'LZ' => 'Lanzarote', 'FV' => 'Fuerteventura', 'LP' => 'La Palma',
+  'GO' => 'La Gomera', 'EH' => 'El Hierro', 'LG' => 'La Graciosa'];
+const ISLA_CAJA = ['LG' => [-13.56, -13.46, 29.21, 29.30], 'EH' => [-18.17, -17.86, 27.62, 27.86], 'LP' => [-18.02, -17.70, 28.44, 28.87],
+  'GO' => [-17.36, -17.08, 27.99, 28.23], 'TF' => [-16.95, -16.10, 27.98, 28.60], 'GC' => [-15.86, -15.35, 27.72, 28.19],
+  'FV' => [-14.55, -13.80, 28.03, 28.78], 'LZ' => [-13.90, -13.40, 28.83, 29.25]];
+function isla_de(?float $lat, ?float $lon): string {
+  if ($lat === null || $lon === null) return '';
+  foreach (ISLA_CAJA as $k => [$x0, $x1, $y0, $y1]) if ($lon >= $x0 && $lon <= $x1 && $lat >= $y0 && $lat <= $y1) return $k;
+  return '';
+}  // cuadrícula fija de ~2 km para las obras difusas
 
 // Añade las columnas nuevas a una base de datos creada con un esquema anterior.
 function migrar_catalogo(PDO $db): void {
@@ -28,7 +39,7 @@ function migrar_catalogo(PDO $db): void {
     'foto_credito' => "TEXT NOT NULL DEFAULT ''", 'ficha' => "TEXT NOT NULL DEFAULT ''", 'publicada' => 'INTEGER NOT NULL DEFAULT 0',
     'version' => 'INTEGER NOT NULL DEFAULT 0', 'creado' => 'TEXT', 'actualizado' => 'TEXT', 'fecha_precision' => "TEXT NOT NULL DEFAULT ''",
     'agentes' => "TEXT NOT NULL DEFAULT '[]'", 'pagadores' => "TEXT NOT NULL DEFAULT '[]'", 'relaciones' => "TEXT NOT NULL DEFAULT '[]'",
-    'fuentes' => "TEXT NOT NULL DEFAULT ''"];
+    'fuentes' => "TEXT NOT NULL DEFAULT ''", 'isla' => "TEXT NOT NULL DEFAULT ''"];
   foreach ($nuevas as $col => $tipo) if (!in_array($col, $hay, true)) $db->exec("ALTER TABLE obras ADD COLUMN $col $tipo");
   $hay = array_column($db->query('PRAGMA table_info(rutas)')->fetchAll(), 'name');
   if (!in_array('notas', $hay, true)) $db->exec("ALTER TABLE rutas ADD COLUMN notas TEXT NOT NULL DEFAULT '{}'");
@@ -91,6 +102,8 @@ function obra_guardar(array $d, ?string $uuid, string $autor = 'admin'): string 
   }
   if (($o['lat'] === null) !== ($o['lon'] === null)) throw new InvalidArgumentException('Faltan la latitud o la longitud.');
   if ($o['lat'] === null && $o['municipio'] === '') throw new InvalidArgumentException('Una obra sin punto necesita al menos el municipio.');
+  if (!isset(ISLAS[$o['isla']])) $o['isla'] = isla_de($o['lat'], $o['lon']);
+  if ($o['sensibilidad'] === 'reservada' && $o['isla'] === '') throw new InvalidArgumentException('Una obra reservada solo publica su isla: elige la isla o marca el punto.');
   foreach (['foto', 'ficha'] as $k) {
     if ($o[$k] !== '' && !preg_match('#^https://#', $o[$k]) && !($k === 'ficha' && !str_contains($o[$k], '://'))) {
       throw new InvalidArgumentException("El enlace de $k tiene que empezar por https://");
@@ -144,7 +157,7 @@ function catalogo_geojson_features(): array {
   foreach ($obras as $o) {
     $p = punto_publico($o);
     $props = ['id' => $o['uuid'], 'name' => $o['titulo'], 'sensibilidad' => $o['sensibilidad'],
-      'precision' => $p === null ? 'municipio' : ($o['sensibilidad'] === 'abierta' ? 'exacta' : 'zona'),
+      'precision' => $o['sensibilidad'] === 'reservada' ? 'isla' : ($p === null ? 'municipio' : ($o['sensibilidad'] === 'abierta' ? 'exacta' : 'zona')),
       'version' => (int) $o['version'], 'actualizado' => $o['actualizado']];
     foreach (['fase', 'municipio', 'tipo', 'descripcion', 'autoria', 'fecha_obra', 'fecha_precision', 'foto', 'foto_credito', 'ficha'] as $k) {
       if ($o[$k] !== '' && $o[$k] !== null) $props[$k] = $o[$k];
@@ -163,6 +176,9 @@ function catalogo_geojson_features(): array {
     if ($pg) $props['financiacion'] = implode(' · ', array_map(fn($p) => (['publica' => 'Pública', 'privada' => 'Privada', 'particular' => 'Particular'][$p['naturaleza']])
       . (!empty($p['entidad']) ? ': ' . $p['entidad'] : '') . (!empty($p['modalidad']) ? ' (' . mb_strtolower(MODALIDADES[$p['modalidad']]) . ')' : ''), $pg));
     if ($rl) $props['relaciones'] = $rl;
+    if ($o['isla'] !== '') $props['isla'] = $o['isla'];
+    // Obra delicada (reservada): ni municipio ni punto, solo la isla.
+    if ($o['sensibilidad'] === 'reservada') unset($props['municipio']);
     // El lugar concreto de una obra sensible no se publica.
     if ($o['lugar'] !== '' && $o['sensibilidad'] === 'abierta') $props['lugar'] = $o['lugar'];
     $features[] = ['type' => 'Feature', 'geometry' => $p ? ['type' => 'Point', 'coordinates' => $p] : null, 'properties' => $props];

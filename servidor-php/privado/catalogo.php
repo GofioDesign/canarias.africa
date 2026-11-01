@@ -5,21 +5,36 @@
 
 const FASES = ['gestacion', 'creacion', 'plenitud', 'desgaste', 'intervencion', 'transformacion', 'desaparicion', 'memoria'];
 const SENSIBILIDADES = ['abierta', 'difusa', 'reservada'];
-const CAMPOS_OBRA = ['titulo', 'sensibilidad', 'lat', 'lon', 'fase', 'isla', 'municipio', 'lugar', 'tipo', 'descripcion', 'autoria',
+const CAMPOS_OBRA = ['titulo', 'sensibilidad', 'lat', 'lon', 'fase', 'isla', 'municipio', 'lugar', 'disciplina', 'permanencia', 'tipo', 'descripcion', 'autoria',
   'fecha_obra', 'fecha_precision', 'agentes', 'pagadores', 'relaciones', 'fuentes', 'foto', 'foto_credito', 'ficha', 'publicada', 'desconocidos'];
 // Campos que se pueden marcar como «desconocido»: el archivo es colaborativo y no siempre se sabe todo. La ficha pública
 // los muestra como desconocidos e invita a quien la mira (o escanea su QR) a completarlos.
 const CAMPOS_DESCONOCIBLES = ['agentes' => 'Quién la hizo', 'fecha_obra' => 'Fecha', 'tipo' => 'Tipo de obra', 'descripcion' => 'Descripción',
   'pagadores' => 'Quién la pagó', 'lugar' => 'Lugar exacto', 'foto' => 'Foto'];
+// Disciplina: «núnea» abarca cualquier expresión artística y cultural (01-11-2026). El campo «tipo» sigue libre debajo
+// (mural, concierto, isa, luchada…). Una obra de fuera de Canarias puede entrar como referencia, sin espacio.
+const DISCIPLINAS = ['' => 'Sin indicar', 'visuales' => 'Artes visuales', 'musica' => 'Música', 'teatro' => 'Teatro', 'danza' => 'Danza',
+  'performance' => 'Performance o acción', 'circo' => 'Circo y artes de calle', 'oralidad' => 'Oralidad y narración', 'literatura' => 'Literatura',
+  'audiovisual' => 'Audiovisual y cine', 'tradicion' => 'Tradición popular (folclore, silbo, lucha, romerías…)', 'web' => 'Obra web o digital'];
+// Permanencia: una obra que está (un mural), una que ocurrió una vez (una acción) o una que se repite (un montaje, una
+// canción, una romería). Cada vez que una obra efímera o de repertorio ocurre será una «función» (fecha y lugar propios).
+const PERMANENCIAS = ['' => 'Sin indicar', 'permanente' => 'Permanente', 'efimera' => 'Efímera (ocurrió una vez)', 'repertorio' => 'De repertorio (se repite)'];
 // Vocabularios de los nodos de una obra. Son los mismos en /admin y en el formulario público de la web.
 const ROLES_AGENTE = ['autoria' => 'Autoría', 'coautoria' => 'Coautoría', 'ejecucion' => 'Ejecución', 'encargo' => 'Encargo',
-  'restauracion' => 'Restauración', 'colaboracion' => 'Colaboración', 'cuidado' => 'Cuidado'];
+  'restauracion' => 'Restauración', 'colaboracion' => 'Colaboración', 'cuidado' => 'Cuidado',
+  // Artes escénicas, música y tradición (01-11-2026). Los intérpretes de cada función irán en la función.
+  'composicion' => 'Composición', 'letra' => 'Letra', 'interpretacion' => 'Interpretación', 'direccion' => 'Dirección',
+  'dramaturgia' => 'Dramaturgia', 'coreografia' => 'Coreografía', 'arreglos' => 'Arreglos', 'produccion' => 'Producción',
+  'tecnica' => 'Técnica (luz, sonido)', 'escenografia' => 'Escenografía y vestuario', 'programacion' => 'Programación o curaduría'];
 const CERTEZAS = ['confirmada' => 'Confirmada', 'probable' => 'Probable', 'atribuida' => 'Atribuida', 'desconocida' => 'Desconocida'];
 // Quién pagó: entidad pública o privada. Un particular se guarda, pero su nombre no se publica nunca.
 const NATURALEZAS = ['publica' => 'Entidad pública', 'privada' => 'Entidad privada', 'particular' => 'Particular (su nombre no se publica)'];
 const MODALIDADES = ['' => 'Sin indicar', 'encargo' => 'Encargo', 'subvencion' => 'Subvención', 'patrocinio' => 'Patrocinio',
   'donacion' => 'Donación', 'autofinanciada' => 'Autofinanciada'];
-const MODOS_RELACION = ['continua' => 'continúa', 'responde' => 'responde a', 'superpone' => 'se superpone a', 'serie' => 'forma serie con'];
+// De la más fiel a la más libre: adapta (novela → teatro), versiona (otro montaje, otra versión), se inspira en (un grafiti
+// sobre una novela), cita o samplea. Valen entre obras de cualquier disciplina.
+const MODOS_RELACION = ['continua' => 'continúa', 'responde' => 'responde a', 'superpone' => 'se superpone a', 'serie' => 'forma serie con',
+  'adapta' => 'adapta', 'versiona' => 'versiona', 'inspira' => 'se inspira en', 'cita' => 'cita o samplea'];
 const PRECISIONES_FECHA = ['' => 'Sin indicar', 'exacta' => 'Exacta', 'aproximada' => 'Aproximada', 'decada' => 'Década', 'epoca' => 'Época'];
 const PASO_DIFUSA = 0.02;
 // Islas: una obra reservada (delicada) solo publica su isla, ni municipio ni punto. [lon mín, lon máx, lat mín, lat máx]
@@ -60,7 +75,7 @@ function migrar_catalogo(PDO $db): void {
     'version' => 'INTEGER NOT NULL DEFAULT 0', 'creado' => 'TEXT', 'actualizado' => 'TEXT', 'fecha_precision' => "TEXT NOT NULL DEFAULT ''",
     'agentes' => "TEXT NOT NULL DEFAULT '[]'", 'pagadores' => "TEXT NOT NULL DEFAULT '[]'", 'relaciones' => "TEXT NOT NULL DEFAULT '[]'",
     'fuentes' => "TEXT NOT NULL DEFAULT ''", 'isla' => "TEXT NOT NULL DEFAULT ''",
-    'desconocidos' => "TEXT NOT NULL DEFAULT ''"];
+    'desconocidos' => "TEXT NOT NULL DEFAULT ''", 'disciplina' => "TEXT NOT NULL DEFAULT ''", 'permanencia' => "TEXT NOT NULL DEFAULT ''"];
   foreach ($nuevas as $col => $tipo) if (!in_array($col, $hay, true)) $db->exec("ALTER TABLE obras ADD COLUMN $col $tipo");
   $hay = array_column($db->query('PRAGMA table_info(rutas)')->fetchAll(), 'name');
   if (!in_array('notas', $hay, true)) $db->exec("ALTER TABLE rutas ADD COLUMN notas TEXT NOT NULL DEFAULT '{}'");
@@ -125,6 +140,8 @@ function obra_guardar(array $d, ?string $uuid, string $autor = 'admin'): string 
   if ($o['titulo'] === '') throw new InvalidArgumentException('Falta el título.');
   if (!in_array($o['sensibilidad'], SENSIBILIDADES, true)) throw new InvalidArgumentException('Sensibilidad no válida.');
   if (!in_array($o['fase'], FASES, true)) throw new InvalidArgumentException('Fase no válida.');
+  if (!isset(DISCIPLINAS[$o['disciplina']])) $o['disciplina'] = '';
+  if (!isset(PERMANENCIAS[$o['permanencia']])) $o['permanencia'] = '';
   foreach (['lat' => [27.4, 29.6], 'lon' => [-18.4, -13.2]] as $k => [$min, $max]) {
     $o[$k] = $o[$k] === '' ? null : (float) str_replace(',', '.', (string) $o[$k]);
     if ($o[$k] !== null && ($o[$k] < $min || $o[$k] > $max)) throw new InvalidArgumentException('Las coordenadas no caen en Canarias.');
@@ -201,7 +218,7 @@ function catalogo_geojson_features(): array {
     $props = ['id' => $o['uuid'], 'name' => $o['titulo'], 'sensibilidad' => $o['sensibilidad'],
       'precision' => $o['sensibilidad'] === 'reservada' ? (($o['isla'] ?: 'CAN') === 'CAN' ? 'canarias' : 'isla') : ($p === null ? 'municipio' : ($o['sensibilidad'] === 'abierta' ? 'exacta' : 'zona')),
       'version' => (int) $o['version'], 'actualizado' => fecha_iso($o['actualizado'])];
-    foreach (['fase', 'municipio', 'tipo', 'descripcion', 'autoria', 'fecha_obra', 'fecha_precision', 'foto', 'foto_credito', 'ficha'] as $k) {
+    foreach (['fase', 'municipio', 'disciplina', 'permanencia', 'tipo', 'descripcion', 'autoria', 'fecha_obra', 'fecha_precision', 'foto', 'foto_credito', 'ficha'] as $k) {
       if ($o[$k] !== '' && $o[$k] !== null) $props[$k] = $o[$k];
     }
     // Personas: solo las marcadas como visibles (han aceptado figurar o son públicas). Particulares que pagan: sin nombre.

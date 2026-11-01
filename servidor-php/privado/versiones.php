@@ -5,7 +5,7 @@
 // que ya son públicos sin matices; de la ubicación, las personas, quién pagó o las fuentes solo se dice que cambiaron.
 // Solo para obras publicadas.
 
-const CAMPOS_CON_VALOR = ['titulo', 'fase', 'tipo', 'descripcion', 'fecha_obra', 'fecha_precision', 'foto', 'foto_credito', 'ficha', 'sensibilidad'];
+const CAMPOS_CON_VALOR = ['titulo', 'fase', 'disciplina', 'permanencia', 'tipo', 'descripcion', 'fecha_obra', 'fecha_precision', 'foto', 'foto_credito', 'ficha', 'sensibilidad'];
 
 function versiones_publicas(string $obra): never {
   $obra = strtolower($obra);

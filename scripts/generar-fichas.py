@@ -165,9 +165,12 @@ VINCULOS = {
     "se_superpone_a": ("se superpone a", "debajo"),
     "dialoga": ("dialoga con", "dialoga con"),
     "serie": ("forma serie con", "forma serie con"),
+    "adapta": ("adapta", "adaptada en"),
+    "versiona": ("versiona", "versionada por"),
 }
 # Modos de relación del catálogo del servidor (/admin) → tipos de vínculo de las fichas.
-MODOS = {"continua": "continua", "responde": "responde_a", "superpone": "se_superpone_a", "serie": "serie"}
+MODOS = {"continua": "continua", "responde": "responde_a", "superpone": "se_superpone_a", "serie": "serie",
+         "adapta": "adapta", "versiona": "versiona", "inspira": "inspirada_en", "cita": "cita"}
 ROLES_AUTORIA = {"autoria", "coautoria"}
 
 

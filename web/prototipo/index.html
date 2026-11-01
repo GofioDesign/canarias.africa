@@ -1119,10 +1119,11 @@ const CERTEZA = {
 };
 const FIN = {publica:"Pública",privada:"Privada",particular:"Particular",altruista:"Altruista",mixta:"Mixta",desconocida:"Sin determinar"};
 /* Vocabularios de los nodos de una obra: los mismos que /admin (servidor-php/privado/catalogo.php) */
-const ROLES = {autoria:"Autoría",coautoria:"Coautoría",ejecucion:"Ejecución",encargo:"Encargo",restauracion:"Restauración",colaboracion:"Colaboración",cuidado:"Cuidado"};
+const ROLES = {autoria:"Autoría",coautoria:"Coautoría",ejecucion:"Ejecución",encargo:"Encargo",restauracion:"Restauración",colaboracion:"Colaboración",cuidado:"Cuidado",composicion:"Composición",letra:"Letra",interpretacion:"Interpretación",direccion:"Dirección",dramaturgia:"Dramaturgia",coreografia:"Coreografía",arreglos:"Arreglos",produccion:"Producción",tecnica:"Técnica (luz, sonido)",escenografia:"Escenografía y vestuario",programacion:"Programación o curaduría"};
+const DISCIPLINAS = {"":"Disciplina (si se sabe)",visuales:"Artes visuales",musica:"Música",teatro:"Teatro",danza:"Danza",performance:"Performance o acción",circo:"Circo y artes de calle",oralidad:"Oralidad y narración",literatura:"Literatura",audiovisual:"Audiovisual y cine",tradicion:"Tradición popular",web:"Obra web o digital"};
 const NATUR = {publica:"Entidad pública",privada:"Entidad privada",particular:"Particular (su nombre no se publica)"};
 const MODAL = {"":"Modalidad (si se sabe)",encargo:"Encargo",subvencion:"Subvención",patrocinio:"Patrocinio",donacion:"Donación",autofinanciada:"Autofinanciada"};
-const MODOS = {continua:"continúa",responde:"responde a",superpone:"se superpone a",serie:"forma serie con"};
+const MODOS = {continua:"continúa",responde:"responde a",superpone:"se superpone a",serie:"forma serie con",adapta:"adapta",versiona:"versiona",inspira:"se inspira en",cita:"cita o samplea"};
 const PREC_FECHA = {"":"sin precisar",exacta:"exacta",aproximada:"aprox.",decada:"década",epoca:"época"};
 const MUNIS = {
   ARI:{n:"Arico",isla:"TF",lon:-16.49,lat:28.19},
@@ -1625,7 +1626,7 @@ function idFicha(o){
 const ESCALA_N={persona:"persona",familia:"familia",amistades:"amistades",barrio:"barrio",municipio:"municipio",mancomunidad:"mancomunidad",isla:"isla",provincia:"provincia",canarias:"Canarias",macaronesia:"Macaronesia",estado:"estado",continente:"continente",global:"global",glocal:"glocal"}; // = datos/escalas.json
 const ESPACIO_N={lugar:"en un lugar",red:"en la red",sin_espacio:"sin espacio"};
 const VINC_N={serie:["forma serie con","forma serie con"],responde_a:["responde a","respuestas"],inspirada_en:["inspirada en","ha inspirado"],cita:["cita","citada por"],
-  continua:["continúa","continuada por"],se_superpone_a:["se superpone a","debajo"],dialoga:["dialoga con","dialoga con"]};
+  continua:["continúa","continuada por"],se_superpone_a:["se superpone a","debajo"],dialoga:["dialoga con","dialoga con"],adapta:["adapta","adaptada en"],versiona:["versiona","versionada por"]};
 function genealogiaObra(o){
   const h=histDe(o), id=o.id.toLowerCase();
   /* La trayectoria de cada agente (artistas, colectivos y colaboradores, que también forman parte de la obra) es otra línea temporal: une esta obra con otros lugares y tiempos */
@@ -2315,7 +2316,8 @@ function vAportar(){
   <div id="okbox" style="margin-top:20px"></div>
   <form class="obsf" id="obsf" data-modo="nueva" novalidate style="margin-top:20px">
     <label class="full" for="o-n-tit">Qué es<input id="o-n-tit" type="text" required placeholder="Por ejemplo: mural en la fachada del colegio"></label>
-    <label for="o-n-tipo">Tipo ${NOLOSE("tipo")}<input id="o-n-tipo" type="text" list="tipolist" placeholder="Mural, escultura, grafiti…"><datalist id="tipolist">${["mural","escultura","grafiti","instalación","grabado","relieve","arquitectura","acción","obra web"].map(t=>`<option value="${t}">`).join("")}</datalist></label>
+    <label for="o-n-dis">Disciplina<select id="o-n-dis">${Object.entries(DISCIPLINAS).map(([k,n])=>`<option value="${k}">${n}</option>`).join("")}</select></label>
+    <label for="o-n-tipo">Tipo ${NOLOSE("tipo")}<input id="o-n-tipo" type="text" list="tipolist" placeholder="Mural, canción, montaje, isa, romería…"><datalist id="tipolist">${["mural","escultura","grafiti","instalación","grabado","relieve","arquitectura","acción","obra web","canción","disco","concierto","montaje teatral","coreografía","isa","folía","romería","luchada","silbo","novela","poema","película"].map(t=>`<option value="${t}">`).join("")}</datalist></label>
     <label for="o-n-fase">Cómo está hoy<select id="o-n-fase">${Object.entries(FASES).map(([k,f])=>`<option value="${k}"${k==="plenitud"?" selected":""}>${f.n}</option>`).join("")}</select></label>
     <label for="o-n-fec">Cuándo se hizo ${NOLOSE("fecha_obra")}<input id="o-n-fec" type="text" placeholder="1987, años 80, época aborigen…"></label>
     <label for="o-n-fp">Precisión de la fecha<select id="o-n-fp">${Object.entries(PREC_FECHA).map(([k,n])=>`<option value="${k}">${k?n:"No lo sé"}</option>`).join("")}</select></label>
@@ -2391,7 +2393,7 @@ async function enviar(e){
   if(modo==="nueva"){
     if(!$("#o-n-tit").value.trim()||!$("#o-n-lug").value.trim()||!$("#o-n-mun").value.trim()) return bad("Falta decir qué es, dónde está o el municipio.");
     const v=sel=>$(sel).value.trim(), ubic=(document.querySelector('input[name="o-ubic"]:checked')||{}).value||"abierta";
-    if(!await enviarAPI("nueva",{titulo:v("#o-n-tit"),tipo:v("#o-n-tipo"),fase:v("#o-n-fase"),fecha_obra:v("#o-n-fec"),fecha_precision:v("#o-n-fp"),
+    if(!await enviarAPI("nueva",{titulo:v("#o-n-tit"),tipo:v("#o-n-tipo"),disciplina:v("#o-n-dis"),fase:v("#o-n-fase"),fecha_obra:v("#o-n-fec"),fecha_precision:v("#o-n-fp"),
       lugar:v("#o-n-lug"),municipio:v("#o-n-mun"),lat:v("#o-lat"),lon:v("#o-lon"),precision_gps:v("#o-prec"),
       agentes:repValor("agentes"),pagadores:repValor("pagadores"),relaciones:repValor("relaciones"),
       descripcion:txt,texto:txt,fuentes:v("#o-n-fue"),alias,sensibilidad:ubic,desconocidos:[...document.querySelectorAll('input[name="o-unk"]:checked')].map(x=>x.value).join(","),posible_sensible:ubic!=="abierta"?"1":"",

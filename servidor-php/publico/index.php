@@ -25,6 +25,16 @@ try {
   }
   if ($metodo === 'GET' && preg_match('#^/datos/fotos/(\d{4}-\d{2}/[0-9a-f]{24}\.jpg)$#', $ruta, $m)) foto_publica($m[1]);
   if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)$#', $ruta, $m)) observaciones_publicas($m[1]);
+  if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)/vinculos$#', $ruta, $m)) vinculos_obra_publicos($m[1]);
+  if ($metodo === 'POST' && preg_match('#^/api/obras/([\w-]+)/huella$#', $ruta, $m)) huella_visita($m[1]);
+  if ($metodo === 'POST' && preg_match('#^/api/publico/obras/([\w-]+)/visita$#', $ruta, $m)) visita_anonima($m[1]);
+  if ($metodo === 'GET' && $ruta === '/api/publico/calor') calor();
+  if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)/huellas$#', $ruta, $m)) huellas_publicas($m[1]);
+  if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)/versiones$#', $ruta, $m)) versiones_publicas($m[1]);
+  if ($metodo === 'POST' && $ruta === '/api/vinculos') vinculo_crear();
+  if ($metodo === 'GET' && $ruta === '/api/vinculos/mios') vinculos_mios();
+  if ($metodo === 'GET' && preg_match('#^/api/vinculos/obra/([\w-]+)$#', $ruta, $m)) vinculos_obra_mios($m[1]);
+  if ($metodo === 'POST' && preg_match('#^/api/vinculos/(\d+)/(aceptar|rechazar|retirar|publicar)$#', $ruta, $m)) vinculo_accion((int) $m[1], $m[2]);
   if ($metodo === 'GET' && preg_match('#^/api/publico/qr/(' . RE_UUID . ')/historial$#', $ruta, $m)) qr_historial($m[1]);
   if ($metodo === 'GET' && $ruta === '/api/publico/etiquetas.geojson') qr_mapa();
   if ($metodo === 'POST' && $ruta === '/api/qr/asignar') qr_asignar();

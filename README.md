@@ -11,8 +11,8 @@ web/          La web (GitHub Pages): página de lanzamiento en index.html, proto
 propuestas/   Propuestas del colectivo, una por archivo .md; se votan en la web y en su issue de GitHub (ver propuestas/README.md)
 servidor-php/ api.canarias.africa en el hosting PHP: catálogo (obras, rutas, artistas), formularios, QR, moderación, caché de teselas
 servidor/     Plan B para un VPS propio (nginx + PocketBase), anterior al sistema de etiquetas del 28-10-2026
-scripts/      Comprobación del catálogo (ubicaciones sensibles) y de las propuestas, que genera web/propuestas.json
-datos/        GeoJSON de ejemplo para importar en uMap
+scripts/      Comprobación del catálogo (ubicaciones sensibles) y de las propuestas, archivo en archive.org y fichas estáticas con sus estratos
+datos/        GeoJSON de ejemplo para uMap y archivo/registro.json (el rastro en archive.org)
 docs/         Infraestructura, mapas (OSM y uMap) y formato de convocatorias.json
 ```
 
@@ -33,6 +33,7 @@ En local las teselas no cargan (no hay caché) y el mapa muestra el contorno de 
 - [Infraestructura y costes](docs/infraestructura.md)
 - [Mapas: OpenStreetMap en caché y nodos en uMap](docs/mapas-osm-umap.md)
 - [Formato de convocatorias.json](docs/convocatorias-formato.md)
+- [Estratos: archivo en archive.org](docs/archivo-archive-org.md)
 
 ## Licencia
 

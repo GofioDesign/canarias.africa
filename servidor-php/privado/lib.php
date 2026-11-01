@@ -40,6 +40,22 @@ function json_respuesta($datos, int $estado = 200): never {
 }
 
 function error_publico(string $mensaje, int $estado = 400): never {
+  // Quien abre una dirección en el navegador ve la página de error del proyecto; la API (/api, /datos, /teselas),
+  // los formularios y la app de campo, que piden por fetch, siguen recibiendo JSON.
+  $ruta = (string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+  if (str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'text/html') && !preg_match('#^/(api|datos|teselas)(/|$)#', $ruta)) {
+    $pagina = ($_SERVER['DOCUMENT_ROOT'] ?? '') . '/' . (in_array($estado, [400, 401, 403, 404, 500], true) ? $estado : ($estado >= 500 ? 500 : 400)) . '.shtml';
+    if (is_file($pagina)) {
+      http_response_code($estado);
+      header('Content-Type: text/html; charset=utf-8');
+      header('Cache-Control: no-store');
+      $html = file_get_contents($pagina);
+      // En /admin se añade el motivo concreto («Sesión caducada.»…): quien lo ve cuida el archivo y le sirve.
+      if (str_starts_with($ruta, '/admin')) $html = str_replace('</h1>', '</h1><p><strong>' . htmlspecialchars($mensaje) . '</strong></p>', $html);
+      echo $html;
+      exit;
+    }
+  }
   json_respuesta(['error' => $mensaje], $estado);
 }
 

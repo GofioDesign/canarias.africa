@@ -5,3 +5,10 @@ RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ index.php [L,QSA]
 Options -Indexes
+# Páginas de error propias (sustituyen las de DirectAdmin). Las genera scripts/paginas-error.py.
+# Solo salen cuando falla el propio servidor web: los errores de la API los responde index.php en JSON.
+ErrorDocument 400 /400.shtml
+ErrorDocument 401 /401.shtml
+ErrorDocument 403 /403.shtml
+ErrorDocument 404 /404.shtml
+ErrorDocument 500 /500.shtml

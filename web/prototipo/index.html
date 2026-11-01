@@ -14,7 +14,7 @@
   --ph-gest:#8C8F86; --ph-crea:#3E7C5A; --ph-plen:#2F7A3E; --ph-desg:#B07A12; --ph-inte:#2D6C8C; --ph-tran:#7A4E8C; --ph-desa:#7E6F66; --ph-memo:#6B7470;
   --warn-bg:#FFF2C2; --warn-ink:#5C4400;
   --tile-filter:none;
-  --n-obra:#C99700; --n-agente:#2D6C8C; --n-entidad:#7A4E8C; --n-terr:#4F7A3A; --n-reg:#8A928C; --n-rec:#A4502E;
+  --n-obra:#C99700; --n-agente:#2D6C8C; --n-entidad:#7A4E8C; --n-terr:#4F7A3A; --n-reg:#8A928C; --n-rec:#A4502E; --pl-muni:#C2185B; --pl-obs:#0E8C8C; --pl-qr:#3E4A56; --pl-conv:#6D7F00; --pl-sal:#D46A00;
   --f-display:"Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
   --f-body:"Source Serif 4", Georgia, "Times New Roman", serif;
   --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -23,12 +23,12 @@
   --bg:#121614; --surface:#1A1F1C; --ink:#E4E9E2; --muted:#9BA69F; --line:#2D3631;
   --lichen:#2FA84F; --lichen-ink:#6FD38A; --on-lichen:#0B1A10; --azul:#5AA9E6; --amarillo:#FFD42A; --sea:#17252A; --land:#2B332E; --land-edge:#4A564E;
   --ph-gest:#9A9D94; --ph-crea:#62B285; --ph-plen:#5DBE6E; --ph-desg:#E0A73A; --ph-inte:#5AA9CF; --ph-tran:#B48AC6; --ph-desa:#A8988D; --ph-memo:#98A39E;
-  --warn-bg:#3A3110; --warn-ink:#F2D98A; --n-obra:#E5B51E; --n-agente:#5AA9CF; --n-entidad:#B48AC6; --n-terr:#7DB866; --n-reg:#7C8781; --n-rec:#D9825E; --tile-filter:brightness(.72) contrast(1.08) saturate(.55); color-scheme:dark}}
+  --warn-bg:#3A3110; --warn-ink:#F2D98A; --n-obra:#E5B51E; --n-agente:#5AA9CF; --n-entidad:#B48AC6; --n-terr:#7DB866; --n-reg:#7C8781; --n-rec:#D9825E; --pl-muni:#F06292; --pl-obs:#4FC7C7; --pl-qr:#AAB6C2; --pl-conv:#B5C93A; --pl-sal:#FFA040; --tile-filter:brightness(.72) contrast(1.08) saturate(.55); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#121614; --surface:#1A1F1C; --ink:#E4E9E2; --muted:#9BA69F; --line:#2D3631;
   --lichen:#2FA84F; --lichen-ink:#6FD38A; --on-lichen:#0B1A10; --azul:#5AA9E6; --amarillo:#FFD42A; --sea:#17252A; --land:#2B332E; --land-edge:#4A564E;
   --ph-gest:#9A9D94; --ph-crea:#62B285; --ph-plen:#5DBE6E; --ph-desg:#E0A73A; --ph-inte:#5AA9CF; --ph-tran:#B48AC6; --ph-desa:#A8988D; --ph-memo:#98A39E;
-  --warn-bg:#3A3110; --warn-ink:#F2D98A; --n-obra:#E5B51E; --n-agente:#5AA9CF; --n-entidad:#B48AC6; --n-terr:#7DB866; --n-reg:#7C8781; --n-rec:#D9825E; --tile-filter:brightness(.72) contrast(1.08) saturate(.55); color-scheme:dark}
+  --warn-bg:#3A3110; --warn-ink:#F2D98A; --n-obra:#E5B51E; --n-agente:#5AA9CF; --n-entidad:#B48AC6; --n-terr:#7DB866; --n-reg:#7C8781; --n-rec:#D9825E; --pl-muni:#F06292; --pl-obs:#4FC7C7; --pl-qr:#AAB6C2; --pl-conv:#B5C93A; --pl-sal:#FFA040; --tile-filter:brightness(.72) contrast(1.08) saturate(.55); color-scheme:dark}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.55}
@@ -958,9 +958,9 @@ a.of:hover h3{text-decoration:underline}
 .plano{fill:var(--bg);fill-opacity:.55;stroke:var(--land-edge);stroke-width:1}
 .plabel{font-family:var(--f-mono);font-size:11px;fill:var(--ink);text-transform:uppercase;letter-spacing:.06em;paint-order:stroke;stroke:var(--surface);stroke-width:3px}
 .plabel .pcount{fill:var(--muted)}
-.plano{fill-opacity:.13;stroke-width:1.2;stroke-opacity:.8;cursor:pointer;transition:fill-opacity .2s}
-.plano:hover,.plano:focus-visible{fill-opacity:.24;outline:none}
-g.pl.sel .plano{fill-opacity:.3;stroke-width:2.2}
+.plano{fill-opacity:.06;stroke-width:1.6;stroke-opacity:.9;cursor:pointer;transition:fill-opacity .2s}
+.plano:hover,.plano:focus-visible{fill-opacity:.12;outline:none}
+g.pl.sel .plano{fill-opacity:.18;stroke-width:2.4}
 g.pl.sel .plabel{font-weight:700}
 #gsvg.con-sel g.pl:not(.sel) .nd{opacity:.5}
 #gsvg.con-sel .lineas line{stroke-opacity:.18}
@@ -1364,14 +1364,14 @@ const TIPOS = {
  obra:{n:"Obra",g:"--n-obra",p:"CA",d:"Pieza con ficha permanente. Es el nodo central, pero no el único.",a:["título","tipo","fecha y precisión","fase actual","fenología[]","sensibilidad: abierta, difusa o reservada (+ motivo)"]},
  agente:{n:"Agente",g:"--n-agente",p:"AG",d:"Persona, colectivo o grupo que crea, encarga, restaura o cuida.",a:["nombre","clase: persona, colectivo, grupo","canales[]: tienda, mecenazgo, encargos, web (solo si su autoría está confirmada)"]},
  entidad:{n:"Entidad",g:"--n-entidad",p:"EN",d:"Institución, empresa o particular que financia.",a:["nombre","naturaleza: pública, privada, particular"]},
- convocatoria:{n:"Convocatoria",g:"--n-entidad",p:"CV",d:"Ayuda o incentivo que puede financiar obras o actividades.",a:["organismo","importe","plazos"]},
+ convocatoria:{n:"Convocatoria",g:"--pl-conv",p:"CV",d:"Ayuda o incentivo que puede financiar obras o actividades.",a:["organismo","importe","plazos"]},
  lugar:{n:"Lugar",g:"--n-terr",p:"LU",d:"Punto concreto del territorio donde está o estuvo algo.",a:["nombre","lat, lon","precisión en metros"]},
- municipio:{n:"Municipio",g:"--n-terr",p:"MU",d:"Término municipal.",a:["nombre","isla"]},
+ municipio:{n:"Municipio",g:"--pl-muni",p:"MU",d:"Término municipal.",a:["nombre","isla"]},
  fuente:{n:"Fuente",g:"--n-reg",p:"FU",d:"Documento, testimonio, foto o vídeo que sostiene un dato.",a:["clase","descripción","fecha"]},
- observacion:{n:"Observación",g:"--n-reg",p:"OBS",d:"Aportación ciudadana fechada. El estado de una obra solo se observa escaneando su QR; el contexto se puede aportar desde la ficha.",a:["fecha","alias","clase: estado (QR) o contexto (ficha)","fase observada (solo estado)","verificación"]},
- qr:{n:"QR",g:"--n-reg",p:"QR",d:"Código físico georreferenciado junto a la obra.",a:["estado","instalado","última revisión"]},
+ observacion:{n:"Observación",g:"--pl-obs",p:"OBS",d:"Aportación ciudadana fechada. El estado de una obra solo se observa escaneando su QR; el contexto se puede aportar desde la ficha.",a:["fecha","alias","clase: estado (QR) o contexto (ficha)","fase observada (solo estado)","verificación"]},
+ qr:{n:"QR",g:"--pl-qr",p:"QR",d:"Código físico georreferenciado junto a la obra.",a:["estado","instalado","última revisión"]},
  ruta:{n:"Ruta",g:"--n-rec",p:"RU",d:"Proyecto curatorial: un recorrido a pie que propone una lectura de obras ya catalogadas.",a:["título","tesis curatorial","km","duración","dificultad"]},
- salida:{n:"Salida",g:"--n-rec",p:"SA",d:"Salida colectiva de mapeo.",a:["fecha","participantes"]}
+ salida:{n:"Salida",g:"--pl-sal",p:"SA",d:"Salida colectiva de mapeo.",a:["fecha","participantes"]}
 };
 const RELT = {
  autoria:{n:"autoría de",de:"agente",a:"obra",p:"rol, certeza, fuente"},
@@ -1593,6 +1593,7 @@ function initMaps(){
     });
     if(c.cerca){ L.circleMarker([c.lat,c.lon],{radius:8,className:"mk-yo",interactive:false}).addTo(m); L.circle([c.lat,c.lon],{radius:RADIO_KM*1000,className:"radio-yo",interactive:false}).addTo(m); m.setView([c.lat,c.lon],11); }
     else if(c.opt.focus){ const o=byId(c.opt.focus), n=sensOf(o); m.setView([o.lat,o.lon],n==="reservada"?11:n==="difusa"?13:14); }
+    else if(c.opt.centro){ m.setView([c.opt.centro.lat,c.opt.centro.lon],12); }
     else if(c.opt.route){ m.fitBounds(L.latLngBounds(c.opt.route.map(byId).map(o=>[o.lat,o.lon])),{padding:[40,40],maxZoom:14}); }
     else m.fitBounds(L.latLngBounds(OUT[c.isla].poly.map(([lon,lat])=>[lat,lon])),{padding:[8,8]});
   });
@@ -1861,7 +1862,7 @@ const ZONAS=MUNIS_CANARIAS.map(x=>[x[0],x[2],x[3]]).sort((a,b)=>a[0].localeCompa
 const RADIO_KM=15;
 let CERCA=null; try{ CERCA=JSON.parse(localStorage.getItem("ca-cerca")||"null"); }catch(e){}
 function km(a1,o1,a2,o2){ const r=Math.PI/180, x=Math.sin((a2-a1)*r/2)**2+Math.cos(a1*r)*Math.cos(a2*r)*Math.sin((o2-o1)*r/2)**2; return 12742*Math.asin(Math.sqrt(x)); }
-function setCerca(v){ CERCA=v; try{ localStorage.setItem("ca-cerca",JSON.stringify(v)); }catch(e){} renderCerca(); }
+function setCerca(v){ CERCA=v; try{ localStorage.setItem("ca-cerca",JSON.stringify(v)); }catch(e){} renderCerca(); if($("#res")) renderRes(); }
 function mapCerca(lat,lon){ const id="lmap-"+(++MAPSEQ); MAPQ.push({id,cerca:true,lat,lon,obras:OBRAS,opt:{}});
   return `<div class="map"><figure><figcaption>Tu zona</figcaption><div class="lmap" id="${id}"></div><p class="osm-note" hidden>Esta vista previa no llega a la caché de mapas de canarias.africa, así que muestra un contorno simplificado. En la web se verá el mapa de OpenStreetMap.</p></figure></div>`; }
 function renderCerca(){
@@ -1877,7 +1878,7 @@ function renderCerca(){
         <ul class="near">${dentro.slice(0,5).map(x=>`<li><a href="#${slug(x.o.id)}">${esc(x.o.t)}</a> <span class="mono muted">${x.d.toFixed(1).replace(".",",")} km</span> ${chip(x.o.fase)}</li>`).join("")}</ul>`
       :`<div class="invite"><h3>Todavía no hay obras mapeadas en tu zona</h3><p>¿Conoces alguna obra de arte o expresión artística en tu región? Un mural, una escultura, una inscripción, una fiesta, una acción que alguien recuerda. Colabora y será la primera del mapa.</p>
         <div class="btns"><a class="btn lichen" href="#aportar" data-obra="nueva">Colaborar con una obra</a></div>
-        <p class="muted" style="font-size:.88rem">La obra registrada más cercana está a ${Math.round(near[0].d)} km: <a href="#${slug(near[0].o.id)}">${esc(near[0].o.t)}</a>.</p></div>`}
+        ${near.length?`<p class="muted" style="font-size:.88rem">La obra registrada más cercana está a ${Math.round(near[0].d)} km: <a href="#${slug(near[0].o.id)}">${esc(near[0].o.t)}</a>.</p>`:""}</div>`}
       ${mapCerca(CERCA.lat,CERCA.lon)}</div>`;
     initMaps();
   }
@@ -1894,7 +1895,9 @@ function renderCerca(){
 function renderRes(){
   const q=FILT.q.toLowerCase();
   const r=OBRAS.filter(o=>(!FILT.m||o.m===FILT.m)&&(!FILT.f||o.fase===FILT.f)&&(!FILT.c||o.aut[0].c===FILT.c)&&(!q||(o.t+o.lugar+o.aut.map(a=>a.n).join(" ")).toLowerCase().includes(q)));
-  $("#res").innerHTML = mapa(OBRAS,{only:r.map(o=>o.id)})+leyenda()+
+  /* Con una zona elegida, el mapa del archivo muestra su isla centrada en ella */
+  const zona=CERCA&&islaDe(CERCA.lat,CERCA.lon);
+  $("#res").innerHTML = mapa(OBRAS,zona?{only:r.map(o=>o.id),islas:[zona],centro:CERCA}:{only:r.map(o=>o.id)})+leyenda()+
    `<p class="count" style="margin-top:18px">${r.length} de ${OBRAS.length} obras</p><div class="list">${r.map(o=>`
     <a class="item" href="#${slug(o.id)}"><span class="mono" title="${o.id}">${corto(o.id)}</span>
     <span><span class="t">${esc(o.t)}</span> <span class="fake">ficticia</span>${sensOf(o)!=="abierta"?` <span class="sens">ubicación ${sensOf(o)}</span>`:""}<br><span class="s">${o.tipo} · ${esc(o.lugar)} · ${MUNIS[o.m].n}</span></span>${chip(o.fase)}</a>`).join("")||`<p class="muted" style="padding:16px 0">Ninguna obra cumple estos filtros. Prueba a quitar alguno.</p>`}</div>`;

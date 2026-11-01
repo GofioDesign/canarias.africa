@@ -179,7 +179,7 @@ if ($sub === '/obra') {
         'tipo' => $ed['tipo'] ?? '', 'fecha_obra' => $ed['fecha_obra'] ?? '', 'fecha_precision' => $ed['fecha_precision'] ?? '',
         'agentes' => json_encode($agentes, JSON_UNESCAPED_UNICODE), 'pagadores' => $ed['pagadores'] ?? '[]', 'relaciones' => $ed['relaciones'] ?? '[]',
         'fuentes' => $ed['fuentes'] ?? '', 'sensibilidad' => in_array($ed['sensibilidad'] ?? '', SENSIBILIDADES, true) ? $ed['sensibilidad'] : (!empty($ed['posible_sensible']) ? 'difusa' : 'abierta'),
-        'isla' => isset(ISLAS[$ed['isla'] ?? '']) ? $ed['isla'] : '',
+        'isla' => isset(ISLAS_CODIGO[$ed['isla'] ?? '']) ? $ed['isla'] : '',
         'fase' => in_array($ed['fase'] ?? '', FASES, true) ? $ed['fase'] : 'plenitud', 'publicada' => 0];
       $origen = "<input type=hidden name=desde_envio value={$e['id']}><p class=meta>Desde un envío del formulario «obra nueva». Al guardar, el envío queda aprobado.</p>";
     }
@@ -197,7 +197,7 @@ if ($sub === '/obra') {
     . ($id ? "<p class=meta>Id: <code>{$h($id)}</code>" . (isset($o['version']) ? " · versión {$o['version']} · <a href='/admin/obra/versiones?id={$h($id)}'>historial</a>" : '') . '</p>' : '')
     . $campo('titulo', 'Título', $v('titulo'), 'text', '', ['required' => 'required'])
     . '<div class=par>' . $lista('fase', 'Fase', $ETIQUETAS_FASE, (string) $v('fase')) . $lista('sensibilidad', 'Sensibilidad', $ETIQUETAS_SENS, (string) $v('sensibilidad')) . '</div>'
-    . $lista('isla', 'Isla', ['' => 'La del punto (automático)'] + ISLAS, (string) $v('isla'))
+    . $lista('isla', 'Isla', ['' => 'La del punto (automático)'] + ISLAS_CODIGO, (string) $v('isla'))
     . '<div class=par>' . $campo('municipio', 'Municipio', $v('municipio'), 'text', 'No se publica si la obra es reservada.') . $campo('lugar', 'Lugar', $v('lugar'), 'text', 'Calle, plaza o paraje. Solo se publica si la obra es abierta.') . '</div>'
     . '<div class=par>' . $campo('lat', 'Latitud', $v('lat'), 'text', '', ['inputmode' => 'decimal']) . $campo('lon', 'Longitud', $v('lon'), 'text', '', ['inputmode' => 'decimal']) . '</div>'
     . $mapa()

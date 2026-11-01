@@ -82,7 +82,8 @@ function qr_resolver(string $codigo): never {
     $obras[] = array_filter(['uuid' => $o['obra'], 'titulo' => $o['titulo'], 'actual' => $o['hasta'] === '', 'desde' => $o['desde'], 'hasta' => $o['hasta']], fn($v) => $v !== '');
   }
   $actual = array_values(array_filter($obras, fn($o) => $o['actual']));
-  $r = ['estado' => $q['estado'], 'obra' => $actual[0]['uuid'] ?? $obras[0]['uuid'] ?? $q['obra'], 'obras' => $obras, 'soporte' => null];
+  // gps: la etiqueta tiene punto y se verifica con el GPS (no lo tiene una que solo se muestra en pantalla).
+  $r = ['estado' => $q['estado'], 'gps' => $q['lat'] !== null, 'obra' => $actual[0]['uuid'] ?? $obras[0]['uuid'] ?? $q['obra'], 'obras' => $obras, 'soporte' => null];
   if ($s) {
     $r['soporte'] = array_filter(['uuid' => $s['uuid'], 'nombre' => $s['nombre'], 'tipo' => $s['tipo'], 'url' => $s['url'] ?? '',
       'municipio' => sensibilidad_soporte($s) === 'reservada' ? '' : $s['municipio']], fn($v) => $v !== '');
@@ -153,8 +154,9 @@ function qr_colocar(): never {
   $soporte = null;
   if (!empty($_POST['soporte'])) {
     $soporte = soporte((string) $_POST['soporte']) ?? error_publico('Ese soporte no está en el archivo.', 404);
-    if ($soporte['lat'] === null) error_publico('Ese soporte no tiene punto en el mapa (por ejemplo, una web): su etiqueta se da de alta en /admin.', 409);
-    if (distancia_m((float) $soporte['lat'], (float) $soporte['lon'], $lat, $lon) > config()['qr']['radio_verificar_m'] + $pre) {
+    // Un soporte sin punto (una web) puede tener etiquetas físicas en cualquier sitio (un cartel, un local): cada una
+    // guarda su propio punto y se verifica con el GPS. Si el soporte tiene punto, hay que estar junto a él.
+    if ($soporte['lat'] !== null && distancia_m((float) $soporte['lat'], (float) $soporte['lon'], $lat, $lon) > config()['qr']['radio_verificar_m'] + $pre) {
       error_publico('Estás demasiado lejos de ese soporte. Si es otro sitio, crea un soporte nuevo.');
     }
     if (sensibilidad_soporte($soporte) === 'reservada') error_publico('Los soportes con obras de ubicación reservada no llevan etiqueta.', 403);
@@ -203,8 +205,8 @@ function qr_colocar(): never {
   json_respuesta(['ok' => true, 'soporte' => $soporte['uuid'], 'obra' => $obra_uuid, 'estado' => 'colocado'], 201);
 }
 
-// /admin: da de alta una etiqueta libre en un soporte. Es la vía para los soportes sin punto (una web: la etiqueta
-// se imprime en un cartel o se muestra en pantalla y queda confirmada) y para etiquetas que se colocaron sin la app.
+// /admin: da de alta una etiqueta libre en un soporte, para etiquetas que se colocaron sin la app o que solo se muestran
+// en pantalla (dentro de la propia web). Una etiqueta impresa de una web se coloca con la app, con GPS, como las demás.
 function qr_vincular_soporte(string $codigo, array $s): void {
   $q = etiqueta($codigo) ?? throw new InvalidArgumentException('Esa etiqueta no existe.');
   if ($q['estado'] !== 'libre') throw new InvalidArgumentException('Esa etiqueta no está libre (estado: ' . $q['estado'] . ').');

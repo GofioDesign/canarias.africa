@@ -2852,7 +2852,7 @@ function qrDemo(cod){
 const QRRES=new Map();
 async function resolverQR(cod){
   const r=await api("/api/qr/"+encodeURIComponent(cod));
-  QRRES.set(cod,r.status===0?{estado:"sin_conexion"}:{obra:r.j.obra||null,estado:r.j.estado||"desconocido",soporte:r.j.soporte||null,obras:Array.isArray(r.j.obras)?r.j.obras:[]});
+  QRRES.set(cod,r.status===0?{estado:"sin_conexion"}:{obra:r.j.obra||null,estado:r.j.estado||"desconocido",soporte:r.j.soporte||null,gps:r.j.gps!==false,obras:Array.isArray(r.j.obras)?r.j.obras:[]});
   route();
 }
 const MSGQR={libre:["Etiqueta sin asignar","Este código todavía está en el pool y no corresponde a ninguna obra."],
@@ -2884,7 +2884,7 @@ function vEtiqueta(cod,r){
       <p class="lede muted">Esta etiqueta ya tiene dueño, pero todavía no está unida a ninguna obra.</p>
       <p>¿Es tuya? <a href="#colabora">Entra en tu cuenta</a> y volverás aquí para colocarla.</p></section>`;
   }
-  if(OBSERVABLE.includes(r.estado)){ const sel=QRSEL.get(cod)||r.obra, o=sel&&byId(sel); if(o) return bloqueSoporte(cod,r,o.id)+vQR(o,cod,r.estado,r.soporte&&r.soporte.tipo==="web");
+  if(OBSERVABLE.includes(r.estado)){ const sel=QRSEL.get(cod)||r.obra, o=sel&&byId(sel); if(o) return bloqueSoporte(cod,r,o.id)+vQR(o,cod,r.estado,r.gps===false);
     return `<section class="stack"><p class="eyebrow">Etiqueta <span class="cinta id">${ESTQ[r.estado]}</span></p><h1>Obra recién incorporada</h1>
       <p class="lede muted">Esta etiqueta ya está colocada, pero la ficha de la obra se publicará en la próxima actualización del archivo.</p></section>${bloqueVerificar(cod,r.estado,null)}`; }
   const [t,d]=MSGQR[r.estado]||MSGQR.desconocido;

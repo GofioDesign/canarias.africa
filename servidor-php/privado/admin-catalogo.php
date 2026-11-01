@@ -442,7 +442,7 @@ if ($sub === '/soporte') {
     . $nodos('obras', 'Obras en este soporte', 'Las de ahora sin «hasta». Si una se pintó encima de otra, la de debajo lleva «hasta» con la fecha (estratigrafía). Si una obra se trasladó, se cierra aquí con «hasta» y se añade en su soporte nuevo.',
         [['obra', 'select', 'Obra', $obras_ops], ['desde', 'text', 'Desde (año o fecha)', ''], ['hasta', 'text', 'Hasta (vacío: sigue)', ''], ['nota', 'text', 'Nota (opcional)', '']], (string) $v('obras'), '+ Añadir obra')
     . '<h2>Etiquetas QR</h2>' . ($etiquetas ? "<ul>$etiquetas</ul>" : '<p class=meta>Sin etiquetas todavía.</p>')
-    . $campo('etiqueta_nueva', 'Dar de alta una etiqueta libre en este soporte', '', 'text', 'Código del pool (/admin/qr). En una web queda confirmada (se imprime en un cartel o se muestra en pantalla); en un sitio físico queda «colocada» y se verifica con el GPS. Las etiquetas que se colocan con la app se enlazan solas.')
+    . $campo('etiqueta_nueva', 'Dar de alta una etiqueta libre en este soporte', '', 'text', 'Lo normal es colocarlas con la app: guardan su punto GPS y se verifican, también las de una web (en un cartel, un local…). Aquí, un código del pool (/admin/qr) para una etiqueta que solo se muestra en pantalla (queda confirmada, sin GPS) o que se colocó sin la app.')
     . '<p><button class=aprobada>Guardar</button> <a href=/admin/soportes>Volver</a></p></form>' . $js_nodos;
   pagina($id ? 'Editar soporte' : 'Nuevo soporte', $html);
 }

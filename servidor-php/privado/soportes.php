@@ -124,10 +124,17 @@ function soporte_guardar(array $d, ?string $uuid): string {
 
 // Capa pública de soportes (la antigua capa QR): un punto por soporte con alguna obra publicada, con el estado de su
 // etiqueta y la lista de obras. El punto se oculta según la protección efectiva; los reservados no salen.
-// Los soportes sin punto (una web) no van en la capa del mapa: se ven en la ficha de su obra y al escanear su etiqueta.
+// Un soporte sin punto (una web) sale en el punto de su etiqueta física más reciente, si tiene alguna colocada con GPS;
+// si no, no va en el mapa (se ve en la ficha de su obra y al escanear su etiqueta).
 function soportes_features(): array {
   $features = [];
-  foreach (db()->query('SELECT * FROM soportes WHERE lat IS NOT NULL ORDER BY nombre') as $s) {
+  foreach (db()->query("SELECT s.* FROM soportes s ORDER BY s.nombre") as $s) {
+    if ($s['lat'] === null) {
+      $st = db()->prepare("SELECT lat, lon FROM qr_codigos WHERE soporte = ? AND lat IS NOT NULL AND estado IN ('colocado','confirmado','sin_verificar') ORDER BY creado DESC LIMIT 1");
+      $st->execute([$s['uuid']]);
+      if (!($g = $st->fetch())) continue;
+      $s['lat'] = $g['lat']; $s['lon'] = $g['lon']; $s['lugar'] = '';
+    }
     $obras = obras_de_soporte($s['uuid'], true);
     if (!$obras) continue;
     $sens = sensibilidad_soporte($s);

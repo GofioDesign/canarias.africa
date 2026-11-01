@@ -81,6 +81,15 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 
 Si la sesión ha caducado, la cola espera: se vuelve a entrar y se sube. Cada obra lleva un identificador creado en el móvil, así que una subida repetida no crea duplicados. Lo que el servidor rechaza (por ejemplo, unas coordenadas fuera de Canarias) queda marcado «Hay que revisarla» con el motivo, para editarlo y volver a guardarlo.
 
+## Páginas de error
+
+`publico/400.shtml`, `401`, `403`, `404` y `500` sustituyen a las de DirectAdmin: al subirlas a `public_html` se sobrescriben las suyas. Las genera `scripts/paginas-error.py` y son HTML estático sin recursos externos, para que se vean aunque falle PHP. Se usan en dos casos:
+
+- Cuando falla el propio servidor web, a través de `ErrorDocument` en `.htaccess`.
+- Cuando se abre en el navegador una dirección que no existe, fuera de `/api`, `/datos` y `/teselas`. En `/admin` añaden el motivo concreto.
+
+La API, los formularios y la app de campo piden por fetch y siguen recibiendo JSON.
+
 ## Espacio (1000 MB)
 
 Caché de teselas: hasta 300 MB, recortada por el cron. Fotos: unos 300 KB cada una tras reducirlas, así que caben unas 2.000 antes de tener que moverlas. Base de datos y copias: unos pocos MB.

@@ -1,6 +1,6 @@
 # CANARIAS.AFRICA
 
-CANARIAS — Colectivo de Arte Nunáneo. Arqueologías de Relaciones e Intervenciones Artísticas Socializadas. «El arte no nos pertenece. Su memoria la construimos entre todos». Un proyecto de Gofio Design.
+CANARIAS — Catálogo Atlántico de Núnea Arqueología · Registro de Intervenciones Artísticas Socializado. «El arte no nos pertenece. Su memoria la construimos entre todos». *Núnea* es una palabra nueva, eco de «nunáneo» (lo que no está en un solo lugar) y de «nueva», que nombra cualquier expresión artística y cultural que deja huella en el territorio. Un proyecto de Gofio Design.
 
 **Estado:** página de lanzamiento (declaración, propuestas votables y lista de correo). El prototipo de la web, con datos ficticios, está en `/prototipo/`.
 

@@ -77,7 +77,7 @@ function participa_alta(): never {
 
   $n = count($votos);
   $texto = ($alias !== '' ? "Hola, $alias:" : 'Hola:') . "\n\n"
-    . "Gracias por sumarte al Colectivo de Arte Nunáneo. Para confirmar tu correo" . ($n ? " y que cuenten tus $n votos" : '') . ", abre este enlace (vale 7 días):\n"
+    . "Gracias por sumarte a CANARIAS, Catálogo Atlántico de Núnea Arqueología. Para confirmar tu correo" . ($n ? " y que cuenten tus $n votos" : '') . ", abre este enlace (vale 7 días):\n"
     . config()['web'] . "/#confirmar?t=$t\n\n"
     . "Si vuelves a votar más adelante, en cada propuesta cuenta tu último voto.\n"
     . "Si no te has apuntado tú, ignora este correo: sin confirmar no te escribiremos más.\n";
@@ -141,16 +141,16 @@ function participa_baja(string $metodo): never {
   }
   $correo = htmlspecialchars($p['correo'], ENT_QUOTES);
   pagina_simple('Darte de baja', $p['estado'] === 'baja' ? '<p>Ya estás de baja. No te escribiremos más.</p>'
-    : "<p>¿Quieres dejar de recibir correos del Colectivo de Arte Nunáneo en <b>$correo</b>?</p>
+    : "<p>¿Quieres dejar de recibir correos de CANARIAS (Catálogo Atlántico de Núnea Arqueología) en <b>$correo</b>?</p>
        <form method=post><input type=hidden name=t value=$t><button>Darme de baja</button></form>");
 }
 
 function enviar_correo_lista(string $para, string $asunto, string $texto, string $baja): void {
   $c = config();
   $url = rtrim($c['api'], '/') . '/api/participa/baja?t=' . $baja;
-  $texto .= "\n--\nCANARIAS · Colectivo de Arte Nunáneo · " . $c['web'] . "\nPara no recibir más correos: $url\n";
+  $texto .= "\n--\nCANARIAS · Catálogo Atlántico de Núnea Arqueología · " . $c['web'] . "\nPara no recibir más correos: $url\n";
   @mail($para, '=?UTF-8?B?' . base64_encode($asunto) . '?=', $texto, implode("\r\n", [
-    "From: =?UTF-8?B?" . base64_encode('CANARIAS · Colectivo de Arte Nunáneo') . "?= <{$c['contacto']}>",
+    "From: =?UTF-8?B?" . base64_encode('CANARIAS · Catálogo Atlántico de Núnea Arqueología') . "?= <{$c['contacto']}>",
     'Content-Type: text/plain; charset=utf-8',
     "List-Unsubscribe: <$url>",
     'List-Unsubscribe-Post: List-Unsubscribe=One-Click',

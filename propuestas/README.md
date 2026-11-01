@@ -1,6 +1,6 @@
 # Cómo añadir una propuesta
 
-CANARIAS, Catálogo Atlántico de Núnea Arqueología, se construye con las ideas de quien participa. Cada propuesta es un archivo de texto en esta carpeta. Cuando se acepta, aparece sola en **canarias.africa**, en la sección «Propuestas», y se puede votar allí y aquí en GitHub.
+CANARIAS, Catálogo Atlántico de Núnea Arqueología · Registro de Intervenciones Artísticas Socializado, se construye con las ideas de quien participa. Cada propuesta es un archivo de texto en esta carpeta. Cuando se acepta, aparece sola en **canarias.africa**, en la sección «Propuestas», y se puede votar allí y aquí en GitHub.
 
 > «El arte no nos pertenece. Su memoria la construimos entre todos».
 

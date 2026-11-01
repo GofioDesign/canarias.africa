@@ -184,7 +184,8 @@ if ($sub === '/obra') {
       $agentes = array_map(fn($a) => ['visible' => false] + (array) $a, json_decode($ed['agentes'] ?? '[]', true) ?: []);
       $o = ['titulo' => $ed['titulo'] ?? $ed['nombre'] ?? '', 'descripcion' => $ed['descripcion'] ?? $ed['texto'] ?? '', 'municipio' => $ed['municipio'] ?? '',
         'lugar' => $ed['lugar'] ?? '', 'autoria' => $ed['autoria'] ?? '', 'lat' => $ed['lat'] ?? '', 'lon' => $ed['lon'] ?? '',
-        'tipo' => $ed['tipo'] ?? '', 'fecha_obra' => $ed['fecha_obra'] ?? '', 'fecha_precision' => $ed['fecha_precision'] ?? '',
+        'tipo' => $ed['tipo'] ?? '', 'disciplina' => isset(DISCIPLINAS[$ed['disciplina'] ?? '']) ? $ed['disciplina'] : '',
+        'permanencia' => isset(PERMANENCIAS[$ed['permanencia'] ?? '']) ? $ed['permanencia'] : '', 'fecha_obra' => $ed['fecha_obra'] ?? '', 'fecha_precision' => $ed['fecha_precision'] ?? '',
         'agentes' => json_encode($agentes, JSON_UNESCAPED_UNICODE), 'pagadores' => $ed['pagadores'] ?? '[]', 'relaciones' => $ed['relaciones'] ?? '[]',
         'fuentes' => $ed['fuentes'] ?? '', 'sensibilidad' => in_array($ed['sensibilidad'] ?? '', SENSIBILIDADES, true) ? $ed['sensibilidad'] : (!empty($ed['posible_sensible']) ? 'difusa' : 'abierta'),
         'isla' => isset(ISLAS_CODIGO[$ed['isla'] ?? '']) ? $ed['isla'] : '',
@@ -200,7 +201,7 @@ if ($sub === '/obra') {
     if ($e = $st->fetch()) {
       $ed = json_decode($e['datos'], true);
       $hechos = [];
-      foreach (['fecha_obra', 'fecha_precision', 'tipo', 'descripcion', 'lugar'] as $k) {
+      foreach (['fecha_obra', 'fecha_precision', 'disciplina', 'permanencia', 'tipo', 'descripcion', 'lugar'] as $k) {
         if (trim((string) ($ed[$k] ?? '')) !== '' && trim((string) ($o[$k] ?? '')) === '') { $o[$k] = trim($ed[$k]); $hechos[] = $k; }
       }
       foreach (['agentes', 'pagadores'] as $k) {
@@ -244,7 +245,8 @@ if ($sub === '/obra') {
     . '<p class=meta>Sensibilidad: <b>abierta</b> si está en un espacio público y no corre peligro; <b>difusa</b> si conviene no dar el punto exacto (terreno privado, obra frágil); <b>reservada</b> para patrimonio delicado, como los grabados aborígenes: no se publica el municipio y no lleva QR.</p>'
     . '</details>'
     . '<details class=seccion' . ($id ? ' open' : '') . '><summary>Qué es y cuándo se hizo</summary>'
-    . $campo('tipo', 'Tipo', $v('tipo'), 'text', 'Mural, escultura, grafiti, instalación, grabado, acción, obra web…')
+    . '<div class=par>' . $lista('disciplina', 'Disciplina', DISCIPLINAS, (string) $v('disciplina')) . $lista('permanencia', 'Permanencia', PERMANENCIAS, (string) $v('permanencia')) . '</div>'
+    . $campo('tipo', 'Tipo', $v('tipo'), 'text', 'Mural, grafiti, grabado, canción, disco, montaje teatral, coreografía, isa, romería, luchada, novela, película, obra web…')
     // El campo de autoría en texto libre es el antiguo: solo aparece si la obra ya lo tiene relleno.
     . ($v('autoria') !== '' ? $campo('autoria', 'Autoría (texto antiguo)', $v('autoria'), 'text', 'Pásalo a «Personas y colectivos» y vacía este campo.') : '')
     . '<div class=par>' . $campo('fecha_obra', 'Fecha de la obra', $v('fecha_obra'), 'text', 'Año, década o época.') . $lista('fecha_precision', 'Precisión de la fecha', PRECISIONES_FECHA, (string) $v('fecha_precision')) . '</div>'

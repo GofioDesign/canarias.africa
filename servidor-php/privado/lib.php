@@ -6,6 +6,7 @@ require __DIR__ . '/cuentas.php';
 require __DIR__ . '/etiquetas.php';
 require __DIR__ . '/vinculos.php';
 require __DIR__ . '/huellas.php';
+require __DIR__ . '/participa.php';
 
 function config(): array {
   static $c = null;

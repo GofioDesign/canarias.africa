@@ -167,3 +167,44 @@ CREATE TABLE IF NOT EXISTS huellas_vistas (
   hash   TEXT PRIMARY KEY,
   dia    TEXT NOT NULL
 );
+
+-- Lista de correo de la página de lanzamiento («Quiero participar») y votos de las propuestas.
+-- Lo enviado espera en «pendiente» hasta que la persona abre el enlace de confirmación (solo se guarda su hash).
+-- «baja» es el token de los enlaces para darse de baja: solo sirve para eso.
+CREATE TABLE IF NOT EXISTS participantes (
+  id               INTEGER PRIMARY KEY,
+  correo           TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  alias            TEXT NOT NULL DEFAULT '',
+  isla             TEXT NOT NULL DEFAULT '',
+  perfil           TEXT NOT NULL DEFAULT '',
+  estado           TEXT NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente','confirmada','baja')),
+  pendiente        TEXT,
+  confirmar_hash   TEXT UNIQUE,
+  confirmar_vence  TEXT,
+  baja             TEXT NOT NULL UNIQUE,
+  creado           TEXT NOT NULL DEFAULT (datetime('now')),
+  confirmado       TEXT,
+  actualizado      TEXT
+);
+
+CREATE TABLE IF NOT EXISTS participa_votos (
+  participante  INTEGER NOT NULL REFERENCES participantes(id),
+  propuesta     TEXT NOT NULL,
+  voto          TEXT NOT NULL CHECK (voto IN ('prioritaria','interesante','no')),
+  PRIMARY KEY (participante, propuesta)
+);
+
+CREATE TABLE IF NOT EXISTS participa_ideas (
+  id            INTEGER PRIMARY KEY,
+  participante  INTEGER NOT NULL REFERENCES participantes(id),
+  texto         TEXT NOT NULL,
+  estado        TEXT NOT NULL DEFAULT 'nueva' CHECK (estado IN ('nueva','pasada','descartada')),
+  creado        TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Registro de envíos del formulario para limitar por IP y por correo. El cron borra las filas de más de 30 días.
+CREATE TABLE IF NOT EXISTS participa_envios (
+  correo   TEXT NOT NULL,
+  ip_hash  TEXT,
+  creado   TEXT NOT NULL DEFAULT (datetime('now'))
+);

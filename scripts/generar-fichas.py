@@ -2,7 +2,7 @@
 
 - web/obra/<uuid>/index.html: ficha estática de cada obra (la que captura la Wayback Machine), con sus
   estratos en archive.org y su item de Internet Archive. Es HTML sin JavaScript, para que la captura
-  se lea igual dentro de veinte años; enlaza a la ficha completa de la web (/#obra-<uuid>).
+  se lea igual dentro de veinte años; enlaza a la ficha completa de la web (/prototipo/#obra-<uuid>).
 - web/estratos/index.html: todas las capturas, de la más reciente a la más antigua.
 - web/datos/archivo.json: el mismo rastro para la web (sección «Estratos en archive.org» de cada ficha).
 - web/datos/historial.json: identificador, versión, fecha y árbol de modificaciones de cada obra,
@@ -582,7 +582,7 @@ def main():
 <p class="idficha">{idlinea}</p>
 <p>{e(p.get('descripcion') or p.get('description'))}</p>
 <dl>{dl}</dl>
-<p><a href="/#obra-{e(uuid)}">Ficha completa, observaciones y mapa</a></p>
+<p><a href="/prototipo/#obra-{e(uuid)}">Ficha completa, observaciones y mapa</a></p>
 {mundo}
 {linea}
 {lineas}

@@ -1,16 +1,17 @@
 # CANARIAS.AFRICA
 
-CANARIAS — Centro de Arte Nunáneo. Arqueologías de Relaciones e Intervenciones Artísticas Socializadas. «El arte no nos pertenece. Su memoria la construimos entre todos». Un proyecto de Gofio Design.
+CANARIAS — Catálogo Atlántico de Núnea Arqueología · Registro de Intervenciones Artísticas Socializado. «El arte no nos pertenece. Su memoria la construimos entre todos». *Núnea* es una palabra nueva, eco de «nunáneo» (lo que no está en un solo lugar) y de «nueva», que nombra cualquier expresión artística y cultural que deja huella en el territorio. Un proyecto de Gofio Design.
 
-**Estado:** prototipo con datos ficticios. Todavía no está publicado.
+**Estado:** página de lanzamiento (declaración, propuestas votables y lista de correo). El prototipo de la web, con datos ficticios, está en `/prototipo/`.
 
 ## Estructura
 
 ```
-web/          La web (GitHub Pages): HTML único con rutas por hash, convocatorias.json y sellos de marca
+web/          La web (GitHub Pages): página de lanzamiento en index.html, prototipo en prototipo/, convocatorias.json y sellos
+propuestas/   Propuestas del colectivo, una por archivo .md; se votan en la web y en su issue de GitHub (ver propuestas/README.md)
 servidor-php/ api.canarias.africa en el hosting PHP: formularios, QR, moderación, caché de teselas, copia de uMap
 servidor/     Plan B para un VPS propio (nginx + PocketBase), anterior al sistema de etiquetas del 28-10-2026
-scripts/      Comprobación del catálogo, archivo en archive.org y fichas estáticas con sus estratos
+scripts/      Comprobación del catálogo (ubicaciones sensibles) y de las propuestas, archivo en archive.org y fichas estáticas con sus estratos
 datos/        GeoJSON de ejemplo para uMap y archivo/registro.json (el rastro en archive.org)
 docs/         Infraestructura, mapas (OSM y uMap) y formato de convocatorias.json
 ```
@@ -20,6 +21,7 @@ docs/         Infraestructura, mapas (OSM y uMap) y formato de convocatorias.jso
 ## Verlo en local
 
 ```bash
+python3 scripts/propuestas.py   # genera web/propuestas.json (sin GITHUB_TOKEN no toca GitHub)
 cd web && python3 -m http.server 8000
 # http://localhost:8000
 ```

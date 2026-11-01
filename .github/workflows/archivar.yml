@@ -1,0 +1,61 @@
+# Inscribe en archive.org cada cambio y cada obra, justo después de cada publicación de la web,
+# y una vez al día (observaciones aprobadas, estrato semanal, capturas pendientes).
+# Secretos opcionales (Settings → Secrets and variables → Actions):
+#   IA_ACCESS_KEY, IA_SECRET_KEY: claves S3 de https://archive.org/account/s3.php
+#   Sin ellos se usa Save Page Now anónimo y no se crean items de Internet Archive.
+name: Archivar en archive.org
+
+on:
+  workflow_run:
+    workflows: ["Publicar la web"]
+    types: [completed]
+    branches: [main]
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: archivo
+  cancel-in-progress: false
+
+jobs:
+  archivar:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Copiar el catálogo del servidor y comprobarlo antes de archivar nada
+        run: |
+          python3 scripts/catalogo-servidor.py
+          python3 scripts/comprobar-catalogo.py
+      - name: Capturas y capas
+        env:
+          IA_ACCESS_KEY: ${{ secrets.IA_ACCESS_KEY }}
+          IA_SECRET_KEY: ${{ secrets.IA_SECRET_KEY }}
+        run: python3 scripts/archivar.py
+      - name: Guardar el rastro y volver a publicar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- datos/archivo; then
+            echo "Sin estratos nuevos."
+            exit 0
+          fi
+          git config user.name "canarias.africa archivo"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datos/archivo
+          git commit -m "Archivo: nuevos estratos en archive.org"
+          git push origin HEAD:main
+          # Los push con GITHUB_TOKEN no lanzan otras acciones: se pide la publicación expresamente.
+          # El commit solo toca datos/archivo/, así que la siguiente pasada no lo vuelve a archivar.
+          gh workflow run publicar-web.yml --ref main

@@ -19,8 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # el árbol de modificaciones de cada ficha sale del historial de git
       - name: Comprobar que el catálogo no publica ubicaciones sensibles
         run: python3 scripts/comprobar-catalogo.py
+      - name: Comprobar que las fichas y los estratos se generan
+        run: python3 scripts/generar-fichas.py
       - name: Comprobar las propuestas
         run: python3 scripts/propuestas.py --comprobar
 
@@ -41,11 +45,15 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # el árbol de modificaciones de cada ficha sale del historial de git
       - uses: actions/configure-pages@v5
       - name: Copiar el catálogo del servidor (obras, QR, rutas, artistas) a canarias.africa/datos/
         run: |
           python3 scripts/catalogo-servidor.py
           python3 scripts/comprobar-catalogo.py
+      - name: Fichas estáticas y estratos de archive.org
+        run: python3 scripts/generar-fichas.py
       - name: Generar propuestas.json y abrir el debate de las propuestas nuevas
         run: python3 scripts/propuestas.py
         env:

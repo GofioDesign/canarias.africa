@@ -132,7 +132,7 @@ textarea{min-height:110px;width:100%;resize:vertical}
 .tt-foto img{width:180px;height:120px;object-fit:cover;border-radius:3px;background:#ddd}
 .ficha-head{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:28px;align-items:start}
 .idline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-.idbadge{font-family:var(--f-mono);font-weight:600;font-size:.9rem;background:var(--ink);color:var(--bg);padding:3px 8px;border-radius:3px}
+.idbadge{font-family:var(--f-mono);font-weight:600;overflow-wrap:anywhere;font-size:.9rem;background:var(--ink);color:var(--bg);padding:3px 8px;border-radius:3px}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
 .dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 16px;margin:0;font-size:.95rem}
 .dl dt{font-family:var(--f-mono);font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding-top:3px}
@@ -846,6 +846,9 @@ path.isle-fb{fill:var(--land);fill-opacity:1;stroke:var(--land-edge);stroke-widt
 path.mk{stroke:var(--surface);stroke-width:2;fill-opacity:1}
 path.mk.dim{opacity:.25}
 path.mk-ring{fill:none;stroke:var(--lichen);stroke-width:3}
+.glifo-mapa{--fg:var(--ink);--verde:var(--n-obra);color:var(--ink);opacity:.7;pointer-events:none}.glifo-mapa.foco{opacity:.95}
+.glifo-mapa svg{width:100%;height:100%;display:block}
+.glifo-mapa svg>circle:last-child{display:none} /* el centro ya lo marca el punto de la obra */
 path.mk-zona{fill-opacity:.22;stroke-width:1.5;stroke-dasharray:4 3}
 path.mk-zona.mk-plenitud{stroke:var(--ph-plen)} path.mk-zona.mk-desgaste{stroke:var(--ph-desg)}
 .sens{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ph-tran);border:1px dashed currentColor;padding:1px 6px;border-radius:3px}
@@ -1403,6 +1406,8 @@ const RELT = {
  cura:{n:"cura",de:"agente",a:"ruta",p:"rol: curaduría, cocuraduría"},
  recorre:{n:"recorre",de:"salida",a:"ruta",p:"fecha"},
  dialoga:{n:"dialoga con",de:"obra",a:"obra",p:"modo: continúa, responde a, se superpone a"},
+ muestra_de:{n:"está ligada a la línea temporal de",de:"obra",a:"obra",p:"escala (persona, familia, amistades, barrio, municipio, mancomunidad, isla, provincia, Canarias, Macaronesia, estado, continente, global), fecha. Un evento global puede dar lugar a muchas muestras locales; una muestra puede ligarse a varias líneas"},
+ vinculo:{n:"se vincula con",de:"obra",a:"obra",p:"tipo abierto (responde a, inspirada en, cita, continúa…), nota"},
  ambito:{n:"tiene como ámbito",de:"convocatoria",a:"municipio",p:"condiciones"}
 };
 const FUTURAS = [
@@ -1586,6 +1591,178 @@ async function cargarObrasPublicas(){
     route();
   }catch(e){ console.warn("Catálogo no disponible; se muestran los datos de ejemplo",e); }
 }
+/* Arqueología de la red: cada cambio y cada obra se inscriben en archive.org (scripts/archivar.py).
+   El rastro se publica en /datos/archivo.json; aquí se muestran los estratos de cada obra. */
+let ARCHIVO=null, HIST=null, TRAY=null; // HIST: identificador, versión, fecha y árbol de modificaciones (scripts/generar-fichas.py)
+async function cargarArchivo(){
+  const leer=async u=>{ try{ const r=await fetch(u); return r.ok?await r.json():null; }catch(e){ return null; } };
+  [ARCHIVO,HIST,TRAY]=await Promise.all([leer("/datos/archivo.json"),leer("/datos/historial.json"),leer("/datos/trayectorias.json")]);
+  if(ARCHIVO||HIST||TRAY) route();
+}
+const histDe=o=>HIST&&HIST[o.id.toLowerCase()];
+const totalHuellas=h=>["visitas","escaneos","verificaciones","observaciones"].reduce((a,k)=>a+(+((h&&h.huellas)||{})[k]||0),0);
+function idFicha(o){
+  const h=histDe(o);
+  return `<span class="idbadge" title="Identificador permanente">${esc(o.id)}</span>`+
+    (h&&h.escala?`<span class="mono">${esc(h.escala)}${h.espacio&&h.espacio!=="lugar"?" · "+esc(ESPACIO_N[h.espacio]):""}</span>`:"")+
+    (h&&h.version&&h.fecha?`<span class="mono">v${h.version} · ${esc(h.fecha.slice(0,10))}</span><a class="mono" href="/obra/${esc(o.id.toLowerCase())}/#arbol">árbol de modificaciones</a>`:"");
+}
+/* Escalas, espacio y líneas temporales: una expresión siempre tiene tiempo, no siempre espacio (puede estar en la red o
+   en ninguno), y su línea temporal puede ligarse a otras de cualquier escala territorial, del barrio a lo global ("muestra_de").
+   Un evento global puede dar lugar a x muestras locales. El resto de vínculos son tipados y abiertos. */
+const ESCALA_N={persona:"persona",familia:"familia",amistades:"amistades",barrio:"barrio",municipio:"municipio",mancomunidad:"mancomunidad",isla:"isla",provincia:"provincia",canarias:"Canarias",macaronesia:"Macaronesia",estado:"estado",continente:"continente",global:"global",glocal:"glocal"}; // = datos/escalas.json
+const ESPACIO_N={lugar:"en un lugar",red:"en la red",sin_espacio:"sin espacio"};
+const VINC_N={serie:["forma serie con","forma serie con"],responde_a:["responde a","respuestas"],inspirada_en:["inspirada en","ha inspirado"],cita:["cita","citada por"],
+  continua:["continúa","continuada por"],se_superpone_a:["se superpone a","debajo"],dialoga:["dialoga con","dialoga con"]};
+function genealogiaObra(o){
+  const h=histDe(o), id=o.id.toLowerCase();
+  /* La trayectoria de cada agente (artistas, colectivos y colaboradores, que también forman parte de la obra) es otra línea temporal: une esta obra con otros lugares y tiempos */
+  const tray=Object.entries(TRAY||{}).map(([i,a])=>{ const k=a.obras.findIndex(x=>x.obra===id); return k<0?null:{i,a,k}; }).filter(Boolean);
+  if(!h||(!(h.arriba||[]).length&&!(h.abajo||[]).length&&!(h.vinculos||[]).length&&!tray.length&&!h.glifo&&!h.linea))
+    return SES&&SES.token&&!DEMO?`<section class="stack"><h2>Vínculos</h2>${misVinculosHueco(o)}</section>`:"";
+  /* Glifo del mundo de vínculos (lo genera scripts/generar-fichas.py): públicos en continuo; los de personas que no son
+     públicos, en discontinuo y a poco contraste, anónimos. Solo los ven con nombre quienes forman parte de ellos. */
+  const mundo=h.glifo?`<figure style="--fg:var(--ink);--verde:var(--n-obra);margin:6px 0 14px;max-width:240px">${h.glifo}
+    <figcaption class="muted" style="font-size:.85rem">Continuo: vínculos públicos. Discontinuo: ${h.vinculos_privados||0} vínculos entre personas que no son públicos.${totalHuellas(h)?` Polvo: ${totalHuellas(h)} huellas anónimas de espectadores con sesión.`:""}</figcaption></figure>`:"";
+  /* Línea de tiempo: el glifo en su fecha, las obras ligadas, versiones y estratos, el calor por mes (visitas sin sesión,
+     agregadas) y el polvo de huellas con sesión. La dibuja también scripts/generar-fichas.py. */
+  const linea=h.linea?`<figure style="--fg:var(--ink);--verde:var(--n-obra);margin:4px 0 14px"><div style="color:var(--ink);overflow-x:auto">${h.linea}</div>
+    <figcaption class="muted" style="font-size:.85rem">Línea de tiempo. Arriba, el glifo en su fecha; en verde, obras ligadas. Marcas sobre el eje: versiones; cuadrados: estratos en archive.org. Naranja: calor por mes de visitas sin sesión, agregadas y anónimas. Polvo: huellas con sesión.</figcaption></figure>`:"";
+  const nom=u=>{ const x=byId(u), y=HIST[u]||{}; return `<a href="/obra/${esc(u)}/">${esc(x?x.t:(y.nombre||corto(u)))}</a> <span class="muted">(${[ESCALA_N[y.escala]||y.escala,ESPACIO_N[y.espacio],String((y.tiempo||{}).inicio||"").slice(0,10)].filter(Boolean).map(esc).join(" · ")})</span>`; };
+  const vn=v=>{ const n=VINC_N[v.tipo]; return n?n[v.sentido==="entra"?1:0]:v.tipo.replace(/_/g," "); };
+  return `<section class="stack">
+    <h2>Líneas temporales, trayectorias y vínculos</h2>
+    ${mundo}
+    ${linea}
+    ${misVinculosHueco(o)}
+    <p class="muted" style="font-size:.9rem">Escala ${esc(ESCALA_N[h.escala]||h.escala)} · ${esc(ESPACIO_N[h.espacio]||"")}. <a href="/obra/${esc(o.id.toLowerCase())}/#lineas">Ver el árbol completo</a></p>
+    ${(h.arriba||[]).length?`<p>Ligada a la línea temporal de: ${h.arriba.map(nom).join(", ")}</p>`:""}
+    ${(h.abajo||[]).length?`<p class="muted" style="font-size:.95rem">Ha dado lugar a ${h.abajo.length} muestra(s):</p><ul>${h.abajo.map(u=>`<li>${nom(u)}</li>`).join("")}</ul>`:""}
+    ${tray.map(({i,a,k})=>`<p><a href="/agente/${esc(i)}/">${esc(a.nombre)}</a> <span class="muted">· ${esc(a.obras[k].rol||(a.obras[k].clase==="colaboracion"?"colaboración":"autoría"))} · obra ${k+1} de ${a.obras.length}</span>${k>0?`<br><span class="muted">anterior:</span> ${nom(a.obras[k-1].obra)}`:""}${k+1<a.obras.length?`<br><span class="muted">siguiente:</span> ${nom(a.obras[k+1].obra)}`:""}</p>`).join("")}
+    ${(h.vinculos||[]).length?`<ul>${h.vinculos.map(v=>`<li>${esc(vn(v))}: ${nom(v.a)}${v.nota?` <span class="muted">— ${esc(v.nota)}</span>`:""}</li>`).join("")}</ul>`:""}
+  </section>`;
+}
+function estratosObra(o){
+  if(!ARCHIVO) return "";
+  const id=o.id.toLowerCase(), caps=(ARCHIVO.capturas||[]).filter(c=>c.obra===id&&c.wayback).sort((a,b)=>b.fecha<a.fecha?-1:1), it=(ARCHIVO.obras||{})[id]||{};
+  return `<section class="stack">
+    <h2>Estratos en archive.org <span class="count">(${caps.length})</span></h2>
+    <p class="muted" style="font-size:.95rem">Cada versión de esta ficha se inscribe en la Wayback Machine a medida que cambia. <a href="/estratos/">Todos los estratos</a></p>
+    ${it.item?`<p>Capas en Internet Archive: <a href="${esc(it.item)}" target="_blank" rel="noopener">${esc(it.item.replace("https://",""))}</a></p>`:""}
+    ${caps.length?`<ul>${caps.map(c=>`<li><span class="mono">${esc(c.fecha.slice(0,10))}</span> · <a href="${esc(c.wayback)}" target="_blank" rel="noopener">${esc(c.motivo)}</a>${c.pantalla?` · <a href="${esc(c.pantalla)}" target="_blank" rel="noopener">captura de pantalla</a>`:""}</li>`).join("")}</ul>`
+      :`<p class="muted">Aún sin estratos: se depositará el primero tras la próxima publicación.</p>`}
+  </section>`;
+}
+/* Quien mira la obra también se convierte en su trazo, pero solo se traza con la sesión iniciada; sin sesión, la visita
+   solo suma al mapa de calor agregado y anónimo. El servidor guarda recuentos por día, nunca quién.
+   Obras de internet o sin espacio: cuentan una vez por persona y día al abrir la ficha (si el navegador no pide no ser rastreado).
+   Obras con representación física: solo cuentan si el GPS confirma que se está junto a la obra, y solo cuando la persona
+   pulsa «Estoy aquí». Las coordenadas se comparan en el servidor y no se guardan. */
+const HUELLAS=new Set();
+const obraFisica=o=>{ const h=histDe(o); return h&&h.espacio?h.espacio==="lugar":o.lat!=null; };
+function enviarHuella(o,cuerpo){
+  const id=encodeURIComponent(o.id.toLowerCase());
+  return SES&&SES.token?api("/api/obras/"+id+"/huella",{metodo:"POST",json:cuerpo})
+    :api("/api/publico/obras/"+id+"/visita",{metodo:"POST",json:cuerpo});
+}
+function dejarHuella(o){
+  if(DEMO||!o||HUELLAS.has(o.id)||obraFisica(o)) return; HUELLAS.add(o.id);
+  if(navigator.doNotTrack==="1"||navigator.globalPrivacyControl) return;
+  enviarHuella(o,{});
+}
+const MOTIVO_GPS={sin_gps:"No se ha podido leer la ubicación.",gps_impreciso:"La ubicación es poco precisa. Prueba al aire libre o activa el GPS del móvil.",
+  lejos:"Parece que no estás junto a la obra: la visita solo cuenta en el sitio.",sin_sitio:"Esta obra aún no tiene un punto con el que comparar tu ubicación.",
+  ya_hoy:"Hoy ya habías dejado tu huella en esta obra.",no_existe:"Esta obra aún no está en el catálogo del servidor."};
+let VIA_QR=null; // obra a la que se llegó escaneando su etiqueta: la huella cuenta como escaneo
+function presenciaHueco(o){
+  if(DEMO||!obraFisica(o)||sensOf(o)==="reservada"&&!VIA_QR) return "";
+  return `<section class="stack" id="presencia"><h2>¿Estás junto a la obra?</h2>
+    <p class="muted" style="font-size:.92rem">${SES&&SES.token?"Con tu sesión, tu visita queda como trazo en su glifo":"Sin sesión, tu visita suma, sin identificarte, a su mapa de calor"}. En las obras físicas solo cuenta en el sitio: el GPS lo confirma y tu ubicación no se guarda.</p>
+    <p><button type="button" class="btn" data-presencia="${esc(o.id)}">Estoy aquí</button> <span class="muted" id="presencia-msg" role="status"></span></p></section>`;
+}
+document.addEventListener("click",ev=>{
+  const b=ev.target.closest&&ev.target.closest("[data-presencia]"); if(!b) return;
+  const o=byId(b.dataset.presencia), msg=document.getElementById("presencia-msg"); if(!o) return;
+  if(!navigator.geolocation){ msg.textContent=MOTIVO_GPS.sin_gps; return; }
+  b.disabled=true; msg.textContent="Comprobando la ubicación…";
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const r=await enviarHuella(o,{lat:pos.coords.latitude,lon:pos.coords.longitude,precision:pos.coords.accuracy,qr:VIA_QR===o.id||undefined});
+    b.disabled=false;
+    msg.textContent=!r.ok?errDe(r):r.j.contada?(SES&&SES.token?"Hecho: tu visita ya es trazo de la obra.":"Hecho: tu visita suma a su mapa de calor."):(MOTIVO_GPS[r.j.motivo]||"No ha contado.");
+  },()=>{ b.disabled=false; msg.textContent="Sin permiso de ubicación no se puede confirmar la visita."; },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+});
+/* Mapa de calor: visitas sin sesión de los últimos 90 días, agregadas (solo obras con 5 o más). Nunca las reservadas. */
+let CALOR=null;
+async function cargarCalor(){
+  if(DEMO) return;
+  try{ const r=await fetch(API_BASE+"/api/publico/calor"); if(!r.ok) return; CALOR=(await r.json()).obras||{}; route(); }catch(e){}
+}
+function capaCalor(m,obras){
+  if(!CALOR) return;
+  const max=Math.max(1,...Object.values(CALOR));
+  obras.filter(o=>sensOf(o)!=="reservada"&&CALOR[o.id.toLowerCase()]).forEach(o=>{
+    const k=Math.sqrt(CALOR[o.id.toLowerCase()]/max);
+    L.circle([o.lat,o.lon],{radius:700+3300*k,stroke:false,fill:true,fillColor:"#e8590c",fillOpacity:.18+.32*k,interactive:false,className:"calor"}).addTo(m);
+  });
+}
+/* El glifo de cada obra también en el mapa, sobre su calor y alrededor de su punto: en la ficha, grande; en los demás mapas,
+   pequeño y solo al acercarse, para no tapar la isla. Nunca en las reservadas (su sitio no se publica). */
+function capaGlifos(m,obras,foco){
+  if(!HIST) return;
+  if(!m.getPane("glifos")){ const p=m.createPane("glifos"); p.style.zIndex=450; p.style.pointerEvents="none"; }
+  const capa=L.layerGroup(), grande=L.layerGroup();
+  obras.filter(o=>sensOf(o)!=="reservada").forEach(o=>{
+    const h=HIST[o.id.toLowerCase()]; if(!h||!h.glifo) return;
+    const big=foco===o.id, t=big?132:56;
+    L.marker([o.lat,o.lon],{pane:"glifos",interactive:false,keyboard:false,
+      icon:L.divIcon({className:"glifo-mapa"+(big?" foco":""),html:h.glifo,iconSize:[t,t],iconAnchor:[t/2,t/2]})}).addTo(big?grande:capa);
+  });
+  grande.addTo(m);
+  const ver=()=>{ if(foco||m.getZoom()>=12) capa.addTo(m); else capa.remove(); };
+  m.on("zoomend",ver); m.whenReady(ver);
+}
+/* Tus vínculos con esta obra (api.canarias.africa): solo los ves tú y las otras partes. Públicos solo si todas lo consienten. */
+const TIPOS_VINC_OBRA={colaboracion:"Colaboré en ella",participacion:"Participé en ella",recuerdo:"Forma parte de mi memoria"};
+function misVinculosHueco(o){
+  if(!SES||!SES.token||DEMO) return "";
+  setTimeout(()=>cargarMisVinculos(o.id.toLowerCase()),0);
+  return `<div id="misvinc" class="stack" style="margin-top:12px"><p class="muted">Cargando tus vínculos…</p></div>`;
+}
+async function cargarMisVinculos(obra){
+  const el=document.getElementById("misvinc"); if(!el) return;
+  const [r,m]=await Promise.all([api("/api/vinculos/obra/"+encodeURIComponent(obra)),api("/api/vinculos/mios")]);
+  if(!r.ok){ el.innerHTML=`<p class="muted">${esc(errDe(r))}</p>`; return; }
+  const vs=r.j.vinculos||[], pend=(m.ok&&m.j.por_responder)||[];
+  el.innerHTML=`<h3>Tus vínculos aquí</h3>
+    <p class="muted" style="font-size:.9rem">Solo los ves tú y las demás personas de cada vínculo. En el glifo público aparecen en discontinuo y sin nombre, salvo que todas las partes decidan publicarlos.</p>
+    ${vs.length?`<ul>${vs.map(v=>`<li><b>${esc(TIPOS_VINC_OBRA[v.tipo]||v.tipo.replace(/_/g," "))}</b>${v.rol?` · ${esc(v.rol)}`:""}${v.con?` · con ${esc(v.con)}`:""}
+      <span class="muted">· ${v.publico?"público":"privado"}</span>
+      <br><button type="button" class="btn alt" style="margin:4px 6px 0 0;padding:6px 10px;font-size:.85rem" data-vinc="${v.id}" data-acc="publicar" data-pub="${v.mi_consentimiento?0:1}">${v.mi_consentimiento?"Retirar mi permiso para publicarlo":"Doy permiso para publicarlo"}</button>
+      <button type="button" class="btn alt" style="margin:4px 6px 0 0;padding:6px 10px;font-size:.85rem" data-vinc="${v.id}" data-acc="retirar">Retirar el vínculo</button></li>`).join("")}</ul>`
+      :`<p class="muted">No tienes vínculos con esta obra.</p>`}
+    ${pend.length?`<h3>Te proponen un vínculo</h3><ul>${pend.map(v=>`<li><b>${esc(v.tipo.replace(/_/g," "))}</b> con ${esc(v.con)}${v.nota?` <span class="muted">— ${esc(v.nota)}</span>`:""}
+      <br><button type="button" class="btn" style="margin:4px 6px 0 0;padding:6px 10px;font-size:.85rem" data-vinc="${v.id}" data-acc="aceptar">Aceptar</button>
+      <button type="button" class="btn alt" style="margin:4px 6px 0 0;padding:6px 10px;font-size:.85rem" data-vinc="${v.id}" data-acc="rechazar">Rechazar</button></li>`).join("")}</ul>`:""}
+    <form id="vincf" class="obsf" data-obra="${esc(obra)}" style="margin-top:8px">
+      <label>Añadir mi vínculo con esta obra<select name="tipo">${Object.entries(TIPOS_VINC_OBRA).map(([k,n])=>`<option value="${k}">${n}</option>`).join("")}</select></label>
+      <label>Rol (opcional)<input name="rol" maxlength="60" placeholder="registro, mapeo, foto, cuidado…"></label>
+      <button class="btn" type="submit">Añadir</button>
+    </form>`;
+}
+document.addEventListener("click",async ev=>{
+  const b=ev.target.closest&&ev.target.closest("[data-vinc]"); if(!b) return;
+  const acc=b.dataset.acc; if(acc==="retirar"&&!confirm("¿Retirar este vínculo? Dejará de contar también en el glifo público.")) return;
+  b.disabled=true;
+  const r=await api(`/api/vinculos/${b.dataset.vinc}/${acc}`,{metodo:"POST",json:acc==="publicar"?{publico:b.dataset.pub==="1"}:{}});
+  if(!r.ok) alert(errDe(r));
+  const f=document.getElementById("vincf"); if(f) cargarMisVinculos(f.dataset.obra);
+});
+document.addEventListener("submit",async ev=>{
+  const f=ev.target; if(!f||f.id!=="vincf") return; ev.preventDefault();
+  const d=new FormData(f);
+  const r=await api("/api/vinculos",{metodo:"POST",json:{obra:f.dataset.obra,tipo:d.get("tipo"),rol:d.get("rol")||undefined}});
+  if(!r.ok) alert(errDe(r)); cargarMisVinculos(f.dataset.obra);
+});
 /* Ficha: descripción y relaciones vienen del catálogo estático; las observaciones aprobadas, de la API */
 async function cargarFicha(o){
   if(DEMO||o._ficha) return false;
@@ -1637,6 +1814,8 @@ function initMaps(){
       islas.forEach(i=>L.polygon(OUT[i].poly.map(([lon,lat])=>[lat,lon]),{className:"isle-fb",interactive:false}).addTo(m).bringToBack());
       Object.values(MUNIS).filter(x=>islas.includes(x.isla)).forEach(x=>L.marker([x.lat,x.lon],{interactive:false,icon:L.divIcon({className:"mlab",html:x.n,iconSize:null,iconAnchor:[-10,22]})}).addTo(m)); });
     if(c.opt.route){ const pts=c.opt.route.map(byId).filter(o=>MUNIS[o.m].isla===c.isla).map(o=>[o.lat,o.lon]); if(pts.length>1) L.polyline(pts,{className:"route-line",interactive:false}).addTo(m); }
+    capaCalor(m,c.obras.filter(o=>islas.includes(MUNIS[o.m].isla)&&enMapa(o)));
+    capaGlifos(m,c.obras.filter(o=>islas.includes(MUNIS[o.m].isla)&&enMapa(o)),c.opt.focus);
     c.obras.filter(o=>islas.includes(MUNIS[o.m].isla)&&enMapa(o)).forEach(o=>{
       if(sensOf(o)==="difusa"){ L.circle([o.lat,o.lon],{radius:1100,className:`mk-zona mk-${o.fase}`}).addTo(m).bindTooltip(`${esc(o.t)} · zona aproximada`).on("click",()=>{ location.hash=slug(o.id); }); return; }
       const on=!c.opt.only||c.opt.only.includes(o.id), big=c.opt.focus===o.id;
@@ -1965,7 +2144,7 @@ function vObra(o){
   return `<p class="eyebrow"><a href="#archivo">← Archivo</a></p>
   <section class="ficha-head" style="margin-top:14px">
     <div class="stack">
-      <div class="idline"><span class="idbadge" title="${o.id}">${corto(o.id)}</span>${chip(o.fase)}${DEMO?`<span class="fake">datos ficticios</span>`:""}</div>
+      <div class="idline">${idFicha(o)}${chip(o.fase)}${DEMO?`<span class="fake">datos ficticios</span>`:""}</div>
       <h1>${esc(o.t)}</h1>
       <p class="lede muted">${esc(o.tipo)} · ${o.lugar&&o.lugar!==M.n?esc(o.lugar)+" · ":""}${M.n}${o.m.startsWith("IS-")?"":`, ${ISLAS[M.isla]}`}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}${o.fichaUrl?`<p><a href="${esc(o.fichaUrl)}" target="_blank" rel="noopener">Ficha completa ↗</a></p>`:""}
       ${o.foto?`<figure class="foto-obra"><img src="${esc(o.foto)}" alt="Foto actual de ${esc(o.t)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest('figure').remove()">${o.fotoCredito?`<figcaption>${esc(o.fotoCredito)}</figcaption>`:""}</figure>`:""}
@@ -2012,9 +2191,13 @@ function vObra(o){
     <div class="stack"><h2>Vecindario</h2>${ego(o.id)}<p class="muted" style="font-size:.9rem"><a href="#red">Ver la red completa</a></p></div>
   </section>
 
+  ${presenciaHueco(o)}
+  ${genealogiaObra(o)}
+  ${estratosObra(o)}
+
   <section class="stack">
     <h3>Cómo citar esta ficha</h3>
-    <div class="cite">CANARIAS.AFRICA. «${esc(o.t)}». Ficha ${o.id}, versión ${o.fen.length+o.obs.length}. canarias.africa/#${slug(o.id)}. Consultado el ${fd(HOY)}. Para imágenes: «Título», Autoría, año. Foto: nombre o alias (fecha) / CANARIAS.AFRICA.</div>
+    <div class="cite">CANARIAS.AFRICA. «${esc(o.t)}». Ficha ${o.id}, versión ${histDe(o)?histDe(o).version:o.fen.length+o.obs.length}${histDe(o)?` (${histDe(o).fecha.slice(0,10)})`:""}. canarias.africa/#${slug(o.id)}. Consultado el ${fd(HOY)}. Para imágenes: «Título», Autoría, año. Foto: nombre o alias (fecha) / CANARIAS.AFRICA.</div>
   </section>`;
 }
 
@@ -2032,7 +2215,8 @@ function cabObra(o,eyebrow){ return `<p class="eyebrow"><a href="#${slug(o.id)}"
 
 /* Observación del estado: solo al escanear el QR junto a la obra */
 function vQR(o,cod,estado,web){
-  return cabObra(o,"Has escaneado el QR de esta obra")+`
+  VIA_QR=o.id;
+  return cabObra(o,"Has escaneado el QR de esta obra")+presenciaHueco(o)+`
   <div id="okbox" style="margin-top:20px"></div>
   <form class="obsf" id="obsf" data-modo="qr" data-obra="${o.id}" novalidate style="margin-top:20px">
     <input type="hidden" name="obra" value="${o.id}"><input type="hidden" name="qr_codigo" value="${esc(cod)}">
@@ -3142,7 +3326,7 @@ function route(){
   else if(h.startsWith("/entrar")){ sec="colabora"; html=`<p class="muted">Entrando…</p>`; entrarConToken(new URLSearchParams(h.split("?")[1]||"").get("t")||""); }
   else if(h.startsWith("/observar/")){ const [ruta,qs]=h.split("?"), o=byId(decodeURIComponent(ruta.slice(10))), cod=new URLSearchParams(qs||"").get("qr"); sec="archivo"; html=o&&qrValido(o,cod)?vQR(o,cod):`<h1>Este QR no es válido</h1><p class="muted">Puede que el código se haya sustituido o que la obra no tenga QR activo. <a href="#archivo">Volver al archivo</a></p>`; }
   else if(h.startsWith("contexto-")){ const o=OBRAS.find(x=>"contexto-"+x.id.toLowerCase()===h); sec="archivo"; html=o?vContexto(o):`<h1>Ficha no encontrada</h1>`; }
-  else if(h.startsWith("obra-")){ const o=OBRAS.find(x=>slug(x.id)===h); sec="archivo"; html=o?vObra(o):`<h1>Ficha no encontrada</h1><p><a href="#archivo">Volver al archivo</a></p>`; }
+  else if(h.startsWith("obra-")){ const o=OBRAS.find(x=>slug(x.id)===h); sec="archivo"; dejarHuella(o); html=o?vObra(o):`<h1>Ficha no encontrada</h1><p><a href="#archivo">Volver al archivo</a></p>`; }
   else if(h.startsWith("nodo-")){ const n=G.byId.get(h.slice(5).toUpperCase()); sec="red"; html=n?vNodo(n):`<h1>Nodo no encontrado</h1><p><a href="#red">Volver a la red</a></p>`; }
   else html=({inicio:vInicio,archivo:vArchivo,red:vRed,aportar:vAportar,inscripcion:vInscripcion,"proponer-ruta":vProponerRuta,apoya:vApoya,rutas:vRutas,ayudas:vAyudas,sistema:vSistema,colabora:vColabora,scan:vScan,comunidad:vComunidad,derechos:vDerechos,privacidad:vPrivacidad}[h]||vInicio)();
   app.innerHTML=`<div class="view">${html}</div>`;
@@ -3171,6 +3355,6 @@ document.addEventListener("click",e=>{
 addEventListener("hashchange",route);
 buildGraph();
 route();
-cargarObrasPublicas().then(cargarCapas);
+cargarObrasPublicas().then(cargarCapas).then(cargarArchivo).then(cargarCalor);
 cargarConvocatorias();
 </script>

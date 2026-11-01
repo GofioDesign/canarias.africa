@@ -205,6 +205,46 @@ CREATE TABLE IF NOT EXISTS envios (
 CREATE INDEX IF NOT EXISTS envios_estado ON envios(formulario, estado);
 CREATE INDEX IF NOT EXISTS envios_obra ON envios(obra, estado);
 
+-- Vínculos de personas (decisión del 01-11-2026): las líneas temporales y de lugares de las personas no son
+-- identificables en la red pública. Solo las ven, con nombre, quienes forman parte de cada vínculo, salvo que
+-- todas las partes decidan publicarlo. Al público solo llega su número, que la ficha dibuja en discontinuo.
+--   persona ↔ persona: familia, amistad, colaboracion… (la otra persona tiene que aceptarlo)
+--   persona ↔ obra: colaboracion (rol: registro, mapeo, foto, documentación, cuidado…), participacion, recuerdo…
+CREATE TABLE IF NOT EXISTS vinculos (
+  id           INTEGER PRIMARY KEY,
+  tipo         TEXT NOT NULL,
+  de           INTEGER NOT NULL REFERENCES colaboradores(id),   -- quien lo propone
+  a            INTEGER REFERENCES colaboradores(id),            -- la otra persona (NULL si es un vínculo con una obra)
+  obra         TEXT,                                            -- uuid de la obra (NULL si es entre personas)
+  rol          TEXT,
+  nota         TEXT,
+  estado       TEXT NOT NULL DEFAULT 'propuesto' CHECK (estado IN ('propuesto','aceptado','rechazado','retirado')),
+  publico_de   INTEGER NOT NULL DEFAULT 0,                      -- consentimiento de cada parte para publicarlo
+  publico_a    INTEGER NOT NULL DEFAULT 0,
+  creado       TEXT NOT NULL DEFAULT (datetime('now')),
+  cambiado     TEXT NOT NULL DEFAULT (datetime('now')),
+  CHECK ((a IS NULL) <> (obra IS NULL))
+);
+CREATE INDEX IF NOT EXISTS vinculos_obra ON vinculos(obra);
+CREATE INDEX IF NOT EXISTS vinculos_de ON vinculos(de);
+CREATE INDEX IF NOT EXISTS vinculos_a ON vinculos(a);
+
+-- Huellas de espectadores (01-11-2026): quien mira, escanea, verifica u observa una obra también se convierte en
+-- trazo de ella. Solo se traza con la sesión iniciada ('visita', 'escaneo'), y solo se guardan recuentos por obra, día
+-- y tipo: ni quién, ni IP. Las visitas sin sesión ('anonima') no son trazo: solo alimentan el mapa de calor agregado.
+-- huellas_vistas evita contar dos veces la misma visita en el día; guarda un hash con sal diaria y el cron la vacía.
+CREATE TABLE IF NOT EXISTS huellas (
+  obra   TEXT NOT NULL,
+  dia    TEXT NOT NULL,
+  tipo   TEXT NOT NULL CHECK (tipo IN ('visita','escaneo','anonima')),
+  n      INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (obra, dia, tipo)
+);
+CREATE TABLE IF NOT EXISTS huellas_vistas (
+  hash   TEXT PRIMARY KEY,
+  dia    TEXT NOT NULL
+);
+
 -- Lista de correo de la página de lanzamiento («Quiero participar») y votos de las propuestas.
 -- Lo enviado espera en «pendiente» hasta que la persona abre el enlace de confirmación (solo se guarda su hash).
 -- «baja» es el token de los enlaces para darse de baja: solo sirve para eso.

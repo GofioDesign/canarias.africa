@@ -2,6 +2,15 @@ servidor.env
 pb_data/
 *.db
 .DS_Store
+
+# Se generan al publicar (scripts/generar-fichas.py)
+web/obra/
+web/estratos/
+web/agente/
+web/datos/trayectorias.json
+web/datos/archivo.json
+web/datos/historial.json
+
 # Lo genera scripts/propuestas.py al publicar
 web/propuestas.json
 servidor-php/privado/config.php

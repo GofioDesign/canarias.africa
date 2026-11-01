@@ -184,6 +184,35 @@ if ($sub === '/obra') {
       $origen = "<input type=hidden name=desde_envio value={$e['id']}><p class=meta>Desde un envío del formulario «obra nueva». Al guardar, el envío queda aprobado.</p>";
     }
   }
+  // Completar con lo que aporta alguien desde la ficha pública: solo se rellenan los campos vacíos.
+  // Las personas que nombra no se publican hasta revisarlas (visible = no).
+  if ($id && empty($error) && !empty($_GET['desde_completar'])) {
+    $st = $db->prepare("SELECT * FROM envios WHERE id = ? AND formulario = 'completar' AND obra = ?");
+    $st->execute([(int) $_GET['desde_completar'], $id]);
+    if ($e = $st->fetch()) {
+      $ed = json_decode($e['datos'], true);
+      $hechos = [];
+      foreach (['fecha_obra', 'fecha_precision', 'tipo', 'descripcion', 'lugar'] as $k) {
+        if (trim((string) ($ed[$k] ?? '')) !== '' && trim((string) ($o[$k] ?? '')) === '') { $o[$k] = trim($ed[$k]); $hechos[] = $k; }
+      }
+      foreach (['agentes', 'pagadores'] as $k) {
+        $nuevos = json_decode($ed[$k] ?? '[]', true) ?: [];
+        if ($k === 'agentes') $nuevos = array_map(fn($a) => ['visible' => false] + (array) $a, $nuevos);
+        if ($nuevos) { $o[$k] = json_encode(array_merge(json_decode($o[$k] ?? '[]', true) ?: [], $nuevos), JSON_UNESCAPED_UNICODE); $hechos[] = $k; }
+      }
+      $fotos = json_decode($e['fotos'], true) ?: [];
+      if ($fotos && trim((string) ($o['foto'] ?? '')) === '') {
+        $o['foto'] = rtrim(config()['api'], '/') . '/datos/fotos/' . $fotos[0];
+        $o['foto_credito'] = 'Foto: ' . (($ed['alias'] ?? '') ?: 'colaboración') . ($ed['licencia'] ?? '' ? ' · ' . $ed['licencia'] : '');
+        $hechos[] = 'foto';
+      }
+      $o['desconocidos'] = implode(',', array_diff(explode(',', $o['desconocidos'] ?? ''), $hechos));
+      $nota = trim((string) ($ed['texto'] ?? $ed['fuente'] ?? ''));
+      $origen = "<input type=hidden name=desde_envio value={$e['id']}><p class=hecho>Aportación del público" . (($ed['alias'] ?? '') ? " ({$h($ed['alias'])})" : '')
+        . ': ' . ($hechos ? 'rellenados ' . $h(implode(', ', array_map(fn($k) => CAMPOS_DESCONOCIBLES[$k] ?? $k, $hechos))) : 'no rellena ningún campo vacío')
+        . '. Revisa y guarda; el envío queda aprobado.' . ($nota ? "<br>Cómo lo sabe: {$h($nota)}" : '') . '</p>';
+    }
+  }
   $v = fn($k) => $o[$k] ?? '';
   // Otras obras (para las relaciones) y entidades ya usadas (sugerencias del campo «Entidad», por naturaleza).
   $obras_ops = ['' => 'Elige la obra…'];
@@ -213,6 +242,9 @@ if ($sub === '/obra') {
     . ($id ? '<h2>Soportes</h2>' . (implode('', array_map(fn($x) => "<p><a href='/admin/soporte?id={$h($x['soporte'])}'>{$h($x['nombre'] ?: 'Soporte')}</a> <span class=meta>" . ($x['tipo'] ? '· ' . $h(TIPOS_SOPORTE[$x['tipo']] ?? '') : '') . "" . ($x['desde'] ? " · desde {$h($x['desde'])}" : '') . ($x['hasta'] ? " · hasta {$h($x['hasta'])}" : ' · ahora') . '</span></p>',
         (function () use ($db, $id) { $st = $db->prepare('SELECT os.*, s.nombre, s.tipo FROM obra_soporte os JOIN soportes s ON s.uuid = os.soporte WHERE os.obra = ? ORDER BY os.hasta != \'\', os.id DESC'); $st->execute([$id]); return $st->fetchAll(); })()))
         ?: '<p class=meta>Sin soporte. Sin punto propio, la obra toma el de su soporte actual.</p>') . "<p><a href='/admin/soporte?obra={$h($id)}'>+ Nuevo soporte para esta obra</a> <span class=meta>(o añádela a uno que ya existe desde <a href=/admin/soportes>Soportes</a>)</span></p>" : '')
+    . '<fieldset class=nodos><legend>Datos desconocidos</legend><p class=meta>Marca lo que no se sabe. La ficha pública lo muestra como desconocido e invita a completarlo a quien la mira o escanea su QR. Al rellenar un campo, deja de ser desconocido.</p>'
+      . implode(' ', array_map(fn($k, $t) => "<label class=chk style='margin-right:12px'><input type=checkbox name='desconocidos[]' value=$k" . (in_array($k, explode(',', (string) $v('desconocidos')), true) ? ' checked' : '') . "> {$h($t)}</label>",
+        array_keys(CAMPOS_DESCONOCIBLES), CAMPOS_DESCONOCIBLES)) . '</fieldset>'
     . $campo('fuentes', 'Fuentes', $v('fuentes'), 'textarea', 'Cómo se sabe: testimonios, documentos, placas, prensa. Uno por línea. No se publica.')
     . $datalists
     . ($v('foto') ? "<img class=foto-actual src=\"{$h($v('foto'))}\" alt='Foto actual'>" : '')

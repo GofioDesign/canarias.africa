@@ -125,6 +125,11 @@ textarea{min-height:110px;width:100%;resize:vertical}
 .fake{display:inline-block;font-family:var(--f-mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;background:var(--warn-bg);color:var(--warn-ink);padding:2px 6px;border-radius:3px;vertical-align:middle}
 
 /* Ficha */
+.foto-obra{margin:6px 0 4px;display:flex;flex-direction:column;gap:6px}
+.foto-obra img{display:block;width:100%;max-height:min(70vh,560px);object-fit:cover;border-radius:4px;background:var(--line)}
+.foto-obra figcaption{font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.tt-foto{display:flex;flex-direction:column;gap:4px;width:180px;white-space:normal}
+.tt-foto img{width:180px;height:120px;object-fit:cover;border-radius:3px;background:#ddd}
 .ficha-head{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:28px;align-items:start}
 .idline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .idbadge{font-family:var(--f-mono);font-weight:600;font-size:.9rem;background:var(--ink);color:var(--bg);padding:3px 8px;border-radius:3px}
@@ -1521,6 +1526,8 @@ function obraDeCatalogo(f){
   if(p.descripcion) o.desc=String(p.descripcion);
   if(p.ficha){ const fi=String(p.ficha).trim(); if(/^https?:\/\//i.test(fi)) o.fichaUrl=fi; else if(!o.desc) o.desc=fi; }
   if(Array.isArray(p.relaciones)) o.rels=p.relaciones;
+  /* Foto actual: URL https directa a la imagen (normalmente Wikimedia Commons) y su crédito (autoría y licencia) */
+  if(p.foto&&/^https:\/\//i.test(String(p.foto).trim())){ o.foto=String(p.foto).trim(); o.fotoCredito=p.foto_credito?String(p.foto_credito):""; }
   o.precision=p.precision; // exacta | zona | municipio: el servidor ya ha ocultado; aquí no se recalcula nada
   if(pt){ [o.lon,o.lat]=pt.map(Number); }
   const m=muniDe(p.municipio, pt?o.lat:null, pt?o.lon:null) || (o.m&&MUNIS[o.m]?o.m:null);
@@ -1589,7 +1596,7 @@ function initMaps(){
       const on=!c.opt.only||c.opt.only.includes(o.id), big=c.opt.focus===o.id;
       if(big&&sensOf(o)==="abierta") L.circleMarker([o.lat,o.lon],{radius:14,className:"mk-ring",interactive:false}).addTo(m);
       L.circleMarker([o.lat,o.lon],{radius:big?8:7,className:`mk mk-${o.fase}${on?"":" dim"}`}).addTo(m)
-       .bindTooltip(`${esc(o.t)} · ${FASES[o.fase].n}`).on("click",()=>{ location.hash=slug(o.id); });
+       .bindTooltip(o.foto?`<span class="tt-foto"><img src="${esc(o.foto)}" alt="" loading="lazy" referrerpolicy="no-referrer"><span>${esc(o.t)} · ${FASES[o.fase].n}</span></span>`:`${esc(o.t)} · ${FASES[o.fase].n}`).on("click",()=>{ location.hash=slug(o.id); });
     });
     if(c.cerca){ L.circleMarker([c.lat,c.lon],{radius:8,className:"mk-yo",interactive:false}).addTo(m); L.circle([c.lat,c.lon],{radius:RADIO_KM*1000,className:"radio-yo",interactive:false}).addTo(m); m.setView([c.lat,c.lon],11); }
     else if(c.opt.focus){ const o=byId(c.opt.focus), n=sensOf(o); m.setView([o.lat,o.lon],n==="reservada"?11:n==="difusa"?13:14); }
@@ -1914,7 +1921,8 @@ function vObra(o){
     <div class="stack">
       <div class="idline"><span class="idbadge" title="${o.id}">${corto(o.id)}</span>${chip(o.fase)}${DEMO?`<span class="fake">datos ficticios</span>`:""}</div>
       <h1>${esc(o.t)}</h1>
-      <p class="lede muted">${o.tipo} · ${esc(o.lugar)} · ${M.n}, ${ISLAS[M.isla]}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}${o.fichaUrl?`<p><a href="${esc(o.fichaUrl)}" target="_blank" rel="noopener">Ficha completa ↗</a></p>`:""}
+      <p class="lede muted">${esc(o.tipo)} · ${o.lugar&&o.lugar!==M.n?esc(o.lugar)+" · ":""}${M.n}, ${ISLAS[M.isla]}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}${o.fichaUrl?`<p><a href="${esc(o.fichaUrl)}" target="_blank" rel="noopener">Ficha completa ↗</a></p>`:""}
+      ${o.foto?`<figure class="foto-obra"><img src="${esc(o.foto)}" alt="Foto actual de ${esc(o.t)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest('figure').remove()">${o.fotoCredito?`<figcaption>${esc(o.fotoCredito)}</figcaption>`:""}</figure>`:""}
       <div class="btns"><a class="btn lichen" href="#contexto-${o.id.toLowerCase()}">Aportar contexto</a></div>
       <div class="qrhint">${o.qr.st==="activo"?`<p><b>¿Estás junto a la obra?</b> Escanea su QR para contar cómo está hoy. El estado de una obra solo se puede observar desde su QR.</p>${DEMO?`<div class="btns" style="align-items:center"><a class="btn alt" href="#${qrHash(o)}" style="padding:6px 12px;font-size:.88rem">Simular escaneo del QR</a><span class="fake">solo en el prototipo</span></div>`:""}`
         :sensOf(o)==="reservada"?`<p class="muted">Esta obra no lleva QR en el sitio, para no señalar dónde está. Su estado lo revisa el equipo junto con la autoridad de patrimonio. Puedes aportar contexto.</p>`

@@ -116,6 +116,8 @@ if ($sub === '/publicar' && $metodo === 'POST') {
 }
 
 // ---------------- Obras ----------------
+if ($sub === '/campo/subir' && $metodo === 'POST') campo_subir($foto_formulario);
+
 if ($sub === '/catalogo') {
   $html = $aviso_pub() . '<p><a href=/admin/obra>+ Nueva obra</a> · <a href=/admin/soportes>Soportes</a> · <a href=/admin/rutas>Rutas</a> · <a href=/admin/artistas>Artistas</a></p>
     <form method=post action=/admin/publicar><input type=hidden name=csrf value=' . $csrf . '><button>Publicar ahora en canarias.africa</button>

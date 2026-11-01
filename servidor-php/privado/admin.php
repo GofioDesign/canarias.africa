@@ -2,12 +2,16 @@
 // Moderación de envíos, catálogo (obras, rutas, artistas), pool de etiquetas QR, personas colaboradoras y obras propuestas: https://api.canarias.africa/admin
 declare(strict_types=1);
 
+// La app «En campo» (PWA): sus archivos se sirven sin sesión porque no llevan datos y tienen que abrirse sin red.
+require PRIVADO . '/campo.php';
+$sub = substr($ruta, strlen('/admin'));
+campo_estatico($sub);
+
 session_set_cookie_params(['httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/admin']);
 session_start();
 header('X-Frame-Options: DENY');
 header('X-Robots-Tag: noindex');
 
-$sub = substr($ruta, strlen('/admin'));
 $hash = config()['admin_hash'];
 
 if ($sub === '/entrar' && $metodo === 'POST') {
@@ -17,11 +21,13 @@ if ($sub === '/entrar' && $metodo === 'POST') {
     $_SESSION['admin'] = true;
     $_SESSION['csrf'] = bin2hex(random_bytes(16));
   }
-  header('Location: /admin', true, 303);
+  header('Location: ' . (($_POST['volver'] ?? '') === 'campo' && !empty($_SESSION['admin']) ? '/admin/campo' : '/admin'), true, 303);
   exit;
 }
+if ($sub === '/campo/token') campo_token();
+if (empty($_SESSION['admin']) && $sub === '/campo/subir') error_publico('La sesión ha caducado.', 403);
 if (empty($_SESSION['admin'])) pagina('Entrar', $hash
-  ? '<form method="post" action="/admin/entrar"><label>Contraseña <input type="password" name="clave" autofocus required></label> <button>Entrar</button></form>'
+  ? '<form method="post" action="/admin/entrar">' . (($_GET['volver'] ?? '') === 'campo' ? '<input type=hidden name=volver value=campo>' : '') . '<label>Contraseña <input type="password" name="clave" autofocus required></label> <button>Entrar</button></form>'
   : '<p>Falta poner <code>admin_hash</code> en <code>privado/config.php</code>.</p>');
 
 if ($metodo === 'POST' && !hash_equals($_SESSION['csrf'], (string) ($_POST['csrf'] ?? ''))) error_publico('Sesión caducada.', 403);
@@ -223,7 +229,7 @@ function pagina(string $titulo, string $cuerpo): never {
     $n = db()->query("SELECT (SELECT COUNT(*) FROM envios WHERE estado = 'pendiente'), (SELECT COUNT(*) FROM obras WHERE publicada = 1), (SELECT COUNT(*) FROM obras),
       (SELECT COUNT(*) FROM soportes), (SELECT COUNT(*) FROM qr_codigos WHERE estado = 'libre'), (SELECT COUNT(*) FROM obras_propuestas WHERE estado = 'pendiente')")->fetch(PDO::FETCH_NUM);
     $c = fn($v, $t = '') => " <span class=cuenta" . ($t ? " title='$t'" : '') . ">$v</span>";
-    $menu = "<nav class=menu><a href=/admin>Envíos{$c($n[0], 'pendientes de revisar')}</a> <a href=/admin/catalogo>Obras{$c("$n[1]/$n[2]", 'publicadas / total')}</a> <a href=/admin/soportes>Soportes{$c($n[3])}</a> <a href=/admin/qr>Etiquetas QR{$c($n[4], 'libres en el pool')}</a>"
+    $menu = "<nav class=menu><a href=/admin>Envíos{$c($n[0], 'pendientes de revisar')}</a> <a href=/admin/catalogo>Obras{$c("$n[1]/$n[2]", 'publicadas / total')}</a> <a href=/admin/campo><strong>En campo</strong></a> <a href=/admin/soportes>Soportes{$c($n[3])}</a> <a href=/admin/qr>Etiquetas QR{$c($n[4], 'libres en el pool')}</a>"
       . " <a href=/admin/rutas>Rutas</a> <a href=/admin/artistas>Artistas</a> <a href=/admin/personas>Personas</a> <a href=/admin/obras>Obras propuestas{$c($n[5], 'pendientes')}</a> <a href=/admin/participa>Lista y votos</a> <a href=/admin/copia>Copia de la base de datos</a>"
       . "<form method=post action=/admin/salir class=inline><input type=hidden name=csrf value={$_SESSION['csrf']}><button class=enlace>Salir</button></form></nav>";
   }

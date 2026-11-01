@@ -7,7 +7,9 @@
 
 const TIPOS_SOPORTE = ['' => 'Sin indicar', 'muro' => 'Muro o pared', 'fachada' => 'Fachada', 'roca' => 'Roca o risco',
   'suelo' => 'Suelo o pavimento', 'mobiliario' => 'Mobiliario urbano', 'edificio' => 'Edificio', 'paisaje' => 'Paisaje o terreno',
-  'objeto' => 'Objeto o pieza exenta', 'web' => 'Web o soporte digital', 'otro' => 'Otro'];
+  'objeto' => 'Objeto o pieza exenta', 'web' => 'Web o soporte digital', 'ar' => 'Realidad aumentada (digital anclada a un lugar)', 'otro' => 'Otro'];
+// Una obra de realidad aumentada es digital pero está en un sitio: su soporte lleva punto y URL, y su etiqueta se
+// coloca y se verifica con el GPS como la de un muro. Solo los soportes sin punto (una web) quedan fuera del GPS.
 const CAMPOS_SOPORTE = ['nombre', 'tipo', 'sensibilidad', 'lat', 'lon', 'isla', 'municipio', 'lugar', 'url', 'descripcion'];
 const NIVEL_SENS = ['abierta' => 0, 'difusa' => 1, 'reservada' => 2];
 
@@ -95,6 +97,7 @@ function soporte_guardar(array $d, ?string $uuid): string {
   if (($s['lat'] === null) !== ($s['lon'] === null)) throw new InvalidArgumentException('Faltan la latitud o la longitud.');
   if ($s['url'] !== '' && !preg_match('#^https?://[^\s]+$#i', $s['url'])) throw new InvalidArgumentException('La URL debe empezar por https://');
   if ($s['tipo'] === 'web' && $s['url'] === '') throw new InvalidArgumentException('Un soporte web necesita su URL.');
+  if ($s['tipo'] === 'ar' && $s['lat'] === null) throw new InvalidArgumentException('Una obra de realidad aumentada está anclada a un lugar: marca su punto en el mapa.');
   if (!isset(ISLAS_CODIGO[$s['isla']])) $s['isla'] = $s['lat'] === null ? '' : isla_de($s['lat'], $s['lon']);
   $filas = json_decode((string) ($d['obras'] ?? '[]'), true);
   if (!is_array($filas)) throw new InvalidArgumentException('La lista de obras no es válida.');

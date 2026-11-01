@@ -433,7 +433,7 @@ if ($sub === '/soporte') {
     . $campo('nombre', 'Nombre', $v('nombre'), 'text', 'Por ejemplo: «Muro norte del lavadero», «Web del colectivo».', ['required' => 'required'])
     . '<div class=par>' . $lista('tipo', 'Tipo', TIPOS_SOPORTE, (string) $v('tipo')) . $lista('sensibilidad', 'Sensibilidad', $ETIQUETAS_SENS, (string) $v('sensibilidad')) . '</div>'
     . '<p class=meta>La protección que cuenta es la mayor entre la del soporte y la de sus obras: si una obra es delicada, el soporte tampoco se publica con detalle.</p>'
-    . $campo('url', 'URL (si es una web o tiene página propia)', $v('url'), 'url', 'Obligatoria para el tipo «Web o soporte digital». Una web no necesita punto en el mapa.')
+    . $campo('url', 'URL (si es una web o tiene página propia)', $v('url'), 'url', 'Obligatoria para el tipo «Web o soporte digital», que no necesita punto. Una obra de realidad aumentada lleva URL y punto: su etiqueta se coloca y se verifica con el GPS.')
     . $lista('isla', 'Isla', ['' => 'La del punto'] + ISLAS_CODIGO, (string) $v('isla'))
     . '<div class=par>' . $campo('municipio', 'Municipio', $v('municipio')) . $campo('lugar', 'Lugar', $v('lugar'), 'text', 'Solo se publica si es abierto.') . '</div>'
     . '<div class=par>' . $campo('lat', 'Latitud', $v('lat'), 'text', '', ['inputmode' => 'decimal']) . $campo('lon', 'Longitud', $v('lon'), 'text', '', ['inputmode' => 'decimal']) . '</div>'

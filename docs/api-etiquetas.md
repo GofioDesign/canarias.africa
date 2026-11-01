@@ -19,7 +19,7 @@ Servidor PHP + SQLite (no PocketBase). Rutas compatibles con lo que ya usa la we
 
 ## Colocar (auth, multipart)
 `POST /api/collections/colocaciones/records`: `qr`, `obra` (UUID del catálogo) o, para obra nueva, `obra_nueva_titulo`, `obra_nueva_sensibilidad` y cualquier otro `obra_nueva_*`; `lat`, `lon`, `precision` (m, ≤ 25), `foto` (obligatoria) y `acepta_derechos=1`. Responde `{ok, obra, estado}`. Si es una obra nueva, el UUID lo genera el servidor.
-Solo admite obras que estén en `/datos/obras.geojson` (el cron lo copia cada hora). Las obras reservadas no admiten etiqueta.
+Solo admite obras del catálogo del servidor (`/admin/catalogo`). Las obras reservadas no admiten etiqueta.
 
 ## Verificar (cuenta opcional, multipart)
 `POST /api/collections/verificaciones/records`: `qr`, `lat`, `lon`, `precision`, `dispositivo` (id aleatorio de 16 a 64 caracteres `[A-Za-z0-9_-]` guardado en localStorage) y `foto` opcional.

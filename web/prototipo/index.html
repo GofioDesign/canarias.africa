@@ -1492,18 +1492,18 @@ function svgIsland(isla,obras,opt){
 function mapa(obras,opt={}){ const islas=opt.islas||islasConObras(obras); return `<div class="map">${islas.map(i=>mapIsland(i,obras,opt)).join("")}</div>`; }
 
 /* Mapas: Leaflet + teselas de OpenStreetMap servidas desde la caché propia de canarias.africa.
-   Los nodos geográficos (obras, QR, rutas) se dibujan y editan en uMap; la web lee sus capas en GeoJSON
-   y las une con la red por la propiedad "id". Si las teselas no cargan, se dibuja el contorno de la isla. */
+   Los nodos geográficos (obras, QR, rutas, artistas) se editan en el archivo (api.canarias.africa/admin); la web y uMap
+   leen sus GeoJSON públicos y los unen con la red por la propiedad "id". Si las teselas no cargan, se dibuja el contorno de la isla. */
 /* La web y las fichas se sirven estáticas desde GitHub Pages (canarias.africa); lo dinámico vive en api.canarias.africa (hosting PHP). */
 const API_BASE = "https://api.canarias.africa";
 const MAPA = {
   teselas: API_BASE+"/teselas/osm/{z}/{x}/{y}.png",
   atribucion: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
-  umap: API_BASE+"/datos/umap/" // copia horaria de las capas de uMap que hace el servidor: qr.geojson, rutas.geojson
+  capas: API_BASE+"/datos/" // GeoJSON públicos del servidor: qr.geojson, rutas.geojson (los mismos que muestra uMap)
 };
 /* Si el catálogo no carga (vista previa), la web funciona con los datos de ejemplo. */
 const API = {
-  obras: "/datos/obras.geojson", // catálogo estático en el repo; difusas ya en el centro de su celda de 0,02°, reservadas sin geometry
+  obras: API_BASE+"/datos/obras.geojson", // catálogo del servidor; difusas ya en el centro de su celda de 0,02°, reservadas sin geometry
   ficha: API_BASE+"/api/publico/obras/", // + <código>: solo las observaciones aprobadas
   qr: "https://canarias.africa/", // cada QR impreso apunta a canarias.africa/<uuid-del-QR>; la página 404 de GitHub Pages lo pasa a #/q/<uuid>
   qrResolver: API_BASE+"/api/qr/", // + <uuid-del-QR> → {obra, estado}
@@ -1511,7 +1511,7 @@ const API = {
     .map(([k,c])=>[k,`${API_BASE}/api/collections/${c}/records`])) // PocketBase, multipart
 };
 let DEMO = true; // pasa a false cuando carga el catálogo
-/* Catálogo real (capa Obras de uMap copiada a /datos/obras.geojson al publicar). Cuando carga, sustituye a las obras de ejemplo:
+/* Catálogo real (obras publicadas desde /admin del servidor). Cuando carga, sustituye a las obras de ejemplo:
    actualiza las que ya conoce por id, crea las nuevas y retira las ficticias, con sus rutas y diálogos. */
 function obraDeCatalogo(f){
   const p=f.properties||{}, pt=f.geometry&&f.geometry.type==="Point"&&Array.isArray(f.geometry.coordinates)?f.geometry.coordinates:null;
@@ -1550,7 +1550,7 @@ async function cargarObrasPublicas(){
     const usados=new Set([...OBRAS.map(o=>o.m),...RUTAS.flatMap(r=>r.ms)]);
     Object.keys(MUNIS).forEach(k=>{ if(!usados.has(k)) delete MUNIS[k]; });
     G.byKey.clear(); G.byId.clear(); G.edges.length=0; buildGraph();
-    const av=document.getElementById("aviso-proto"); if(av) av.textContent="EN PRUEBAS · Las obras vienen del catálogo real, editado en uMap. Algunas funciones todavía son de prueba. Las convocatorias de «Ayudas a artistas» son reales.";
+    const av=document.getElementById("aviso-proto"); if(av) av.textContent="EN PRUEBAS · Las obras vienen del catálogo real del archivo. Algunas funciones todavía son de prueba. Las convocatorias de «Ayudas a artistas» son reales.";
     route();
   }catch(e){ console.warn("Catálogo no disponible; se muestran los datos de ejemplo",e); }
 }
@@ -1564,13 +1564,24 @@ async function cargarFicha(o){
     o._ficha=true; return true;
   }catch(e){ return false; }
 }
-async function cargarUMap(){
-  const capa=async c=>{ const r=await fetch(MAPA.umap+c+".geojson"); if(!r.ok) throw new Error(c); return (await r.json()).features||[]; };
-  let cambio=false;
-  try{ (await capa("qr")).forEach(f=>{ const p=f.properties||{}, o=byId(p.obra); if(o&&p.estado){ o.qr.st=p.estado; cambio=true; } }); }catch(e){}
+/* Estados de etiqueta del servidor → estados que muestra la ficha */
+const QR_ESTADO={confirmado:"activo",sin_verificar:"activo",activo:"activo",pendiente:"pendiente","dañado":"dañado",retirado:"retirado","no aplica":"no aplica"};
+const kmRuta=ids=>{ let d=0; for(let i=1;i<ids.length;i++){ const a=byId(ids[i-1]), b=byId(ids[i]), r=Math.PI/180;
+  const h=Math.sin((b.lat-a.lat)*r/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin((b.lon-a.lon)*r/2)**2; d+=12742*Math.asin(Math.sqrt(h)); } return Math.round(d*10)/10; };
+async function cargarCapas(){
+  const capa=async c=>{ const r=await fetch(MAPA.capas+c+".geojson"); if(!r.ok) throw new Error(c); return (await r.json()).features||[]; };
+  let cambio=false, red=false;
+  try{ (await capa("qr")).forEach(f=>{ const p=f.properties||{}, o=byId(p.obra), st=QR_ESTADO[p.estado]; if(o&&st){ o.qr.st=st; cambio=true; } }); }catch(e){}
   try{ (await capa("rutas")).forEach(f=>{ const p=f.properties||{}, r=RUTAS.find(x=>x.id===p.id||("RU-"+x.id).toUpperCase()===p.id);
     const ids=String(p.paradas||"").split(",").map(x=>x.trim()).filter(x=>byId(x)&&enMapa(byId(x)));
-    if(r&&ids.length>1){ r.stops=ids; cambio=true; } }); }catch(e){}
+    if(ids.length<2) return;
+    if(r){ r.stops=ids; cambio=true; return; }
+    if(DEMO||!p.id) return;
+    /* Ruta creada en el archivo: se añade con lo que publica el servidor */
+    RUTAS.push({id:String(p.id).replace(/^RU-/i,"").toLowerCase(),n:String(p.name||p.id),cur:String(p.curaduria||"canarias.africa"),
+      ms:[...new Set(ids.map(x=>byId(x).m))],km:kmRuta(ids),h:"—",dif:"Sin indicar",tesis:String(p.description||""),notas:{},stops:ids,sal:[]});
+    cambio=red=true; }); }catch(e){}
+  if(red){ G.byKey.clear(); G.byId.clear(); G.edges.length=0; buildGraph(); }
   if(cambio) route();
 }
 let MAPSEQ=0, MAPQ=[];
@@ -2087,7 +2098,7 @@ function vRutas(){
       <div class="stack">
         <p class="eyebrow">${r.ms.map(k=>MUNIS[k].n).join(" · ")} · ${ISLAS[isla]}</p>
         <h2>${r.n}</h2>
-        <p class="curline">Curaduría: ${cur?nlink(cur):esc(r.cur)} <span class="fake">ficticio</span></p>
+        <p class="curline">Curaduría: ${cur?nlink(cur):esc(r.cur)}${DEMO?' <span class="fake">ficticio</span>':""}</p>
         <blockquote class="tesis">${esc(r.tesis)}</blockquote>
         <div class="facts"><span>${r.km.toLocaleString("es-ES")} km</span><span>${r.h}</span><span>Dificultad ${r.dif.toLowerCase()}</span><span>${r.stops.length} obras</span></div>
         <ol class="stops">${r.stops.map(id=>{const o=byId(id);return `<li><span><a href="#${slug(id)}">${esc(o.t)}</a> <span class="muted" style="font-size:.85rem">· ${FASES[o.fase].n}</span>${r.notas[id]?`<br><span class="muted" style="font-size:.9rem">${esc(r.notas[id])}</span>`:""}</span></li>`;}).join("")}</ol>
@@ -3001,6 +3012,6 @@ document.addEventListener("click",e=>{
 addEventListener("hashchange",route);
 buildGraph();
 route();
-cargarObrasPublicas().then(cargarUMap);
+cargarObrasPublicas().then(cargarCapas);
 cargarConvocatorias();
 </script>

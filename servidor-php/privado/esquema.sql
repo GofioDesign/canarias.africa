@@ -22,11 +22,59 @@ CREATE TABLE IF NOT EXISTS tokens (
   usado        INTEGER NOT NULL DEFAULT 0
 );
 
--- Catálogo público copiado de GitHub por el cron: el servidor necesita saber qué obras existen y su sensibilidad.
+-- Catálogo de obras: la fuente es este servidor (se edita en /admin/obras) y se publica en /datos/obras.geojson.
+-- lat/lon son siempre exactos aquí; la publicación los oculta según la sensibilidad (difusa → celda de 2 km, reservada → nada).
+-- Las columnas que faltan en una base de datos antigua las añade migrar_catalogo().
 CREATE TABLE IF NOT EXISTS obras (
   uuid          TEXT PRIMARY KEY,
   titulo        TEXT,
   sensibilidad  TEXT NOT NULL DEFAULT 'reservada'
+);
+
+-- Cada vez que se edita una obra se guarda aquí cómo estaba: es su árbol de versiones.
+CREATE TABLE IF NOT EXISTS obras_versiones (
+  id       INTEGER PRIMARY KEY,
+  obra     TEXT NOT NULL,
+  version  INTEGER NOT NULL,
+  datos    TEXT NOT NULL,
+  autor    TEXT NOT NULL DEFAULT 'admin',
+  fecha    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS obras_versiones_obra ON obras_versiones(obra, version);
+
+-- Rutas curatoriales: paradas = UUID de obras en orden, separados por comas. trazado = LineString GeoJSON opcional.
+CREATE TABLE IF NOT EXISTS rutas (
+  id           TEXT PRIMARY KEY,
+  nombre       TEXT NOT NULL,
+  descripcion  TEXT NOT NULL DEFAULT '',
+  curaduria    TEXT NOT NULL DEFAULT '',
+  paradas      TEXT NOT NULL DEFAULT '',
+  trazado      TEXT NOT NULL DEFAULT '',
+  publicada    INTEGER NOT NULL DEFAULT 0,
+  actualizado  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Galería de artistas: solo con su consentimiento. El punto es opcional y solo para un espacio público suyo
+-- (taller abierto, galería, tienda); nunca su domicilio. Sin punto, se publica solo el municipio.
+CREATE TABLE IF NOT EXISTS artistas (
+  id              TEXT PRIMARY KEY,
+  nombre          TEXT NOT NULL,
+  disciplina      TEXT NOT NULL DEFAULT '',
+  municipio       TEXT NOT NULL DEFAULT '',
+  bio             TEXT NOT NULL DEFAULT '',
+  web             TEXT NOT NULL DEFAULT '',
+  tienda          TEXT NOT NULL DEFAULT '',
+  mecenazgo       TEXT NOT NULL DEFAULT '',
+  redes           TEXT NOT NULL DEFAULT '',
+  foto            TEXT NOT NULL DEFAULT '',
+  foto_credito    TEXT NOT NULL DEFAULT '',
+  espacio         TEXT NOT NULL DEFAULT '',
+  lat             REAL,
+  lon             REAL,
+  obras           TEXT NOT NULL DEFAULT '',
+  consentimiento  TEXT NOT NULL DEFAULT '',
+  publicada       INTEGER NOT NULL DEFAULT 0,
+  actualizado     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 -- Obras nuevas propuestas al colocar una etiqueta, a la espera de entrar en el catálogo de GitHub.

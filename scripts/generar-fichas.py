@@ -17,6 +17,10 @@ Modelo (propiedades de cada obra o expresión en el catálogo):
 - "autoria" y "colaboraciones": ["Nombre o alias", …] o [{"id", "nombre", "rol"}, …]: la trayectoria de cada
   artista, colectivo o colaborador es otra línea temporal que vincula espacios (/agente/<id>/ y
   /datos/trayectorias.json). Quienes colaboran también forman parte de la obra.
+  Privacidad: las personas no son identificables en la red pública salvo que quieran publicarlo ("publica": true)
+  o sean personajes públicos. La autoría acreditada es pública salvo "publica": false; una colaboración, solo con
+  "publica": true. Lo que no es público no va en el catálogo: solo su número, "vinculos_privados", que el glifo
+  dibuja en discontinuo y a poco contraste, sin nombres ni destinos.
 - "relaciones": [{"tipo", "a": <uuid>, "nota"}]. El tipo "muestra_de" (o el atajo "muestra_de": <uuid> o
   [<uuid>, …]) liga la línea temporal propia a otra más general: un evento global puede dar lugar a x
   muestras locales, y una muestra puede estar ligada a varias líneas a la vez. Los demás tipos (responde_a,
@@ -26,8 +30,10 @@ Lee web/datos/obras.geojson (ya sin coordenadas sensibles) y datos/archivo/regis
 Las páginas se generan en cada publicación y no se suben al repositorio.
 Uso: python3 scripts/generar-fichas.py
 """
+import hashlib
 import html
 import json
+import math
 import os
 import re
 import subprocess
@@ -58,6 +64,8 @@ ol.estratos>li::before{content:"";position:absolute;left:-6px;top:11px;width:10p
 .idficha .mono{background:var(--fg);color:var(--bg);padding:2px 8px;border-radius:3px}
 ul.cambios{margin:4px 0;padding-left:18px;list-style:disc;font-size:.95rem} del{color:var(--muted)} ins{text-decoration:none;font-weight:600}
 .enlaces{font-size:.9rem}
+.mundo{margin:18px 0;text-align:center}.mundo figcaption{font-size:.88rem;max-width:30rem;margin:6px auto 0}
+.glifo{max-width:100%;height:auto;color:var(--fg)}
 .tree ul{list-style:none;padding-left:16px;margin:2px 0;border-left:1px dashed var(--linea)}
 .tree>ul{border-left:0;padding-left:0}
 .mono{font-family:ui-monospace,monospace;font-size:.88rem;word-break:break-all}
@@ -204,6 +212,37 @@ def ident_agente(texto):
     return re.sub(r"[^a-z0-9]+", "-", t).strip("-")[:60] or "anonimo"
 
 
+def agente_publico(a, clase):
+    """Las personas no son identificables en la red pública salvo que quieran publicarlo o sean personajes públicos.
+    La autoría acreditada de una obra pública es pública salvo "publica": false; una colaboración solo con "publica": true."""
+    return a.get("publica") is not False if clase == "autoria" else a.get("publica") is True
+
+
+def glifo(uuid, publicos, privados):
+    """Mundo de grafos de la ficha: la obra en el centro, sus vínculos públicos en trazo continuo y los privados
+    (personas, familias, amistades, trayectorias no publicadas) en discontinuo y a poco contraste, anónimos:
+    se ve que existen, no quiénes son ni adónde llevan."""
+    W, C = 240, 120
+    semilla = int(hashlib.sha256(uuid.encode()).hexdigest(), 16)
+    partes = [f'<svg class="glifo" viewBox="0 0 {W} {W}" width="{W}" height="{W}" role="img" '
+              f'aria-label="{len(publicos)} vínculos públicos y {privados} privados">']
+    privados = min(privados, 36)
+    for k in range(privados):
+        ang = 2 * math.pi * (k / max(privados, 1)) + (semilla % 628) / 100
+        r = 78 + ((semilla >> (k % 60)) % 32)
+        x, y = C + r * math.cos(ang), C + r * math.sin(ang)
+        partes.append(f'<line x1="{C}" y1="{C}" x2="{x:.1f}" y2="{y:.1f}" stroke="currentColor" stroke-opacity=".28" stroke-dasharray="3 4"/>'
+                      f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2.5" fill="currentColor" fill-opacity=".28"/>')
+    n = len(publicos)
+    for k, (destino, _) in enumerate(publicos):
+        ang = 2 * math.pi * k / max(n, 1) - math.pi / 2
+        x, y = C + 58 * math.cos(ang), C + 58 * math.sin(ang)
+        partes.append(f'<a href="/obra/{destino}/"><line x1="{C}" y1="{C}" x2="{x:.1f}" y2="{y:.1f}" stroke="var(--verde)" stroke-width="1.6"/>'
+                      f'<circle cx="{x:.1f}" cy="{y:.1f}" r="6" fill="var(--verde)"/></a>')
+    partes.append(f'<circle cx="{C}" cy="{C}" r="11" fill="var(--fg)"/></svg>')
+    return "".join(partes)
+
+
 def trayectorias(props):
     """Línea temporal de cada agente (artistas, colectivos y colaboradores): sus obras, en orden de fecha.
 
@@ -219,6 +258,8 @@ def trayectorias(props):
                 a = a if isinstance(a, dict) else {"nombre": a}
                 if not a.get("nombre") and not a.get("id"):
                     continue
+                if not agente_publico(a, clase):
+                    continue  # no debería estar en el catálogo (lo vigila comprobar-catalogo.py)
                 i = ident_agente(a.get("id") or a["nombre"])
                 ag = ags.setdefault(i, {"nombre": a.get("nombre") or i, "obras": []})
                 ag["obras"].append({"obra": u, "clase": clase, **({"rol": a["rol"]} if a.get("rol") else {})})
@@ -291,6 +332,7 @@ def main():
     nombres = {}
     gen, props = genealogia(feats)
     ags = trayectorias(props)
+    glifos = {}
 
     def nodo(u):
         q = props.get(u, {})
@@ -343,6 +385,23 @@ def main():
             sig = nodo(ag["obras"][pos + 1]["obra"]) if pos + 1 < len(ag["obras"]) else '<span class="muted">última obra registrada</span>'
             tray += (f'<li><a href="/agente/{e(i)}/">{e(ag["nombre"])}</a> <span class="muted">· {e(ag["obras"][pos].get("rol") or ("autoría" if ag["obras"][pos]["clase"] == "autoria" else "colaboración"))} · obra {pos + 1} de {len(ag["obras"])}</span>'
                      f'<br><span class="muted">anterior:</span> {ant}<br><span class="muted">siguiente:</span> {sig}</li>')
+        vecinos = {}
+        for x in g["arriba"] + g["abajo"]:
+            vecinos.setdefault(x, "linea")
+        for v in g["vinculos"]:
+            vecinos.setdefault(v["a"], v["tipo"])
+        for ag in ags.values():
+            obras_ag = [x["obra"] for x in ag["obras"]]
+            if uuid in obras_ag:
+                k = obras_ag.index(uuid)
+                for x in obras_ag[max(k - 1, 0):k] + obras_ag[k + 1:k + 2]:
+                    vecinos.setdefault(x, "trayectoria")
+        vecinos.pop(uuid, None)
+        privados = int(p.get("vinculos_privados") or 0)
+        glifos[uuid] = glifo(uuid, list(vecinos.items()), privados)
+        mundo = (f'<figure class="mundo">{glifos[uuid]}<figcaption class="muted">Mundo de vínculos de esta obra. '
+                 f'En trazo continuo, {len(vecinos)} vínculos públicos; en discontinuo, {privados} vínculos entre personas que no son públicos: '
+                 'solo los ven quienes forman parte de ellos.</figcaption></figure>') if vecinos or privados else ""
         if tray:
             tray = f'<h2 id="trayectoria">Trayectorias</h2><p class="muted">Quienes la crearon y quienes colaboran en ella también forman parte de la obra: la línea temporal de cada una une esta obra con otros lugares y tiempos.</p><ul>{tray}</ul>'
         if p.get("archivar") is False:
@@ -365,6 +424,7 @@ def main():
 <p>{e(p.get('descripcion') or p.get('description'))}</p>
 <dl>{dl}</dl>
 <p><a href="/#obra-{e(uuid)}">Ficha completa, observaciones y mapa</a></p>
+{mundo}
 {lineas}
 {tray}
 {vinc}
@@ -401,7 +461,7 @@ def main():
     (WEB / "datos").mkdir(parents=True, exist_ok=True)
     (WEB / "datos" / "archivo.json").write_text(json.dumps(publico, ensure_ascii=False) + "\n", encoding="utf-8")
     resumen = {u: {**({"version": hist[u][-1]["version"], "fecha": hist[u][-1]["fecha"], "versiones": hist[u]} if u in hist else {}),
-                   **gen[u]} for u in nombres}
+                   **gen[u], "glifo": glifos.get(u), "vinculos_privados": int(props[u].get("vinculos_privados") or 0)} for u in nombres}
     (WEB / "datos" / "historial.json").write_text(json.dumps(resumen, ensure_ascii=False) + "\n", encoding="utf-8")
     (WEB / "datos" / "trayectorias.json").write_text(json.dumps(ags, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"{len(ags)} trayectorias.")

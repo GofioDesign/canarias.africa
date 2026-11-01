@@ -34,6 +34,16 @@ for f in features:
             errores.append(f"{ident}: relación sin tipo válido (minúsculas y guiones bajos): {r}")
         elif r.get("a"):
             destinos.append((r["tipo"], r["a"]))
+    # Personas: solo entran en el catálogo público si son públicas (consentimiento o personaje público).
+    for a in p.get("autoria") or []:
+        if isinstance(a, dict) and a.get("publica") is False:
+            errores.append(f"{ident}: autoría no pública ({a.get('nombre') or a.get('id')}): no puede ir en el catálogo; cuéntala en vinculos_privados")
+    for a in p.get("colaboraciones") or []:
+        if not isinstance(a, dict) or a.get("publica") is not True:
+            errores.append(f"{ident}: colaboración sin \"publica\": true ({a if not isinstance(a, dict) else a.get('nombre')}): no puede ir en el catálogo; cuéntala en vinculos_privados")
+    vp = p.get("vinculos_privados")
+    if vp is not None and (not isinstance(vp, int) or vp < 0):
+        errores.append(f"{ident}: vinculos_privados debe ser un número entero")
     for tipo, a in destinos:
         if str(a).lower() not in ids:
             errores.append(f"{ident}: {tipo} apunta a {a}, que no está en el catálogo")

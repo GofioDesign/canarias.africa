@@ -1528,11 +1528,16 @@ function genealogiaObra(o){
   const h=histDe(o), id=o.id.toLowerCase();
   /* La trayectoria de cada agente (artistas, colectivos y colaboradores, que también forman parte de la obra) es otra línea temporal: une esta obra con otros lugares y tiempos */
   const tray=Object.entries(TRAY||{}).map(([i,a])=>{ const k=a.obras.findIndex(x=>x.obra===id); return k<0?null:{i,a,k}; }).filter(Boolean);
-  if(!h||(!(h.arriba||[]).length&&!(h.abajo||[]).length&&!(h.vinculos||[]).length&&!tray.length)) return "";
+  if(!h||(!(h.arriba||[]).length&&!(h.abajo||[]).length&&!(h.vinculos||[]).length&&!tray.length&&!h.glifo)) return "";
+  /* Glifo del mundo de vínculos (lo genera scripts/generar-fichas.py): públicos en continuo; los de personas que no son
+     públicos, en discontinuo y a poco contraste, anónimos. Solo los ven con nombre quienes forman parte de ellos. */
+  const mundo=h.glifo?`<figure style="--fg:var(--ink);--verde:var(--n-obra);margin:6px 0 14px;max-width:240px">${h.glifo}
+    <figcaption class="muted" style="font-size:.85rem">Continuo: vínculos públicos. Discontinuo: ${h.vinculos_privados||0} vínculos entre personas que no son públicos.</figcaption></figure>`:"";
   const nom=u=>{ const x=byId(u), y=HIST[u]||{}; return `<a href="/obra/${esc(u)}/">${esc(x?x.t:(y.nombre||corto(u)))}</a> <span class="muted">(${[ESCALA_N[y.escala]||y.escala,ESPACIO_N[y.espacio],String((y.tiempo||{}).inicio||"").slice(0,10)].filter(Boolean).map(esc).join(" · ")})</span>`; };
   const vn=v=>{ const n=VINC_N[v.tipo]; return n?n[v.sentido==="entra"?1:0]:v.tipo.replace(/_/g," "); };
   return `<section class="stack">
     <h2>Líneas temporales, trayectorias y vínculos</h2>
+    ${mundo}
     <p class="muted" style="font-size:.9rem">Escala ${esc(ESCALA_N[h.escala]||h.escala)} · ${esc(ESPACIO_N[h.espacio]||"")}. <a href="/obra/${esc(o.id.toLowerCase())}/#lineas">Ver el árbol completo</a></p>
     ${(h.arriba||[]).length?`<p>Ligada a la línea temporal de: ${h.arriba.map(nom).join(", ")}</p>`:""}
     ${(h.abajo||[]).length?`<p class="muted" style="font-size:.95rem">Ha dado lugar a ${h.abajo.length} muestra(s):</p><ul>${h.abajo.map(u=>`<li>${nom(u)}</li>`).join("")}</ul>`:""}

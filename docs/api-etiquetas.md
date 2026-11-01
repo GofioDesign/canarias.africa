@@ -38,3 +38,6 @@ La observación sigue enviando `obra` y `qr_codigo` (el código de la etiqueta).
 ## GitHub Pages
 - `canarias.africa/<código>` (de 8 a 16 caracteres, admite guiones y minúsculas) → `404.html` → `/#/q/<CÓDIGO>`.
 - `canarias.africa/scan` (el QR común de los azulejos) → `scan/index.html` → `/#scan`.
+
+## Completar una ficha (público, multipart)
+`POST /api/collections/completar_obra/records`: `obra` (UUID de una obra publicada) y los datos que se conocen de los campos marcados como desconocidos: `agentes` y `pagadores` (JSON), `fecha_obra`, `fecha_precision`, `tipo`, `descripcion`, `lugar`, `foto`; además `fuente`, `alias` y `acepta_privacidad=1`. Llega a /admin como envío «Completar ficha»; desde allí se pasa a la ficha (solo rellena campos vacíos; las personas nombradas quedan sin publicar hasta revisarlas). La lista de campos desconocidos sale en `obras.geojson` como `desconocidos` (y en texto, `por_conocer`).

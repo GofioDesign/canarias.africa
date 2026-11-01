@@ -6,7 +6,11 @@
 const FASES = ['gestacion', 'creacion', 'plenitud', 'desgaste', 'intervencion', 'transformacion', 'desaparicion', 'memoria'];
 const SENSIBILIDADES = ['abierta', 'difusa', 'reservada'];
 const CAMPOS_OBRA = ['titulo', 'sensibilidad', 'lat', 'lon', 'fase', 'isla', 'municipio', 'lugar', 'tipo', 'descripcion', 'autoria',
-  'fecha_obra', 'fecha_precision', 'agentes', 'pagadores', 'relaciones', 'fuentes', 'foto', 'foto_credito', 'ficha', 'publicada'];
+  'fecha_obra', 'fecha_precision', 'agentes', 'pagadores', 'relaciones', 'fuentes', 'foto', 'foto_credito', 'ficha', 'publicada', 'desconocidos'];
+// Campos que se pueden marcar como «desconocido»: el archivo es colaborativo y no siempre se sabe todo. La ficha pública
+// los muestra como desconocidos e invita a quien la mira (o escanea su QR) a completarlos.
+const CAMPOS_DESCONOCIBLES = ['agentes' => 'Quién la hizo', 'fecha_obra' => 'Fecha', 'tipo' => 'Tipo de obra', 'descripcion' => 'Descripción',
+  'pagadores' => 'Quién la pagó', 'lugar' => 'Lugar exacto', 'foto' => 'Foto'];
 // Vocabularios de los nodos de una obra. Son los mismos en /admin y en el formulario público de la web.
 const ROLES_AGENTE = ['autoria' => 'Autoría', 'coautoria' => 'Coautoría', 'ejecucion' => 'Ejecución', 'encargo' => 'Encargo',
   'restauracion' => 'Restauración', 'colaboracion' => 'Colaboración', 'cuidado' => 'Cuidado'];
@@ -55,7 +59,8 @@ function migrar_catalogo(PDO $db): void {
     'foto_credito' => "TEXT NOT NULL DEFAULT ''", 'ficha' => "TEXT NOT NULL DEFAULT ''", 'publicada' => 'INTEGER NOT NULL DEFAULT 0',
     'version' => 'INTEGER NOT NULL DEFAULT 0', 'creado' => 'TEXT', 'actualizado' => 'TEXT', 'fecha_precision' => "TEXT NOT NULL DEFAULT ''",
     'agentes' => "TEXT NOT NULL DEFAULT '[]'", 'pagadores' => "TEXT NOT NULL DEFAULT '[]'", 'relaciones' => "TEXT NOT NULL DEFAULT '[]'",
-    'fuentes' => "TEXT NOT NULL DEFAULT ''", 'isla' => "TEXT NOT NULL DEFAULT ''"];
+    'fuentes' => "TEXT NOT NULL DEFAULT ''", 'isla' => "TEXT NOT NULL DEFAULT ''",
+    'desconocidos' => "TEXT NOT NULL DEFAULT ''"];
   foreach ($nuevas as $col => $tipo) if (!in_array($col, $hay, true)) $db->exec("ALTER TABLE obras ADD COLUMN $col $tipo");
   $hay = array_column($db->query('PRAGMA table_info(rutas)')->fetchAll(), 'name');
   if (!in_array('notas', $hay, true)) $db->exec("ALTER TABLE rutas ADD COLUMN notas TEXT NOT NULL DEFAULT '{}'");
@@ -98,6 +103,14 @@ function entidades_conocidas(bool $solo_publicadas = true): array {
   return array_map(function ($l) { $l = array_keys($l); sort($l, SORT_LOCALE_STRING); return $l; }, $r);
 }
 
+// Lista de campos desconocidos (array de casillas o texto con comas). Un campo que ya tiene valor deja de serlo.
+function normalizar_desconocidos($v, array $o): string {
+  $l = is_array($v) ? $v : explode(',', (string) $v);
+  $vacio = fn($k) => in_array($k, ['agentes', 'pagadores'], true) ? ($o[$k] ?? '[]') === '[]' || ($o[$k] ?? '') === '' : trim((string) ($o[$k] ?? '')) === '';
+  $l = array_filter(array_unique(array_map('trim', $l)), fn($k) => isset(CAMPOS_DESCONOCIBLES[$k]) && $vacio($k));
+  return implode(',', array_keys(array_intersect_key(CAMPOS_DESCONOCIBLES, array_flip($l))));
+}
+
 function obra(string $uuid): ?array {
   $st = db()->prepare('SELECT * FROM obras WHERE uuid = ?');
   $st->execute([strtolower($uuid)]);
@@ -129,6 +142,7 @@ function obra_guardar(array $d, ?string $uuid, string $autor = 'admin'): string 
   $o['publicada'] = $o['publicada'] ? 1 : 0;
   foreach (['agentes', 'pagadores', 'relaciones'] as $k) $o[$k] = normalizar_nodos($k, $d[$k] ?? '[]');
   if (!isset(PRECISIONES_FECHA[$o['fecha_precision']])) $o['fecha_precision'] = '';
+  $o['desconocidos'] = normalizar_desconocidos($d['desconocidos'] ?? '', $o);
 
   $db->beginTransaction();
   if ($uuid && ($antes = obra($uuid))) {
@@ -205,6 +219,9 @@ function catalogo_geojson_features(): array {
       . (!empty($p['entidad']) ? ': ' . $p['entidad'] : '') . (!empty($p['modalidad']) ? ' (' . mb_strtolower(MODALIDADES[$p['modalidad']]) . ')' : ''), $pg));
     if ($rl) $props['relaciones'] = $rl;
     if ($o['isla'] !== '') $props['isla'] = $o['isla'];
+    // Campos desconocidos: la web los ofrece para completar. El lugar de una obra no abierta no se pide en público.
+    $desc = array_values(array_filter(explode(',', $o['desconocidos'] ?? ''), fn($k) => $k !== '' && ($k !== 'lugar' || $o['sensibilidad'] === 'abierta')));
+    if ($desc) { $props['desconocidos'] = $desc; $props['por_conocer'] = implode(', ', array_map(fn($k) => CAMPOS_DESCONOCIBLES[$k], $desc)); }
     if ($sop && sensibilidad_soporte($sop) !== 'reservada') {
       $props['soporte'] = $sop['uuid'];
       if ($sop['url'] !== '') $props['soporte_url'] = $sop['url'];  // obra en una web: su dirección

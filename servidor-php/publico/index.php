@@ -92,7 +92,7 @@ function observaciones_publicas(string $obra): never {
 // Formularios públicos. Todo entra como pendiente y exige aceptar el aviso de privacidad.
 function recibir_envio(string $coleccion): never {
   $formularios = ['observaciones' => 'observacion', 'contexto' => 'contexto', 'propuestas_obra' => 'obra_nueva',
-    'propuestas_ruta' => 'ruta', 'inscripciones' => 'inscripcion'];
+    'propuestas_ruta' => 'ruta', 'inscripciones' => 'inscripcion', 'completar_obra' => 'completar'];
   $formulario = $formularios[$coleccion] ?? error_publico('Formulario desconocido.', 404);
   if (!in_array($_POST['acepta_privacidad'] ?? '', ['true', 'on', '1'], true)) {
     error_publico('Hay que aceptar el aviso de privacidad para enviar el formulario.');
@@ -111,6 +111,12 @@ function recibir_envio(string $coleccion): never {
     // Vale cualquier obra que esté o haya estado en el soporte de la etiqueta.
     $en_soporte = $qr['soporte'] && in_array(strtolower((string) $obra), array_column(obras_de_soporte($qr['soporte']), 'obra'), true);
     if (!$en_soporte && $qr['obra'] !== strtolower((string) $obra)) error_publico('La etiqueta QR no corresponde a esta obra.');
+  }
+  if ($formulario === 'completar') {
+    $st = $db->prepare('SELECT 1 FROM obras WHERE uuid = ? AND publicada = 1');
+    $st->execute([strtolower((string) $obra)]);
+    if (!$st->fetchColumn()) error_publico('Esa obra no está en el archivo.', 404);
+    $obra = strtolower((string) $obra);
   }
   $datos = [];
   foreach ($_POST as $k => $v) if (is_string($v)) $datos[substr((string) $k, 0, 60)] = mb_substr($v, 0, 5000);

@@ -165,6 +165,12 @@ textarea{min-height:110px;width:100%;resize:vertical}
 /* Formulario */
 form.obsf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px;max-width:760px}
 form.obsf .full{grid-column:1/-1}
+.unk{display:inline-flex;align-items:center;gap:4px;font-size:.75rem;color:var(--muted);margin-left:8px;text-transform:none;letter-spacing:0}
+.unk input{margin:0}
+.completar{border:1px solid var(--line);border-left:4px solid var(--ph-plen);padding:14px 18px;margin:20px 0;background:var(--surface)}
+.completar>summary{cursor:pointer;font-weight:600;font-size:1.05rem}
+.completar .faltan{margin:8px 0 0;font-size:.92rem}
+.desconocido{color:var(--muted);font-style:italic}
 form.obsf label{display:flex;flex-direction:column;gap:6px;font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
 fieldset{border:1px solid var(--line);padding:12px 14px;margin:0}
 legend{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);padding:0 6px}
@@ -1521,12 +1527,16 @@ const API = {
   ficha: API_BASE+"/api/publico/obras/", // + <código>: solo las observaciones aprobadas
   qr: "https://canarias.africa/", // cada QR impreso apunta a canarias.africa/<uuid-del-QR>; la página 404 de GitHub Pages lo pasa a #/q/<uuid>
   qrResolver: API_BASE+"/api/qr/", // + <código> → {soporte, obras, obra, estado}: la etiqueta identifica un soporte (un muro, una roca… o una web)
-  envios: Object.fromEntries(Object.entries({ qr: "observaciones", contexto: "contexto", nueva: "propuestas_obra", ruta: "propuestas_ruta", inscripcion: "inscripciones" })
+  envios: Object.fromEntries(Object.entries({ qr: "observaciones", contexto: "contexto", nueva: "propuestas_obra", ruta: "propuestas_ruta", inscripcion: "inscripciones", completar: "completar_obra" })
     .map(([k,c])=>[k,`${API_BASE}/api/collections/${c}/records`])) // PocketBase, multipart
 };
 let DEMO = true; // pasa a false cuando carga el catálogo
 /* Catálogo real (obras publicadas desde /admin del servidor). Cuando carga, sustituye a las obras de ejemplo:
    actualiza las que ya conoce por id, crea las nuevas y retira las ficticias, con sus rutas y diálogos. */
+/* Campos que se pueden marcar como «desconocido» (los mismos que en /admin) */
+const DESCONOCIBLES={agentes:"Quién la hizo",fecha_obra:"Fecha",tipo:"Tipo de obra",descripcion:"Descripción",pagadores:"Quién la pagó",lugar:"Lugar exacto",foto:"Foto"};
+const unkOf=o=>o.unk||[];
+const NOLOSE=k=>`<span class="unk"><input type="checkbox" name="o-unk" value="${k}"> no lo sé</span>`;
 function obraDeCatalogo(f){
   const p=f.properties||{};
   /* Una obra reservada trae un punto ficticio (alrededor del centro de su isla o del archipiélago): solo sirve para uMap. */
@@ -1547,6 +1557,8 @@ function obraDeCatalogo(f){
     const nat=[...new Set(o.pags.map(x=>x.naturaleza))];
     o.fin={t:nat.length>1?"mixta":nat[0]||"desconocida",e:o.pags.map(x=>x.entidad).filter(Boolean).join(" · ")}; }
   if(p.fecha_obra) o.fecha={v:String(p.fecha_obra),p:PREC_FECHA[p.fecha_precision]||"sin precisar"};
+  /* Campos marcados como desconocidos en el archivo: la ficha invita a completarlos */
+  o.unk=Array.isArray(p.desconocidos)?p.desconocidos.filter(k=>DESCONOCIBLES[k]):[];
   if(Array.isArray(p.relaciones)) o.rels=p.relaciones;
   /* Foto actual: URL https directa a la imagen (normalmente Wikimedia Commons) y su crédito (autoría y licencia) */
   if(p.foto&&/^https:\/\//i.test(String(p.foto).trim())){ o.foto=String(p.foto).trim(); o.fotoCredito=p.foto_credito?String(p.foto_credito):""; }
@@ -1970,6 +1982,7 @@ function vObra(o){
       <p class="lede muted">${esc(o.tipo)} · ${o.lugar&&o.lugar!==M.n?esc(o.lugar)+" · ":""}${M.n}${o.m.startsWith("IS-")?"":`, ${ISLAS[M.isla]}`}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}${o.fichaUrl?`<p><a href="${esc(o.fichaUrl)}" target="_blank" rel="noopener">Ficha completa ↗</a></p>`:""}
       ${o.foto?`<figure class="foto-obra"><img src="${esc(o.foto)}" alt="Foto actual de ${esc(o.t)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest('figure').remove()">${o.fotoCredito?`<figcaption>${esc(o.fotoCredito)}</figcaption>`:""}</figure>`:""}
       <div class="btns"><a class="btn lichen" href="#contexto-${o.id.toLowerCase()}">Aportar contexto</a></div>
+      ${bloqueCompletar(o)}
       <div class="qrhint">${o.qr.st==="activo"?`<p><b>¿Estás junto a la obra?</b> Escanea su QR para contar cómo está hoy. El estado de una obra solo se puede observar desde su QR.</p>${DEMO?`<div class="btns" style="align-items:center"><a class="btn alt" href="#${qrHash(o)}" style="padding:6px 12px;font-size:.88rem">Simular escaneo del QR</a><span class="fake">solo en el prototipo</span></div>`:""}`
         :sensOf(o)==="reservada"?`<p class="muted">Esta obra no lleva QR en el sitio, para no señalar dónde está. Su estado lo revisa el equipo junto con la autoridad de patrimonio. Puedes aportar contexto.</p>`
         :`<p class="muted">Esta obra no tiene un QR activo (${esc(o.qr.st)}), así que ahora no se puede observar su estado. Lo revisaremos en la próxima salida de mapeo.</p>`}</div>
@@ -1982,9 +1995,9 @@ function vObra(o){
     <div class="stack">
       <h2>Ficha</h2>
       <dl class="dl">
-        <dt>Fecha</dt><dd>${esc(o.fecha.v)} <span class="muted">(${o.fecha.p})</span></dd>
-        <dt>Autoría</dt><dd>${o.aut.map(a=>`<div>${cert(a.c)}<b>${esc(a.n)}</b>${a.rol?` · ${a.rol}`:""}<br><span class="muted" style="font-size:.88rem">${CERTEZA[a.c].n}${a.f?`: ${esc(a.f)}`:""}</span></div>`).join("")}</dd>
-        <dt>Financiación</dt><dd>${o.pags&&o.pags.length?o.pags.map(x=>`<div>${FIN[x.naturaleza]}${x.entidad?` <span class="muted">· ${esc(x.entidad)}</span>`:""}${x.modalidad&&MODAL[x.modalidad]?` <span class="muted">· ${MODAL[x.modalidad]}</span>`:""}</div>`).join(""):`${FIN[o.fin.t]}${o.fin.e?` <span class="muted">· ${esc(o.fin.e)}</span>`:""}`}</dd>
+        <dt>Fecha</dt><dd>${unkOf(o).includes("fecha_obra")?`<span class="desconocido">Desconocida</span>`:`${esc(o.fecha.v)} <span class="muted">(${o.fecha.p})</span>`}</dd>
+        <dt>Autoría</dt><dd>${unkOf(o).includes("agentes")?`<span class="desconocido">Desconocida</span>`:o.aut.map(a=>`<div>${cert(a.c)}<b>${esc(a.n)}</b>${a.rol?` · ${a.rol}`:""}<br><span class="muted" style="font-size:.88rem">${CERTEZA[a.c].n}${a.f?`: ${esc(a.f)}`:""}</span></div>`).join("")}</dd>
+        <dt>Financiación</dt><dd>${unkOf(o).includes("pagadores")?`<span class="desconocido">Desconocida</span>`:o.pags&&o.pags.length?o.pags.map(x=>`<div>${FIN[x.naturaleza]}${x.entidad?` <span class="muted">· ${esc(x.entidad)}</span>`:""}${x.modalidad&&MODAL[x.modalidad]?` <span class="muted">· ${MODAL[x.modalidad]}</span>`:""}</div>`).join(""):`${FIN[o.fin.t]}${o.fin.e?` <span class="muted">· ${esc(o.fin.e)}</span>`:""}`}</dd>
         <dt>Ubicación</dt><dd>${sensOf(o)==="abierta"?`<span class="mono">${o.lat.toFixed(4)}° N, ${Math.abs(o.lon).toFixed(4)}° O · ±25 m</span>`
           :`<span class="sens">${sensOf(o)==="reservada"?(MUNIS[o.m].canarias?"Reservada · solo se indica que está en Canarias":`Reservada · solo se indica la isla (${ISLAS[MUNIS[o.m].isla]})`):"Zona aproximada (~2 km)"}</span><br><span class="muted" style="font-size:.88rem">${SENS[sensOf(o)].d}${o.sens.m?` Motivo: ${esc(o.sens.m)}.`:""}</span>`}</dd>
         <dt>QR</dt><dd>${qrTxt2}${o.qr.inst?`<br><span class="muted" style="font-size:.88rem">Instalado ${fd(o.qr.inst)} · última revisión ${fd(o.qr.rev)} · próxima ${fd(prox)}${prox&&prox<HOY?" <b>(vencida)</b>":""}</span>`:""}</dd>
@@ -2018,6 +2031,48 @@ function vObra(o){
   </section>`;
 }
 
+/* «¿Conoces más detalles de esta obra? Colabora»: los campos marcados como desconocidos, para rellenarlos rápido.
+   Va a /admin como envío «completar»; las personas que se nombren no se publican hasta revisarlo. */
+function bloqueCompletar(o,abierto){
+  const u=unkOf(o); if(!u.length) return "";
+  const campo={
+    agentes:`<label for="c-ag">Quién la hizo<input id="c-ag" type="text" placeholder="Nombre de la persona o colectivo"></label>
+      <label for="c-agc">¿Cómo lo sabes?<select id="c-agc"><option value="atribuida">Lo he oído o lo creo</option><option value="probable">Varias fuentes coinciden</option><option value="confirmada">Está confirmado (firma, documento)</option></select></label>`,
+    fecha_obra:`<label for="c-fec">Cuándo se hizo<input id="c-fec" type="text" placeholder="1987, años 80…"></label>
+      <label for="c-fp">Precisión<select id="c-fp">${Object.entries(PREC_FECHA).map(([k,n])=>`<option value="${k}">${k?n:"Sin precisar"}</option>`).join("")}</select></label>`,
+    tipo:`<label for="c-tipo">Tipo de obra<input id="c-tipo" type="text" list="c-tipolist" placeholder="Mural, escultura, grafiti…"><datalist id="c-tipolist">${["mural","escultura","grafiti","instalación","grabado","relieve","arquitectura","acción","obra web"].map(t=>`<option value="${t}">`).join("")}</datalist></label>`,
+    descripcion:`<label class="full" for="c-desc">Qué es, qué representa<textarea id="c-desc" placeholder="Técnica, historia, significado…"></textarea></label>`,
+    pagadores:`<label for="c-pn">Quién la pagó<select id="c-pn">${Object.entries(NATUR).map(([k,n])=>`<option value="${k}">${n}</option>`).join("")}</select></label>
+      <label for="c-pe">Entidad<input id="c-pe" type="text" list="c-ent" placeholder="Ayuntamiento, empresa… (si es un particular, no se publica)"><datalist id="c-ent">${[...entidadesDe("publica"),...entidadesDe("privada")].map(e=>`<option value="${esc(e)}">`).join("")}</datalist></label>`,
+    lugar:`<label class="full" for="c-lug">Dónde está exactamente<input id="c-lug" type="text" placeholder="Calle, número, plaza, paraje"></label>`,
+    foto:`<label class="full" for="c-foto">Una foto de la obra<input id="c-foto" type="file" accept="image/*" capture="environment"></label>`};
+  return `<details class="completar"${abierto?" open":""}><summary>¿Conoces más detalles de esta obra? Colabora</summary>
+    <p class="faltan muted">De esta obra no sabemos: <b>${u.map(k=>DESCONOCIBLES[k].toLowerCase()).join(", ")}</b>. Si conoces algo, cuéntanoslo: el equipo lo revisa antes de publicarlo.</p>
+    <form class="obsf" id="compf" data-obra="${o.id}" novalidate style="margin-top:14px">
+      ${u.map(k=>campo[k]).join("")}
+      <label class="full" for="c-fue">Cómo lo sabes (opcional)<input id="c-fue" type="text" placeholder="Placa, vecinos, artículo, conoces a quien la hizo… No se publica."></label>
+      <label for="c-alias">Tu nombre o alias (opcional)<input id="c-alias" type="text" autocomplete="nickname"></label>
+      ${u.includes("foto")?`<label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="c-lic" style="margin-top:4px"> <span>Si envío una foto, es mía o puedo compartirla, y autorizo a mostrarla con mi crédito (<a href="#derechos">derechos de imagen</a>).</span></label>`:""}
+      <label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="c-priv" style="margin-top:4px"> <span>He leído la <a href="#privacidad">política de privacidad</a> y acepto que se guarden estos datos para revisarlos.</span></label>
+      <p class="full muted" id="c-res" role="status" style="font-size:.9rem"></p>
+      <div class="full btns"><button class="btn" type="submit">Enviar lo que sé</button></div>
+    </form></details>`;
+}
+async function completar(e){
+  e.preventDefault();
+  const f=e.target, v=id=>{ const el=f.querySelector("#"+id); return el?el.value.trim():""; }, res=f.querySelector("#c-res");
+  const bad=t=>{ res.textContent=t; res.style.color="var(--ph-desg)"; };
+  if(!f.querySelector("#c-priv").checked) return bad("Marca la casilla de privacidad para poder enviarlo.");
+  const foto=f.querySelector("#c-foto")&&f.querySelector("#c-foto").files[0]||null;
+  if(foto&&!f.querySelector("#c-lic").checked) return bad("Marca la casilla de derechos de imagen para enviar la foto.");
+  const d={obra:f.dataset.obra,alias:v("c-alias"),fuente:v("c-fue"),texto:v("c-fue"),fecha_obra:v("c-fec"),fecha_precision:v("c-fec")?v("c-fp"):"",tipo:v("c-tipo"),descripcion:v("c-desc"),lugar:v("c-lug"),
+    agentes:v("c-ag")?JSON.stringify([{nombre:v("c-ag"),rol:"autoria",certeza:v("c-agc")||"atribuida"}]):"",
+    pagadores:v("c-pe")||v("c-pn")==="particular"?JSON.stringify([{naturaleza:v("c-pn"),entidad:v("c-pe"),modalidad:""}]):"",
+    foto,licencia:foto?"cesión no exclusiva con crédito":"",acepta_derechos:"1",acepta_privacidad:"1"};
+  if(!["fecha_obra","tipo","descripcion","lugar","agentes","pagadores"].some(k=>d[k])&&!foto) return bad("Rellena al menos uno de los datos.");
+  if(!await enviarAPI("completar",d)) return bad("No se ha podido enviar. Inténtalo de nuevo en un rato.");
+  f.closest("details").innerHTML=`<div class="ok"><h3>¡Gracias!</h3><p>El equipo revisará lo que nos cuentas y lo pasará a la ficha.${DEMO?" En este prototipo no se envía a ningún sitio.":""}</p></div>`;
+}
 let PRESEL="";
 /* Token de cada QR físico: se renueva cuando se repone el código. Sin token válido no se puede observar el estado. */
 const qrHash=o=>`/q/${o.qr.cod}`;
@@ -2032,7 +2087,7 @@ function cabObra(o,eyebrow){ return `<p class="eyebrow"><a href="#${slug(o.id)}"
 
 /* Observación del estado: solo al escanear el QR junto a la obra */
 function vQR(o,cod,estado,web){
-  return cabObra(o,"Has escaneado el QR de esta obra")+`
+  return cabObra(o,"Has escaneado el QR de esta obra")+bloqueCompletar(o,true)+`
   <div id="okbox" style="margin-top:20px"></div>
   <form class="obsf" id="obsf" data-modo="qr" data-obra="${o.id}" novalidate style="margin-top:20px">
     <input type="hidden" name="obra" value="${o.id}"><input type="hidden" name="qr_codigo" value="${esc(cod)}">
@@ -2071,22 +2126,23 @@ function vAportar(){
     <h1>Proponer una obra nueva</h1>
     <p class="lede muted">¿Conoces una obra de arte o expresión artística que no está en el archivo? Cuéntanos qué es y dónde está. El equipo la revisa, le da un identificador y, si procede, le coloca su QR.</p>
     <p class="muted">¿La obra ya tiene ficha? Escanea su QR para contar cómo está, o entra en su ficha para aportar contexto.</p>
+    <p class="muted">No hace falta saberlo todo: marca «no lo sé» en lo que desconozcas. La ficha lo mostrará como desconocido y otras personas podrán completarlo.</p>
   </section>
   <div id="okbox" style="margin-top:20px"></div>
   <form class="obsf" id="obsf" data-modo="nueva" novalidate style="margin-top:20px">
     <label class="full" for="o-n-tit">Qué es<input id="o-n-tit" type="text" required placeholder="Por ejemplo: mural en la fachada del colegio"></label>
-    <label for="o-n-tipo">Tipo<input id="o-n-tipo" type="text" list="tipolist" placeholder="Mural, escultura, grafiti…"><datalist id="tipolist">${["mural","escultura","grafiti","instalación","grabado","relieve","arquitectura","acción","obra web"].map(t=>`<option value="${t}">`).join("")}</datalist></label>
+    <label for="o-n-tipo">Tipo ${NOLOSE("tipo")}<input id="o-n-tipo" type="text" list="tipolist" placeholder="Mural, escultura, grafiti…"><datalist id="tipolist">${["mural","escultura","grafiti","instalación","grabado","relieve","arquitectura","acción","obra web"].map(t=>`<option value="${t}">`).join("")}</datalist></label>
     <label for="o-n-fase">Cómo está hoy<select id="o-n-fase">${Object.entries(FASES).map(([k,f])=>`<option value="${k}"${k==="plenitud"?" selected":""}>${f.n}</option>`).join("")}</select></label>
-    <label for="o-n-fec">Cuándo se hizo<input id="o-n-fec" type="text" placeholder="1987, años 80, época aborigen…"></label>
+    <label for="o-n-fec">Cuándo se hizo ${NOLOSE("fecha_obra")}<input id="o-n-fec" type="text" placeholder="1987, años 80, época aborigen…"></label>
     <label for="o-n-fp">Precisión de la fecha<select id="o-n-fp">${Object.entries(PREC_FECHA).map(([k,n])=>`<option value="${k}">${k?n:"No lo sé"}</option>`).join("")}</select></label>
     <label for="o-n-mun">Municipio<input id="o-n-mun" type="text" required list="munlist" placeholder="Escribe el municipio"><datalist id="munlist">${MUNIS_CANARIAS.map(m=>`<option value="${m[0]}">`).join("")}</datalist></label>
     <label for="o-n-lug">Dónde está<input id="o-n-lug" type="text" required placeholder="Calle, barrio o paraje"></label>
     <div class="full gps"><button class="btn alt mini" type="button" id="o-gps">Tomar mis coordenadas</button><span class="muted" id="o-gps-txt" style="font-size:.9rem">Si estás junto a la obra, guarda su punto exacto con el GPS del móvil.</span><input type="hidden" id="o-lat"><input type="hidden" id="o-lon"><input type="hidden" id="o-prec"></div>
-    ${repBloque("agentes","Quién la hizo o participó","Autoría, encargo, restauración, cuidado… Las personas que nombres no se publican hasta que el equipo lo revise con ellas.","+ Añadir persona o colectivo")}
-    ${repBloque("pagadores","Quién la pagó","Elige si es una entidad pública o privada y busca en la lista de entidades de otras obras. Si no está, escríbela: se añadirá.","+ Añadir quién la pagó")}
+    ${repBloque("agentes","Quién la hizo o participó "+NOLOSE("agentes"),"Autoría, encargo, restauración, cuidado… Las personas que nombres no se publican hasta que el equipo lo revise con ellas.","+ Añadir persona o colectivo")}
+    ${repBloque("pagadores","Quién la pagó "+NOLOSE("pagadores"),"Elige si es una entidad pública o privada y busca en la lista de entidades de otras obras. Si no está, escríbela: se añadirá.","+ Añadir quién la pagó")}
     ${repBloque("relaciones","Relación con otras obras del archivo","¿Continúa, responde o se superpone a otra obra que ya está en el archivo?","+ Añadir relación")}
     ${["publica","privada"].map(n=>`<datalist id="ent-${n}">${entidadesDe(n).map(e=>`<option value="${esc(e)}">`).join("")}</datalist>`).join("")}
-    <label class="full" for="o-txt">Lo que sabes de ella (opcional)<textarea id="o-txt" placeholder="Qué representa, técnica, historia, cómo está."></textarea></label>
+    <label class="full" for="o-txt">Lo que sabes de ella (opcional) ${NOLOSE("descripcion")}<textarea id="o-txt" placeholder="Qué representa, técnica, historia, cómo está."></textarea></label>
     <label class="full" for="o-n-fue">Cómo lo sabes (opcional)<textarea id="o-n-fue" placeholder="Testimonio de vecinos, placa, artículo, documento… No se publica: ayuda a verificar."></textarea></label>
     <label for="o-foto">Foto (opcional)<input id="o-foto" type="file" accept="image/*" capture="environment"></label>
     ${ALIAS}
@@ -2154,7 +2210,7 @@ async function enviar(e){
     if(!await enviarAPI("nueva",{titulo:v("#o-n-tit"),tipo:v("#o-n-tipo"),fase:v("#o-n-fase"),fecha_obra:v("#o-n-fec"),fecha_precision:v("#o-n-fp"),
       lugar:v("#o-n-lug"),municipio:v("#o-n-mun"),lat:v("#o-lat"),lon:v("#o-lon"),precision_gps:v("#o-prec"),
       agentes:repValor("agentes"),pagadores:repValor("pagadores"),relaciones:repValor("relaciones"),
-      descripcion:txt,texto:txt,fuentes:v("#o-n-fue"),alias,sensibilidad:ubic,posible_sensible:ubic!=="abierta"?"1":"",
+      descripcion:txt,texto:txt,fuentes:v("#o-n-fue"),alias,sensibilidad:ubic,desconocidos:[...document.querySelectorAll('input[name="o-unk"]:checked')].map(x=>x.value).join(","),posible_sensible:ubic!=="abierta"?"1":"",
       isla:(()=>{ const f=MUNIS_CANARIAS.find(x=>normNombre(x[0])===normNombre(v("#o-n-mun"))); return (v("#o-lat")?islaDe(+v("#o-lat"),+v("#o-lon")):null)||(f?islaDe(f[2],f[3]):""); })(),foto:archivo("#o-foto"),acepta_derechos:"1",acepta_privacidad:"1"})) return bad("No se ha podido enviar. Inténtalo de nuevo en un rato.");
     $("#okbox").innerHTML=`<div class="ok"><h3>Propuesta recibida</h3><p>El equipo la revisará y abrirá una ficha con identificador nuevo.${DEMO?" En este prototipo no se envía a ningún sitio.":""}</p></div>`;
   } else {
@@ -3159,6 +3215,11 @@ function route(){
   if(h==="ayudas") wireAyudas();
   if(h==="inscripcion") $("#inscf").addEventListener("submit",inscribir);
   if($("#obsf")) $("#obsf").addEventListener("submit",enviar);
+  if($("#compf")) $("#compf").addEventListener("submit",completar);
+  /* «no lo sé»: vacía y bloquea el campo de al lado */
+  document.querySelectorAll('input[name="o-unk"]').forEach(c=>c.addEventListener("change",()=>{ const l=c.closest("label,fieldset"); if(!l) return;
+    if(l.tagName==="FIELDSET"&&c.checked) l.querySelectorAll(".repf").forEach(x=>x.remove());
+    l.querySelectorAll("input:not([name=o-unk]),textarea,select,button").forEach(i=>{ if(c.checked&&i.tagName!=="BUTTON") i.value=""; i.disabled=c.checked; }); }));
   if($("#rutaf")){ $("#rutaf").addEventListener("submit",proponerRuta); wireAgregador(); }
   wireEtiquetas(); wireScan(); if(h!=="scan") pararScan();
   if(h==="colabora") refrescarPerfil();

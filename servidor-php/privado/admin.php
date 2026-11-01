@@ -165,7 +165,7 @@ if ($sub === '/obras') {
   pagina('Obras propuestas', $html);
 }
 
-$nombres = ['observacion' => 'Observación (QR)', 'contexto' => 'Contexto', 'obra_nueva' => 'Obra nueva', 'ruta' => 'Ruta propuesta', 'inscripcion' => 'Inscripción a salida'];
+$nombres = ['observacion' => 'Observación (QR)', 'contexto' => 'Contexto', 'obra_nueva' => 'Obra nueva', 'ruta' => 'Ruta propuesta', 'inscripcion' => 'Inscripción a salida', 'completar' => 'Completar ficha (datos desconocidos)'];
 $estado = in_array($_GET['estado'] ?? '', ['aprobada', 'rechazada'], true) ? $_GET['estado'] : 'pendiente';
 $st = $db->prepare('SELECT * FROM envios WHERE estado = ? ORDER BY creado DESC LIMIT 200');
 $st->execute([$estado]);
@@ -178,6 +178,7 @@ foreach ($envios as $e) {
   $html .= '</dl>';
   foreach (json_decode($e['fotos'], true) as $f) $html .= "<a href='/admin/foto/{$h($f)}'><img src='/admin/foto/{$h($f)}' alt='Foto enviada'></a>";
   if ($e['formulario'] === 'obra_nueva' && $e['estado'] !== 'aprobada') $html .= "<p><a href='/admin/obra?desde_envio={$e['id']}'>Pasar al catálogo</a></p>";
+  if ($e['formulario'] === 'completar' && $e['estado'] !== 'aprobada' && $e['obra']) $html .= "<p><a href='/admin/obra?id={$h($e['obra'])}&desde_completar={$e['id']}'>Revisar y pasar a la ficha</a></p>";
   if ($e['formulario'] === 'ruta' && $e['estado'] !== 'aprobada') $html .= "<p><a href='/admin/ruta?desde_envio={$e['id']}'>Pasar a rutas</a></p>";
   foreach (['aprobada' => 'Aprobar', 'rechazada' => 'Rechazar', 'pendiente' => 'Devolver a pendientes'] as $a => $t) {
     if ($a !== $e['estado']) $html .= "<form method=post action=/admin/estado class=inline><input type=hidden name=csrf value=$csrf><input type=hidden name=id value={$e['id']}><input type=hidden name=estado value=$a><input type=hidden name=volver value=$estado><button class=$a>$t</button></form> ";

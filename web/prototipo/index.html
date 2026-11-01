@@ -1065,7 +1065,7 @@ a.of:hover::after{opacity:.9}
     </nav>
   </div>
 </header>
-<div class="bandera" aria-hidden="true"></div><div class="proto"><div class="wrap">PROTOTIPO · Las obras, personas, fechas y observaciones son ficticias y sirven para probar el sistema. Las convocatorias de «Ayudas a artistas» son reales.</div></div>
+<div class="bandera" aria-hidden="true"></div><div class="proto"><div class="wrap" id="aviso-proto">PROTOTIPO · Las obras, personas, fechas y observaciones son ficticias y sirven para probar el sistema. Las convocatorias de «Ayudas a artistas» son reales.</div></div>
 
 <main class="wrap" id="app" tabindex="-1"></main>
 
@@ -1105,7 +1105,25 @@ const MUNIS = {
   HAR:{n:"Haría",isla:"LZ",lon:-13.50,lat:29.145},
   TIN:{n:"Tinajo",isla:"LZ",lon:-13.675,lat:29.063}
 };
-const ISLAS = {TF:"Tenerife",LZ:"Lanzarote"};
+const ISLAS = {LP:"La Palma",EH:"El Hierro",GO:"La Gomera",TF:"Tenerife",GC:"Gran Canaria",FV:"Fuerteventura",LZ:"Lanzarote",LG:"La Graciosa"};
+/* Los 88 municipios de Canarias [nombre, código INE, lat, lon de la capital municipal] (paquete spanish-cities-info, ISC, datos del INE).
+   Sirven para dar municipio e isla a las obras del catálogo que llegan sin la propiedad «municipio». */
+const MUNIS_CANARIAS = [["Adeje","38001",28.14,-16.7241],["Agulo","38002",28.1687,-17.2251],["Alajeró","38003",28.055,-17.2453],["Arafo","38004",28.3506,-16.4333],["Arico","38005",28.1924,-16.5043],["Arona","38006",28.0553,-16.676],["Barlovento","38007",28.8092,-17.8221],["Breña Alta","38008",28.6565,-17.8032],["Breña Baja","38009",28.6313,-17.7906],["Buenavista del Norte","38010",28.335,-16.8631],["Candelaria","38011",28.3812,-16.3927],["El Paso","38027",28.6651,-17.8676],["El Pinar de El Hierro","38901",27.696,-18.0252],["El Rosario","38032",28.4303,-16.359],["El Sauzal","38041",28.4561,-16.424],["El Tanque","38044",28.3313,-16.7807],["Fasnia","38012",28.2496,-16.467],["Frontera","38013",27.7478,-18.0667],["Fuencaliente de la Palma","38014",28.5087,-17.8463],["Garachico","38015",28.3321,-16.7513],["Garafía","38016",28.8017,-17.9125],["Granadilla de Abona","38017",28.1121,-16.5639],["Guía de Isora","38019",28.2204,-16.7586],["Güímar","38020",28.2952,-16.4325],["Hermigua","38021",28.1478,-17.1979],["Icod de los Vinos","38022",28.3308,-16.6935],["La Guancha","38018",28.3531,-16.6463],["La Matanza de Acentejo","38025",28.4407,-16.4422],["La Orotava","38026",28.2989,-16.5769],["La Victoria de Acentejo","38051",28.4187,-16.4481],["Los Llanos de Aridane","38024",28.6167,-17.9024],["Los Realejos","38031",28.3546,-16.5857],["Los Silos","38042",28.352,-16.8165],["Puerto de la Cruz","38028",28.4075,-16.5472],["Puntagorda","38029",28.7621,-17.9651],["Puntallana","38030",28.7423,-17.7658],["San Andrés y Sauces","38033",28.7765,-17.7992],["San Cristóbal de La Laguna","38023",28.5099,-16.3263],["San Juan de la Rambla","38034",28.3552,-16.6248],["San Miguel de Abona","38035",28.0706,-16.6221],["San Sebastián de la Gomera","38036",28.0969,-17.1663],["Santa Cruz de Tenerife","38038",28.5179,-16.2254],["Santa Cruz de la Palma","38037",28.7075,-17.8],["Santa Úrsula","38039",28.4069,-16.4774],["Santiago del Teide","38040",28.2785,-16.7965],["Tacoronte","38043",28.4809,-16.4005],["Tazacorte","38045",28.6243,-17.9251],["Tegueste","38046",28.52,-16.3358],["Tijarafe","38047",28.7111,-17.9456],["Valle Gran Rey","38049",28.1234,-17.3187],["Vallehermoso","38050",28.1424,-17.2845],["Valverde","38048",27.7853,-17.9439],["Vilaflor de Chasna","38052",28.1557,-16.6475],["Villa de Mazo","38053",28.5797,-17.7973],["Agaete","35001",28.0694,-15.6983],["Agüimes","35002",27.8951,-15.4573],["Antigua","35003",28.3778,-13.9503],["Arrecife","35004",28.9783,-13.5622],["Artenara","35005",28.019,-15.6972],["Arucas","35006",28.1203,-15.5225],["Betancuria","35007",28.4344,-14.0872],["Firgas","35008",28.1079,-15.5583],["Gáldar","35009",28.1092,-15.6611],["Haría","35010",29.1618,-13.4752],["Ingenio","35011",27.9307,-15.4435],["La Aldea de San Nicolás","35020",27.9496,-15.7874],["La Oliva","35014",28.6521,-13.925],["Las Palmas de Gran Canaria","35016",28.0914,-15.4549],["Mogán","35012",27.8576,-15.7169],["Moya","35013",28.0876,-15.5926],["Puerto del Rosario","35017",28.5108,-13.9507],["Pájara","35015",28.2052,-14.241],["San Bartolomé","35018",28.9901,-13.6156],["San Bartolomé de Tirajana","35019",27.8409,-15.5829],["Santa Brígida","35021",28.0332,-15.4954],["Santa Lucía de Tirajana","35022",27.8698,-15.4888],["Santa María de Guía de Gran Canaria","35023",28.1159,-15.6184],["Teguise","35024",29.0949,-13.5475],["Tejeda","35025",27.9681,-15.66],["Telde","35026",27.9831,-15.4293],["Teror","35027",28.0599,-15.5403],["Tinajo","35029",29.0455,-13.7082],["Tuineje","35030",28.2721,-14.0443],["Tías","35028",28.9561,-13.6621],["Valleseco","35032",28.0443,-15.5831],["Valsequillo de Gran Canaria","35031",27.9843,-15.509],["Vega de San Mateo","35033",28.0001,-15.5596],["Yaiza","35034",28.9351,-13.7851]];
+const ISLA_BOX = {LG:[-13.56,-13.46,29.21,29.30],EH:[-18.17,-17.86,27.62,27.86],LP:[-18.02,-17.70,28.44,28.87],GO:[-17.36,-17.08,27.99,28.23],
+  TF:[-16.95,-16.10,27.98,28.60],GC:[-15.86,-15.35,27.72,28.19],FV:[-14.55,-13.80,28.03,28.78],LZ:[-13.90,-13.40,28.83,29.25]};
+const islaDe=(lat,lon)=>(Object.entries(ISLA_BOX).find(([k,[x0,x1,y0,y1]])=>lon>=x0&&lon<=x1&&lat>=y0&&lat<=y1)||[])[0]||null;
+const normNombre=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+/* Clave de MUNIS para una obra: por nombre si viene en el catálogo; si no, la capital municipal más cercana de su isla
+   (aproximado: cerca de un límite municipal puede asignar el vecino). Añade el municipio a MUNIS si aún no estaba. */
+function muniDe(nombre,lat,lon){
+  let fila=null;
+  if(nombre){ const n=normNombre(nombre); fila=MUNIS_CANARIAS.find(x=>normNombre(x[0])===n)||MUNIS_CANARIAS.find(x=>normNombre(x[0]).includes(n)||n.includes(normNombre(x[0]))); }
+  if(!fila&&lat!=null){ const isla=islaDe(lat,lon), k=Math.cos(lat*Math.PI/180);
+    fila=MUNIS_CANARIAS.filter(x=>!isla||islaDe(x[2],x[3])===isla||(isla==="LG"&&x[0]==="Teguise")).reduce((a,x)=>{ const d=(x[2]-lat)**2+((x[3]-lon)*k)**2; return !a||d<a.d?{x,d}:a; },null)?.x; }
+  if(!fila) return null;
+  const ya=Object.entries(MUNIS).find(([k,m])=>normNombre(m.n)===normNombre(fila[0])); if(ya) return ya[0];
+  MUNIS[fila[1]]={n:fila[0],isla:islaDe(fila[2],fila[3]),lon:fila[3],lat:fila[2]}; return fila[1];
+}
 
 /* ---------- Datos de ejemplo (FICTICIOS) ---------- */
 const OBRAS = [
@@ -1445,6 +1463,10 @@ const OUT = {
  TF:{box:[-16.94,-16.10,27.98,28.62],W:440,poly:[[-16.92,28.345],[-16.90,28.375],[-16.86,28.385],[-16.76,28.378],[-16.66,28.395],[-16.55,28.418],[-16.45,28.47],[-16.36,28.55],[-16.24,28.57],[-16.13,28.585],[-16.16,28.53],[-16.25,28.47],[-16.33,28.40],[-16.37,28.35],[-16.38,28.30],[-16.43,28.23],[-16.43,28.16],[-16.48,28.10],[-16.54,28.03],[-16.63,28.02],[-16.72,28.04],[-16.74,28.10],[-16.80,28.17],[-16.84,28.25],[-16.89,28.30]]},
  LZ:{box:[-13.90,-13.38,28.82,29.26],W:280,poly:[[-13.47,29.24],[-13.42,29.22],[-13.46,29.13],[-13.49,29.03],[-13.55,28.96],[-13.66,28.915],[-13.75,28.87],[-13.83,28.85],[-13.87,28.86],[-13.84,28.94],[-13.83,28.98],[-13.75,29.04],[-13.67,29.10],[-13.58,29.12],[-13.53,29.17],[-13.49,29.22]]}
 };
+/* Islas sin contorno dibujado: su recuadro (solo se usa si no cargan las teselas) */
+Object.entries(ISLA_BOX).forEach(([k,[x0,x1,y0,y1]])=>{ if(!OUT[k]) OUT[k]={box:[x0,x1,y0,y1],W:{GC:300,FV:300,LP:220}[k]||200,poly:[[x0,y0],[x1,y0],[x1,y1],[x0,y1]]}; });
+const ORDEN_ISLAS=Object.keys(ISLAS);
+function islasConObras(obras){ const s=new Set(obras.filter(enMapa).map(o=>MUNIS[o.m]&&MUNIS[o.m].isla).filter(Boolean)); const l=ORDEN_ISLAS.filter(i=>s.has(i)); return l.length?l:["TF"]; }
 function proj(isla){ const o=OUT[isla],[x0,x1,y0,y1]=o.box,k=Math.cos(28.6*Math.PI/180),W=o.W,H=W*(y1-y0)/((x1-x0)*k);
   return {W,H,p:(lon,lat)=>[ (lon-x0)/(x1-x0)*W, (y1-lat)/(y1-y0)*H ]}; }
 function svgIsland(isla,obras,opt){
@@ -1462,7 +1484,7 @@ function svgIsland(isla,obras,opt){
   s+=`<g font-family="var(--f-mono)" font-size="9" fill="${css("--muted")}"><text x="${W-10}" y="${H-10}" text-anchor="end">${isla==="TF"?"10 km":"5 km"} ⟷</text></g></svg>`;
   return `<figure class="${isla==="LZ"?"lz":""}"><figcaption>${ISLAS[isla]}</figcaption>${s}</figure>`;
 }
-function mapa(obras,opt={}){ const islas=opt.islas||["TF","LZ"]; return `<div class="map">${islas.map(i=>mapIsland(i,obras,opt)).join("")}</div>`; }
+function mapa(obras,opt={}){ const islas=opt.islas||islasConObras(obras); return `<div class="map">${islas.map(i=>mapIsland(i,obras,opt)).join("")}</div>`; }
 
 /* Mapas: Leaflet + teselas de OpenStreetMap servidas desde la caché propia de canarias.africa.
    Los nodos geográficos (obras, QR, rutas) se dibujan y editan en uMap; la web lee sus capas en GeoJSON
@@ -1484,21 +1506,46 @@ const API = {
     .map(([k,c])=>[k,`${API_BASE}/api/collections/${c}/records`])) // PocketBase, multipart
 };
 let DEMO = true; // pasa a false cuando carga el catálogo
+/* Catálogo real (capa Obras de uMap copiada a /datos/obras.geojson al publicar). Cuando carga, sustituye a las obras de ejemplo:
+   actualiza las que ya conoce por id, crea las nuevas y retira las ficticias, con sus rutas y diálogos. */
+function obraDeCatalogo(f){
+  const p=f.properties||{}, pt=f.geometry&&f.geometry.type==="Point"&&Array.isArray(f.geometry.coordinates)?f.geometry.coordinates:null;
+  if(!p.id) return null;
+  let o=byId(p.id);
+  if(!o){ o={id:String(p.id),t:"",tipo:"Obra",m:null,lugar:"",lon:null,lat:null,fecha:{v:"—",p:"sin datos"},
+    aut:[{n:"Desconocida",rol:"",c:"desconocida",f:""}],fin:{t:"desconocida",e:""},fase:"plenitud",fen:[],qr:{st:"pendiente",inst:"",rev:""},obs:[]}; }
+  if(p.name) o.t=String(p.name);
+  if(p.tipo) o.tipo=String(p.tipo);
+  if(FASES[p.fase]) o.fase=p.fase;
+  if(SENS[p.sensibilidad]) o.sens={...(o.sens||{}),n:p.sensibilidad};
+  if(p.descripcion) o.desc=String(p.descripcion);
+  if(p.ficha){ const fi=String(p.ficha).trim(); if(/^https?:\/\//i.test(fi)) o.fichaUrl=fi; else if(!o.desc) o.desc=fi; }
+  if(Array.isArray(p.relaciones)) o.rels=p.relaciones;
+  o.precision=p.precision; // exacta | zona | municipio: el servidor ya ha ocultado; aquí no se recalcula nada
+  if(pt){ [o.lon,o.lat]=pt.map(Number); }
+  const m=muniDe(p.municipio, pt?o.lat:null, pt?o.lon:null) || (o.m&&MUNIS[o.m]?o.m:null);
+  if(!m) return null; // sin punto ni municipio no se puede situar
+  o.m=m; if(!pt){ o.lat=MUNIS[m].lat; o.lon=MUNIS[m].lon; }
+  if(!o.lugar||!byId(o.id)) o.lugar=p.lugar?String(p.lugar):MUNIS[m].n;
+  if(!o.t) o.t="Obra sin título";
+  return o;
+}
 async function cargarObrasPublicas(){
   try{
     const r=await fetch(API.obras,{headers:{Accept:"application/geo+json, application/json"}}); if(!r.ok) return;
     const gj=await r.json(); if(!gj||!Array.isArray(gj.features)) return;
+    const nuevas=gj.features.map(obraDeCatalogo).filter(Boolean);
     DEMO=false;
-    gj.features.forEach(f=>{ const p=f.properties||{}, o=byId(p.id); if(!o) return;
-      if(FASES[p.fase]) o.fase=p.fase;
-      if(SENS[p.sensibilidad]) o.sens={...(o.sens||{}),n:p.sensibilidad};
-      if(p.descripcion) o.desc=p.descripcion;
-      if(Array.isArray(p.relaciones)) o.rels=p.relaciones;
-      o.precision=p.precision; // exacta | zona | municipio: el servidor ya ha ocultado; aquí no se recalcula nada
-      if(f.geometry&&f.geometry.type==="Point") [o.lon,o.lat]=f.geometry.coordinates;
-      else { o.lat=MUNIS[o.m].lat; o.lon=MUNIS[o.m].lon; } });
+    OBRAS.splice(0,OBRAS.length,...nuevas);
+    const hay=id=>OBRAS.some(o=>o.id===id);
+    for(let i=RUTAS.length-1;i>=0;i--){ const r=RUTAS[i]; r.stops=r.stops.filter(hay); if(r.stops.length<2) RUTAS.splice(i,1); }
+    for(let i=DIALOGOS.length-1;i>=0;i--) if(!hay(DIALOGOS[i][0])||!hay(DIALOGOS[i][2])) DIALOGOS.splice(i,1);
+    const usados=new Set([...OBRAS.map(o=>o.m),...RUTAS.flatMap(r=>r.ms)]);
+    Object.keys(MUNIS).forEach(k=>{ if(!usados.has(k)) delete MUNIS[k]; });
+    G.byKey.clear(); G.byId.clear(); G.edges.length=0; buildGraph();
+    const av=document.getElementById("aviso-proto"); if(av) av.textContent="EN PRUEBAS · Las obras vienen del catálogo real, editado en uMap. Algunas funciones todavía son de prueba. Las convocatorias de «Ayudas a artistas» son reales.";
     route();
-  }catch(e){ /* vista previa: datos de ejemplo */ }
+  }catch(e){ console.warn("Catálogo no disponible; se muestran los datos de ejemplo",e); }
 }
 /* Ficha: descripción y relaciones vienen del catálogo estático; las observaciones aprobadas, de la API */
 async function cargarFicha(o){
@@ -1810,10 +1857,7 @@ function vArchivo(){
   <div id="res"></div>`;
 }
 /* ---------- Cerca de ti ---------- */
-const ZONAS=[...Object.values(MUNIS).map(m=>[m.n,m.lat,m.lon]),
- ["Santa Cruz de Tenerife",28.468,-16.254],["San Cristóbal de La Laguna",28.487,-16.315],["Puerto de la Cruz",28.414,-16.548],
- ["Las Palmas de Gran Canaria",28.124,-15.430],["Agüimes",27.905,-15.446],["Arrecife",28.963,-13.548],["Puerto del Rosario",28.500,-13.862],
- ["San Sebastián de La Gomera",28.091,-17.111],["Santa Cruz de La Palma",28.683,-17.765],["Valverde",27.809,-17.915]];
+const ZONAS=MUNIS_CANARIAS.map(x=>[x[0],x[2],x[3]]).sort((a,b)=>a[0].localeCompare(b[0],"es"));
 const RADIO_KM=15;
 let CERCA=null; try{ CERCA=JSON.parse(localStorage.getItem("ca-cerca")||"null"); }catch(e){}
 function km(a1,o1,a2,o2){ const r=Math.PI/180, x=Math.sin((a2-a1)*r/2)**2+Math.cos(a1*r)*Math.cos(a2*r)*Math.sin((o2-o1)*r/2)**2; return 12742*Math.asin(Math.sqrt(x)); }
@@ -1867,7 +1911,7 @@ function vObra(o){
     <div class="stack">
       <div class="idline"><span class="idbadge" title="${o.id}">${corto(o.id)}</span>${chip(o.fase)}${DEMO?`<span class="fake">datos ficticios</span>`:""}</div>
       <h1>${esc(o.t)}</h1>
-      <p class="lede muted">${o.tipo} · ${esc(o.lugar)} · ${M.n}, ${ISLAS[M.isla]}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}
+      <p class="lede muted">${o.tipo} · ${esc(o.lugar)} · ${M.n}, ${ISLAS[M.isla]}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}${o.fichaUrl?`<p><a href="${esc(o.fichaUrl)}" target="_blank" rel="noopener">Ficha completa ↗</a></p>`:""}
       <div class="btns"><a class="btn lichen" href="#contexto-${o.id.toLowerCase()}">Aportar contexto</a></div>
       <div class="qrhint">${o.qr.st==="activo"?`<p><b>¿Estás junto a la obra?</b> Escanea su QR para contar cómo está hoy. El estado de una obra solo se puede observar desde su QR.</p>${DEMO?`<div class="btns" style="align-items:center"><a class="btn alt" href="#${qrHash(o)}" style="padding:6px 12px;font-size:.88rem">Simular escaneo del QR</a><span class="fake">solo en el prototipo</span></div>`:""}`
         :sensOf(o)==="reservada"?`<p class="muted">Esta obra no lleva QR en el sitio, para no señalar dónde está. Su estado lo revisa el equipo junto con la autoridad de patrimonio. Puedes aportar contexto.</p>`

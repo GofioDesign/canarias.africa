@@ -61,7 +61,7 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
    | `@` | AAAA | 2606:50c0:8000::153, 2606:50c0:8001::153, 2606:50c0:8002::153, 2606:50c0:8003::153 (ya están) |
    | `www` | CNAME | `gofiodesign.github.io` |
    | `api` | A o CNAME | El que indique el hosting para el subdominio |
-   | `api` | TXT | `v=spf1 ip4:94.23.83.211 ~all` (SPF: autoriza al hosting a enviar como `no-responder@api.canarias.africa`) |
+   | `api` | TXT | `v=spf1 a mx ip4:51.91.107.140 ~all` (SPF que da el panel del hosting: `a` = la IP de la web, 51.91.107.140 = su servidor de correo saliente; autoriza a enviar como `no-responder@api.canarias.africa`) |
    | `default._domainkey.api` (o el nombre que dé el panel) | TXT | La clave DKIM que genera DirectAdmin para `api.canarias.africa` (opcional, mejora la entrega) |
    | `_github-pages-challenge-GofioDesign` | TXT | El que dé GitHub al verificar el dominio (evita que otra cuenta lo use en Pages) |
 

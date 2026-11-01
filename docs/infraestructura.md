@@ -50,6 +50,7 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 | `GET /datos/{obras,qr,rutas,artistas}.geojson` | Catálogo público (lo leen la web y uMap); `/datos/umap/…` es el nombre antiguo |
 | `GET /datos/fotos/AAAA-MM/<id>.jpg` | Fotos subidas desde `/admin`, solo si una obra o artista publicado las usa |
 | `/admin` | Moderación, pool de etiquetas, personas (nivel Custodia), obras propuestas, lista y votos del lanzamiento (con CSV e ideas nuevas) y descarga de la base de datos (con contraseña) |
+| `/admin/campo` | App «En campo» (instalable en el móvil): registra obras sin cobertura y las sube como borradores sin publicar cuando vuelve la red |
 
 ## Puesta en marcha
 
@@ -68,6 +69,17 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 
 3. **Hosting:** crear el subdominio `api.canarias.africa` con certificado SSL y con su carpeta pública apuntando a `servidor-php/publico/`. Subir `servidor-php/privado/` fuera de la carpeta pública si el hosting lo permite (si no, su `.htaccess` la bloquea). Copiar `privado/config.ejemplo.php` como `config.php` y rellenarlo. Programar cada hora: `php …/servidor-php/cron/tareas.php`.
 4. Requisitos del hosting: PHP 8.1 o superior con PDO SQLite, GD y cURL, y Apache o LiteSpeed con `mod_rewrite`. No hace falta MySQL.
+
+## App «En campo» (sin cobertura)
+
+`api.canarias.africa/admin/campo` se puede instalar en el móvil («Añadir a la pantalla de inicio»). Funciona así:
+
+1. Con conexión, se entra en `/admin` una vez: el móvil guarda la página para poder abrirla sin red.
+2. En campo, cada obra (título, foto, punto GPS con su precisión, municipio, sensibilidad, datos desconocidos y una nota) se guarda **en el propio móvil**. La foto se reduce a 2000 px en el teléfono.
+3. Al volver la red, la cola se sube sola: al abrir la página o, en Android, aunque esté cerrada. También se puede pulsar «Subir ahora».
+4. Cada obra entra **sin publicar** y con la nota y la precisión del GPS en «Fuentes». Desde la lista se abre en `/admin/obra` para completarla con el mapa.
+
+Si la sesión ha caducado, la cola espera: se vuelve a entrar y se sube. Cada obra lleva un identificador creado en el móvil, así que una subida repetida no crea duplicados. Lo que el servidor rechaza (por ejemplo, unas coordenadas fuera de Canarias) queda marcado «Hay que revisarla» con el motivo, para editarlo y volver a guardarlo.
 
 ## Espacio (1000 MB)
 

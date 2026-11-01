@@ -14,7 +14,7 @@ from pathlib import Path
 
 SALIDA = Path(__file__).resolve().parent.parent / "web" / "datos" / "obras.geojson"
 UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
-CAMPOS = ["fase", "municipio", "descripcion", "tipo", "ficha"]
+CAMPOS = ["fase", "municipio", "descripcion", "tipo", "ficha", "foto_credito"]
 
 try:
     req = urllib.request.Request(sys.argv[1], headers={"User-Agent": "canarias.africa catalogo"})
@@ -44,6 +44,11 @@ for f in capa.get("features", []):
     if p.get("description") and not p.get("descripcion"):
         p["descripcion"] = p["description"]
     props.update({k: p[k] for k in CAMPOS if p.get(k)})
+    foto = str(p.get("foto", "")).strip()
+    if foto.startswith("https://"):
+        props["foto"] = foto
+    elif foto:
+        avisos.append(f"«{nombre}»: la foto tiene que ser un enlace https://, no se publica la foto")
     obras.append({"type": "Feature", "geometry": {"type": "Point", "coordinates": g["coordinates"][:2]}, "properties": props})
 
 for a in avisos:

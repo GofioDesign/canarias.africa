@@ -19,11 +19,27 @@ const MODOS_RELACION = ['continua' => 'continúa', 'responde' => 'responde a', '
 const PRECISIONES_FECHA = ['' => 'Sin indicar', 'exacta' => 'Exacta', 'aproximada' => 'Aproximada', 'decada' => 'Década', 'epoca' => 'Época'];
 const PASO_DIFUSA = 0.02;
 // Islas: una obra reservada (delicada) solo publica su isla, ni municipio ni punto. [lon mín, lon máx, lat mín, lat máx]
-const ISLAS_CODIGO = ['TF' => 'Tenerife', 'GC' => 'Gran Canaria', 'LZ' => 'Lanzarote', 'FV' => 'Fuerteventura', 'LP' => 'La Palma',
+const ISLAS_CODIGO = ['CAN' => 'Canarias (sin isla concreta)', 'TF' => 'Tenerife', 'GC' => 'Gran Canaria', 'LZ' => 'Lanzarote', 'FV' => 'Fuerteventura', 'LP' => 'La Palma',
   'GO' => 'La Gomera', 'EH' => 'El Hierro', 'LG' => 'La Graciosa'];
 const ISLA_CAJA = ['LG' => [-13.56, -13.46, 29.21, 29.30], 'EH' => [-18.17, -17.86, 27.62, 27.86], 'LP' => [-18.02, -17.70, 28.44, 28.87],
   'GO' => [-17.36, -17.08, 27.99, 28.23], 'TF' => [-16.95, -16.10, 27.98, 28.60], 'GC' => [-15.86, -15.35, 27.72, 28.19],
   'FV' => [-14.55, -13.80, 28.03, 28.78], 'LZ' => [-13.90, -13.40, 28.83, 29.25]];
+// Obras con ubicación protegida (reservadas): se dibujan en un punto ficticio alrededor de un centro fijo, a hasta 5 km
+// del centro de su isla o 50 km del centro del archipiélago. El desplazamiento sale del UUID, nunca de las coordenadas
+// reales: es estable entre publicaciones y no da ninguna pista de dónde está la obra. [lat, lon, radio en km]
+const CENTRO_PROTEGIDO = ['CAN' => [28.30, -15.80, 50], 'TF' => [28.27, -16.56, 5], 'GC' => [27.96, -15.59, 5], 'LZ' => [29.03, -13.65, 5],
+  'FV' => [28.40, -14.03, 5], 'LP' => [28.68, -17.86, 5], 'GO' => [28.11, -17.22, 5], 'EH' => [27.75, -18.00, 5], 'LG' => [29.245, -13.505, 1.5]];
+function punto_protegido(string $uuid, string $isla): array {
+  [$lat, $lon, $radio] = CENTRO_PROTEGIDO[$isla] ?? CENTRO_PROTEGIDO['CAN'];
+  $h = hash('sha256', 'canarias-protegida:' . $uuid, true);
+  $a = unpack('N2', $h);
+  $angulo = $a[1] / 4294967295 * 2 * M_PI;
+  $r = $radio * sqrt($a[2] / 4294967295);  // reparto uniforme dentro del círculo
+  $dlat = $r * cos($angulo) / 111.32;
+  $dlon = $r * sin($angulo) / (111.32 * cos(deg2rad($lat)));
+  return [round($lon + $dlon, 4), round($lat + $dlat, 4)];
+}
+
 function isla_de(?float $lat, ?float $lon): string {
   if ($lat === null || $lon === null) return '';
   foreach (ISLA_CAJA as $k => [$x0, $x1, $y0, $y1]) if ($lon >= $x0 && $lon <= $x1 && $lat >= $y0 && $lat <= $y1) return $k;
@@ -103,7 +119,8 @@ function obra_guardar(array $d, ?string $uuid, string $autor = 'admin'): string 
   if (($o['lat'] === null) !== ($o['lon'] === null)) throw new InvalidArgumentException('Faltan la latitud o la longitud.');
   if ($o['lat'] === null && $o['municipio'] === '') throw new InvalidArgumentException('Una obra sin punto necesita al menos el municipio.');
   if (!isset(ISLAS_CODIGO[$o['isla']])) $o['isla'] = isla_de($o['lat'], $o['lon']);
-  if ($o['sensibilidad'] === 'reservada' && $o['isla'] === '') throw new InvalidArgumentException('Una obra reservada solo publica su isla: elige la isla o marca el punto.');
+  // Una reservada sin isla ni punto se dibuja alrededor del centro del archipiélago.
+  if ($o['sensibilidad'] === 'reservada' && $o['isla'] === '') $o['isla'] = 'CAN';
   foreach (['foto', 'ficha'] as $k) {
     if ($o[$k] !== '' && !preg_match('#^https://#', $o[$k]) && !($k === 'ficha' && !str_contains($o[$k], '://'))) {
       throw new InvalidArgumentException("El enlace de $k tiene que empezar por https://");
@@ -157,7 +174,7 @@ function catalogo_geojson_features(): array {
   foreach ($obras as $o) {
     $p = punto_publico($o);
     $props = ['id' => $o['uuid'], 'name' => $o['titulo'], 'sensibilidad' => $o['sensibilidad'],
-      'precision' => $o['sensibilidad'] === 'reservada' ? 'isla' : ($p === null ? 'municipio' : ($o['sensibilidad'] === 'abierta' ? 'exacta' : 'zona')),
+      'precision' => $o['sensibilidad'] === 'reservada' ? (($o['isla'] ?: 'CAN') === 'CAN' ? 'canarias' : 'isla') : ($p === null ? 'municipio' : ($o['sensibilidad'] === 'abierta' ? 'exacta' : 'zona')),
       'version' => (int) $o['version'], 'actualizado' => $o['actualizado']];
     foreach (['fase', 'municipio', 'tipo', 'descripcion', 'autoria', 'fecha_obra', 'fecha_precision', 'foto', 'foto_credito', 'ficha'] as $k) {
       if ($o[$k] !== '' && $o[$k] !== null) $props[$k] = $o[$k];
@@ -181,6 +198,7 @@ function catalogo_geojson_features(): array {
     if ($o['sensibilidad'] === 'reservada') unset($props['municipio']);
     // El lugar concreto de una obra sensible no se publica.
     if ($o['lugar'] !== '' && $o['sensibilidad'] === 'abierta') $props['lugar'] = $o['lugar'];
+    if ($o['sensibilidad'] === 'reservada') $p = punto_protegido($o['uuid'], $o['isla'] ?: 'CAN');
     $features[] = ['type' => 'Feature', 'geometry' => $p ? ['type' => 'Point', 'coordinates' => $p] : null, 'properties' => $props];
   }
   return $features;

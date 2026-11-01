@@ -1245,7 +1245,7 @@ function trazaEtiqueta(o){
    difusa: punto ajustado a una cuadrícula fija de ~2 km (no se puede promediar); reservada: solo el municipio. */
 const SENS={abierta:{n:"Abierta",d:"Ubicación exacta pública, QR en el sitio."},
  difusa:{n:"Difusa",d:"Se muestra una zona de unos 2 km. No entra en rutas. Para obras sin protección suficiente o en terreno privado."},
- reservada:{n:"Reservada",d:"Obra delicada: solo se publica la isla, ni el municipio ni el punto. Sin QR en el sitio. Las coordenadas exactas solo las ve el equipo y la investigación acreditada. Para patrimonio protegido, como el arte rupestre aborigen."}};
+ reservada:{n:"Reservada",d:"Obra delicada: solo se publica la isla (o solo que está en Canarias). En el mapa sale un punto simbólico alrededor del centro de la isla, que no tiene nada que ver con su ubicación real. Sin QR en el sitio. Las coordenadas exactas solo las ve el equipo y la investigación acreditada. Para patrimonio protegido, como el arte rupestre aborigen."}};
 const sensOf=o=>(o.sens&&o.sens.n)||"abierta";
 OBRAS.forEach(o=>{ const n=sensOf(o);
   if(n==="difusa"){ const c=.02; o.lat=(Math.floor(o.lat/c)+.5)*c; o.lon=(Math.floor(o.lon/c)+.5)*c; }
@@ -1528,7 +1528,9 @@ let DEMO = true; // pasa a false cuando carga el catálogo
 /* Catálogo real (obras publicadas desde /admin del servidor). Cuando carga, sustituye a las obras de ejemplo:
    actualiza las que ya conoce por id, crea las nuevas y retira las ficticias, con sus rutas y diálogos. */
 function obraDeCatalogo(f){
-  const p=f.properties||{}, pt=f.geometry&&f.geometry.type==="Point"&&Array.isArray(f.geometry.coordinates)?f.geometry.coordinates:null;
+  const p=f.properties||{};
+  /* Una obra reservada trae un punto ficticio (alrededor del centro de su isla o del archipiélago): solo sirve para uMap. */
+  const pt=p.sensibilidad!=="reservada"&&f.geometry&&f.geometry.type==="Point"&&Array.isArray(f.geometry.coordinates)?f.geometry.coordinates:null;
   if(!p.id) return null;
   let o=byId(p.id);
   if(!o){ o={id:String(p.id),t:"",tipo:"Obra",m:null,lugar:"",lon:null,lat:null,fecha:{v:"—",p:"sin datos"},
@@ -1554,6 +1556,7 @@ function obraDeCatalogo(f){
   /* Obra reservada (delicada): el servidor solo da la isla. Se sitúa en el centro de la isla, sin punto en el mapa. */
   if(!m&&ISLAS[p.isla]){ const b=ISLA_BOX[p.isla]; m="IS-"+p.isla;
     MUNIS[m]=MUNIS[m]||{n:ISLAS[p.isla]+" (ubicación protegida)",isla:p.isla,lon:(b[0]+b[1])/2,lat:(b[2]+b[3])/2}; }
+  if(!m&&p.sensibilidad==="reservada"){ m="IS-CAN"; MUNIS[m]=MUNIS[m]||{n:"Canarias (ubicación protegida)",isla:"TF",lon:-15.8,lat:28.3,canarias:true}; }
   if(!m) return null; // sin punto ni municipio no se puede situar
   o.m=m; if(!pt){ o.lat=MUNIS[m].lat; o.lon=MUNIS[m].lon; }
   if(!o.lugar||!byId(o.id)) o.lugar=p.lugar?String(p.lugar):MUNIS[m].n;
@@ -1961,7 +1964,7 @@ function vObra(o){
     <div class="stack">
       <div class="idline"><span class="idbadge" title="${o.id}">${corto(o.id)}</span>${chip(o.fase)}${DEMO?`<span class="fake">datos ficticios</span>`:""}</div>
       <h1>${esc(o.t)}</h1>
-      <p class="lede muted">${esc(o.tipo)} · ${o.lugar&&o.lugar!==M.n?esc(o.lugar)+" · ":""}${M.n}, ${ISLAS[M.isla]}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}${o.fichaUrl?`<p><a href="${esc(o.fichaUrl)}" target="_blank" rel="noopener">Ficha completa ↗</a></p>`:""}
+      <p class="lede muted">${esc(o.tipo)} · ${o.lugar&&o.lugar!==M.n?esc(o.lugar)+" · ":""}${M.n}${o.m.startsWith("IS-")?"":`, ${ISLAS[M.isla]}`}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}${o.fichaUrl?`<p><a href="${esc(o.fichaUrl)}" target="_blank" rel="noopener">Ficha completa ↗</a></p>`:""}
       ${o.foto?`<figure class="foto-obra"><img src="${esc(o.foto)}" alt="Foto actual de ${esc(o.t)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest('figure').remove()">${o.fotoCredito?`<figcaption>${esc(o.fotoCredito)}</figcaption>`:""}</figure>`:""}
       <div class="btns"><a class="btn lichen" href="#contexto-${o.id.toLowerCase()}">Aportar contexto</a></div>
       <div class="qrhint">${o.qr.st==="activo"?`<p><b>¿Estás junto a la obra?</b> Escanea su QR para contar cómo está hoy. El estado de una obra solo se puede observar desde su QR.</p>${DEMO?`<div class="btns" style="align-items:center"><a class="btn alt" href="#${qrHash(o)}" style="padding:6px 12px;font-size:.88rem">Simular escaneo del QR</a><span class="fake">solo en el prototipo</span></div>`:""}`
@@ -1980,7 +1983,7 @@ function vObra(o){
         <dt>Autoría</dt><dd>${o.aut.map(a=>`<div>${cert(a.c)}<b>${esc(a.n)}</b>${a.rol?` · ${a.rol}`:""}<br><span class="muted" style="font-size:.88rem">${CERTEZA[a.c].n}${a.f?`: ${esc(a.f)}`:""}</span></div>`).join("")}</dd>
         <dt>Financiación</dt><dd>${o.pags&&o.pags.length?o.pags.map(x=>`<div>${FIN[x.naturaleza]}${x.entidad?` <span class="muted">· ${esc(x.entidad)}</span>`:""}${x.modalidad&&MODAL[x.modalidad]?` <span class="muted">· ${MODAL[x.modalidad]}</span>`:""}</div>`).join(""):`${FIN[o.fin.t]}${o.fin.e?` <span class="muted">· ${esc(o.fin.e)}</span>`:""}`}</dd>
         <dt>Ubicación</dt><dd>${sensOf(o)==="abierta"?`<span class="mono">${o.lat.toFixed(4)}° N, ${Math.abs(o.lon).toFixed(4)}° O · ±25 m</span>`
-          :`<span class="sens">${sensOf(o)==="reservada"?`Reservada · solo se indica la isla (${ISLAS[MUNIS[o.m].isla]})`:"Zona aproximada (~2 km)"}</span><br><span class="muted" style="font-size:.88rem">${SENS[sensOf(o)].d}${o.sens.m?` Motivo: ${esc(o.sens.m)}.`:""}</span>`}</dd>
+          :`<span class="sens">${sensOf(o)==="reservada"?(MUNIS[o.m].canarias?"Reservada · solo se indica que está en Canarias":`Reservada · solo se indica la isla (${ISLAS[MUNIS[o.m].isla]})`):"Zona aproximada (~2 km)"}</span><br><span class="muted" style="font-size:.88rem">${SENS[sensOf(o)].d}${o.sens.m?` Motivo: ${esc(o.sens.m)}.`:""}</span>`}</dd>
         <dt>QR</dt><dd>${qrTxt2}${o.qr.inst?`<br><span class="muted" style="font-size:.88rem">Instalado ${fd(o.qr.inst)} · última revisión ${fd(o.qr.rev)} · próxima ${fd(prox)}${prox&&prox<HOY?" <b>(vencida)</b>":""}</span>`:""}</dd>
         <dt>Derechos</dt><dd>Obra © su autoría · ficha © CANARIAS.AFRICA · <a href="#derechos">uso y permisos</a></dd>
       </dl>
@@ -2087,7 +2090,7 @@ function vAportar(){
     <fieldset class="full"><legend>¿Se puede publicar dónde está?</legend><div class="radios" style="flex-direction:column;gap:8px">
       <label><input type="radio" name="o-ubic" value="abierta" checked> Sí, el punto exacto: está en un espacio público y no corre peligro.</label>
       <label><input type="radio" name="o-ubic" value="difusa"> Solo la zona (unos 2 km): obra sin protección o en terreno privado.</label>
-      <label><input type="radio" name="o-ubic" value="reservada"> No, es una obra delicada (grabado aborigen, yacimiento, patrimonio frágil): solo se publicará la isla.</label>
+      <label><input type="radio" name="o-ubic" value="reservada"> No, es una obra delicada (grabado aborigen, yacimiento, patrimonio frágil): solo se publicará la isla, con un punto simbólico en el mapa.</label>
     </div><p class="muted" style="font-size:.88rem;margin:8px 0 0">Las coordenadas y el lugar que nos des los guarda solo el equipo. Nada se publica hasta revisarlo, y el equipo puede proteger más una obra, nunca menos de lo que pidas.</p></fieldset>
     ${LIC}${PRIV}
     <p class="full muted" id="o-err" style="font-size:.9rem"></p>

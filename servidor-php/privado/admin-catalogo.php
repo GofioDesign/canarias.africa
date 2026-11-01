@@ -4,7 +4,7 @@
 
 $ETIQUETAS_FASE = ['gestacion' => 'Gestación', 'creacion' => 'Creación', 'plenitud' => 'Plenitud', 'desgaste' => 'Desgaste',
   'intervencion' => 'Intervención', 'transformacion' => 'Transformación', 'desaparicion' => 'Desaparición', 'memoria' => 'Memoria'];
-$ETIQUETAS_SENS = ['abierta' => 'Abierta (punto exacto)', 'difusa' => 'Difusa (zona de ~2 km)', 'reservada' => 'Reservada: obra delicada (solo se publica la isla, sin QR)'];
+$ETIQUETAS_SENS = ['abierta' => 'Abierta (punto exacto)', 'difusa' => 'Difusa (zona de ~2 km)', 'reservada' => 'Reservada: obra delicada (solo la isla, con un punto simbólico; sin QR)'];
 
 // Si viene una foto del formulario (la cámara del móvil o un archivo), la guarda sin metadatos y devuelve su URL pública.
 $foto_formulario = function (): ?string {
@@ -197,7 +197,7 @@ if ($sub === '/obra') {
     . ($id ? "<p class=meta>Id: <code>{$h($id)}</code>" . (isset($o['version']) ? " · versión {$o['version']} · <a href='/admin/obra/versiones?id={$h($id)}'>historial</a>" : '') . '</p>' : '')
     . $campo('titulo', 'Título', $v('titulo'), 'text', '', ['required' => 'required'])
     . '<div class=par>' . $lista('fase', 'Fase', $ETIQUETAS_FASE, (string) $v('fase')) . $lista('sensibilidad', 'Sensibilidad', $ETIQUETAS_SENS, (string) $v('sensibilidad')) . '</div>'
-    . $lista('isla', 'Isla', ['' => 'La del punto (automático)'] + ISLAS_CODIGO, (string) $v('isla'))
+    . $lista('isla', 'Isla', ['' => 'La del punto (o Canarias si no hay punto)'] + ISLAS_CODIGO, (string) $v('isla'))
     . '<div class=par>' . $campo('municipio', 'Municipio', $v('municipio'), 'text', 'No se publica si la obra es reservada.') . $campo('lugar', 'Lugar', $v('lugar'), 'text', 'Calle, plaza o paraje. Solo se publica si la obra es abierta.') . '</div>'
     . '<div class=par>' . $campo('lat', 'Latitud', $v('lat'), 'text', '', ['inputmode' => 'decimal']) . $campo('lon', 'Longitud', $v('lon'), 'text', '', ['inputmode' => 'decimal']) . '</div>'
     . $mapa()

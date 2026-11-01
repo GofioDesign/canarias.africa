@@ -2567,8 +2567,9 @@ let REDT=new Set(["obra","agente","entidad","lugar","municipio","ruta"]);
 let REDMODO="red";
 /* Vista por planos, como un sistema de planos acotados: un plano por tipo de nodo, apilados de abajo (territorio, cota 0) arriba.
    Un tipo nuevo del registro TIPOS aparece solo, en el plano más alto. */
+const PLURAL={obra:"Obras",agente:"Agentes",entidad:"Entidades",convocatoria:"Convocatorias",lugar:"Lugares",municipio:"Municipios",fuente:"Fuentes",observacion:"Observaciones",qr:"QR",ruta:"Rutas",salida:"Salidas"}; // nombre de cada plano
 const ORDEN_PLANOS=["salida","ruta","qr","observacion","fuente","convocatoria","entidad","agente","obra","lugar","municipio"];
-const PLANOS=[...Object.keys(TIPOS).filter(t=>!ORDEN_PLANOS.includes(t)),...ORDEN_PLANOS.filter(t=>TIPOS[t])].map(t=>[TIPOS[t].n,[t]]);
+const PLANOS=[...Object.keys(TIPOS).filter(t=>!ORDEN_PLANOS.includes(t)),...ORDEN_PLANOS.filter(t=>TIPOS[t])].map(t=>[PLURAL[t]||TIPOS[t].n,[t]]);
 let SIM=null;
 function vRed(){
   const counts=t=>[...G.byId.values()].filter(n=>n.tipo===t).length;

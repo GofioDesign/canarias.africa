@@ -1432,7 +1432,7 @@ const DIALOGOS = [
  ["dbf12703-5acb-47ee-a6bc-dd731e4e9709","se superpone a","ca0fab1b-8810-4099-a9ad-6134dcec5aa0","El banco se hizo con piedra retirada de la era."]
 ];
 
-/* Canales propios de cada artista (ficticios). canarias.africa solo enlaza; no vende. */
+/* Canales propios de cada artista (ficticios). Más adelante, su tienda estará en canarias.africa, con un porcentaje para el proyecto. */
 const CANALES={"Colectivo Malpaís":[["Tienda"],["Mecenazgo"]],"Ana R.":[["Web"],["Tienda"],["Encargos"]]};
 const G={byKey:new Map(),byId:new Map(),edges:[]};
 function addNode(tipo,key,label,attrs){
@@ -2032,7 +2032,7 @@ function vInicio(){
    ["Datos para investigar","Fichas, fuentes y relaciones consultables para investigación y docencia, con reglas claras de uso y crédito.","#derechos","on"],
    ["Comunidad artística","Foro privado para artistas: ideas, colaboraciones, logística, materiales y experiencias con entidades.","#comunidad","on"],
    ["Exposiciones virtuales","Recorridos curatoriales por la red: temas, épocas y autorías.","","soon"],
-   ["Apoya a los artistas","Mecenazgo y souvenirs directamente con quien hizo la obra. Nosotros no vendemos: te llevamos a sus canales.","#apoya","on"]
+   ["Apoya a los artistas","Mecenazgo, encargos y, pronto, su tienda aquí mismo. La venta es para quien hizo la obra; el proyecto se queda un porcentaje para seguir creciendo.","#apoya","on"]
   ];
   const PARA=[["Vecindad","Reconoce las obras de tu pueblo, cuenta lo que sabes y ayuda a que no se pierdan."],
    ["Artistas","Registra tu obra con su autoría, encuentra ayudas y conecta con otros proyectos."],
@@ -2701,7 +2701,7 @@ function vNodo(n){
   <section class="grid2">
     <div class="stack">
       <h2>Atributos</h2>
-      ${n.tipo==="agente"&&canales(n).length?`<div class="stack" style="gap:8px"><h3>Apoya su trabajo</h3>${botonesCanal(n)}<p class="muted" style="font-size:.85rem">Enlaces de ejemplo. canarias.africa no vende ni cobra comisión.</p></div>`:""}
+      ${n.tipo==="agente"&&canales(n).length?`<div class="stack" style="gap:8px"><h3>Apoya su trabajo</h3>${botonesCanal(n)}<p class="muted" style="font-size:.85rem">Enlaces de ejemplo. Cuando abra la tienda de artistas en canarias.africa, el proyecto cobrará un porcentaje de cada venta.</p></div>`:""}
       <dl class="dl">${Object.entries(n.attrs).filter(([k])=>k!=="canales").map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")||`<dt>—</dt><dd class="muted">Sin atributos propios: este nodo se define por sus relaciones.</dd>`}</dl>
       <h2 style="margin-top:12px">Relaciones <span class="count">(${R.length})</span></h2>
       ${relList(n.id)}
@@ -2852,7 +2852,7 @@ function vApoya(){
   return `<section class="stack">
     <p class="eyebrow">Mecenazgo y souvenirs</p>
     <h1>Apoya a los artistas</h1>
-    <p class="lede muted">canarias.africa no vende nada ni cobra comisión. Si una obra te ha gustado, aquí te llevamos a los canales de quien la hizo: su tienda, sus encargos o su página de mecenazgo.</p>
+    <p class="lede muted">Si una obra te ha gustado, aquí te llevamos a los canales de quien la hizo: su tienda, sus encargos o su página de mecenazgo. Pronto abriremos la tienda de artistas en canarias.africa: lo vendido será para cada artista y el proyecto se quedará un porcentaje, que publicaremos, para pagar las horas de trabajo y seguir creciendo.</p>
   </section>
   <section class="stack">
     <div class="aplist">${L.map(({ag,obras})=>`<article class="ap">

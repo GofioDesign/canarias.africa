@@ -1,6 +1,6 @@
 ---
 titulo: Apoyo directo a artistas
-resumen: Enlazar a las tiendas, encargos y campañas de cada artista, sin comisiones. Más adelante, micromecenazgo colectivo.
+resumen: Galería de artistas y una tienda alojada en canarias.africa. La venta es para quien hizo la obra; el proyecto se queda un porcentaje público para sostenerse.
 autoria: Colectivo CANARIAS
 estado: abierta
 fecha: 2026-10-30
@@ -8,13 +8,14 @@ fecha: 2026-10-30
 
 ## Qué propongo
 
-Desde cada ficha, enlazar a los canales de la propia artista o colectivo: tienda, encargos, campañas.
+Desde cada ficha, llegar a la galería de la artista o el colectivo: sus encargos, sus campañas y una tienda propia alojada en canarias.africa.
 
 ## Por qué
 
-Apoyar sin intermediar ni cobrar comisiones, coherente con que el arte no nos pertenece.
+Apoyar a quien crea y, a la vez, sostener el archivo. Lo que se venda irá a cada artista, y el proyecto se quedará un porcentaje, publicado y claro, para pagar las horas de trabajo y seguir creciendo.
 
 ## Cómo empezaríamos
 
-- Solo enlaces que la persona artista confirme.
+- Perfiles y enlaces que la persona artista confirme.
+- La tienda en canarias.africa, con el porcentaje decidido y publicado antes de abrirla.
 - El micromecenazgo colectivo, en una fase posterior.

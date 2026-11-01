@@ -158,6 +158,10 @@ function catalogo_geojson_features(): array {
     $rl = array_values(array_filter(json_decode($o['relaciones'] ?: '[]', true) ?: [], fn($r) => isset($publicadas[$r['obra']])));
     if ($ag) $props['agentes'] = $ag;
     if ($pg) $props['pagadores'] = $pg;
+    // Versiones en texto de las listas, para los campos de uMap (que no muestra listas).
+    if ($ag && empty($props['autoria'])) $props['autoria'] = implode(', ', array_map(fn($a) => $a['nombre'] . ($a['rol'] !== 'autoria' ? ' (' . mb_strtolower(ROLES_AGENTE[$a['rol']]) . ')' : ''), $ag));
+    if ($pg) $props['financiacion'] = implode(' · ', array_map(fn($p) => (['publica' => 'Pública', 'privada' => 'Privada', 'particular' => 'Particular'][$p['naturaleza']])
+      . (!empty($p['entidad']) ? ': ' . $p['entidad'] : '') . (!empty($p['modalidad']) ? ' (' . mb_strtolower(MODALIDADES[$p['modalidad']]) . ')' : ''), $pg));
     if ($rl) $props['relaciones'] = $rl;
     // El lugar concreto de una obra sensible no se publica.
     if ($o['lugar'] !== '' && $o['sensibilidad'] === 'abierta') $props['lugar'] = $o['lugar'];
@@ -254,9 +258,10 @@ function artistas_geojson_features(): array {
   $features = [];
   foreach (db()->query('SELECT * FROM artistas WHERE publicada = 1 ORDER BY nombre') as $a) {
     $props = ['id' => $a['id'], 'name' => $a['nombre']];
-    foreach (['disciplina', 'municipio', 'bio', 'web', 'tienda', 'mecenazgo', 'redes', 'foto', 'foto_credito', 'espacio', 'obras'] as $k) {
-      if ($a[$k] !== '') $props[$k] = $a[$k];
-    }
+    // Nombres de los campos tal como están en la capa Artistas de uMap.
+    $claves = ['disciplina' => 'disciplinas', 'municipio' => 'municipio', 'bio' => 'bio', 'web' => 'enlace_web', 'tienda' => 'enlace_tienda',
+      'mecenazgo' => 'enlace_mecenazgo', 'redes' => 'enlace_redes', 'foto' => 'foto', 'foto_credito' => 'foto_credito', 'espacio' => 'espacio', 'obras' => 'obras'];
+    foreach ($claves as $k => $clave) if ($a[$k] !== '') $props[$clave] = $a[$k];
     $geo = $a['lat'] !== null ? ['type' => 'Point', 'coordinates' => [round((float) $a['lon'], 6), round((float) $a['lat'], 6)]] : null;
     $features[] = ['type' => 'Feature', 'geometry' => $geo, 'properties' => $props];
   }

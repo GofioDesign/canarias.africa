@@ -14,6 +14,11 @@ return [
   'avisar_por_correo' => true,
   // Contraseña de /admin. Genérala con: php -r "echo password_hash('tu-contraseña', PASSWORD_DEFAULT);"
   'admin_hash' => '',
+  // Publicar al momento en canarias.africa al guardar en /admin (opcional; sin él, la web copia el catálogo cada 6 horas).
+  // Token «fine-grained» de GitHub: github.com/settings/personal-access-tokens → solo el repositorio canarias.africa,
+  // permiso «Actions: Read and write» y nada más. Nunca se sube al repositorio.
+  'github_token' => '',
+  'github_repo' => 'GofioDesign/canarias.africa',
   // Límites para no llenar los 1000 MB del plan.
   'teselas_max_mb' => 300,
   'foto_lado_max' => 1600,

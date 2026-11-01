@@ -48,14 +48,23 @@ Si el hosting es compartido y no hay nginx, se puede hacer lo mismo con un peque
 
 ## 3. Convenciones para uMap
 
-**uMap solo muestra; no es fuente de datos (decisión del usuario, 1/11/2026).** Las obras, rutas y artistas se crean y editan en `https://api.canarias.africa/admin` (Catálogo · Rutas · Artistas), con su historial de versiones. El servidor publica cuatro GeoJSON y cada capa del mapa de uMap (https://umap.openstreetmap.fr/es/map/canariasafrica_1479087) los lee como **«Datos remotos»** (formato `geojson`, actualización dinámica):
+**uMap solo muestra; no es fuente de datos (decisión del usuario, 1/11/2026).** Las obras, rutas y artistas se crean y editan en `https://api.canarias.africa/admin` (Catálogo · Rutas · Artistas), con su historial de versiones. El servidor genera cuatro GeoJSON y **GitHub Pages sirve una copia en `https://canarias.africa/datos/`**, que es lo que leen la web y uMap. Así el servidor solo recibe una petición por capa en cada publicación, no una por visita. La copia se renueva:
+
+- al guardar en `/admin`, si `github_token` está en `config.php` (el servidor lanza la acción «Publicar la web»; como mucho una vez cada 3 minutos);
+- con el botón «Publicar ahora» del catálogo;
+- con el cron horario, si lo publicado ha cambiado (por ejemplo, el estado de una etiqueta QR);
+- y, en todo caso, cada 6 horas.
+
+La copia no se guarda en el repositorio: `scripts/catalogo-servidor.py` la mete directamente en el artefacto de Pages. Si falta, la web lee del servidor.
+
+En uMap, cada capa usa **«Datos remotos»** con formato `geojson`, **sin** actualización dinámica y sin proxy:
 
 | Capa | Geometría | URL de «Datos remotos» |
 |---|---|---|
-| Obras | Punto (las reservadas no salen en el mapa) | `https://api.canarias.africa/datos/obras.geojson` |
-| QR | Punto | `https://api.canarias.africa/datos/qr.geojson` |
-| Rutas | Línea | `https://api.canarias.africa/datos/rutas.geojson` |
-| Artistas | Punto (solo si muestran un espacio público suyo) | `https://api.canarias.africa/datos/artistas.geojson` |
+| Obras | Punto (las reservadas no salen en el mapa) | `https://canarias.africa/datos/obras.geojson` |
+| QR | Punto | `https://canarias.africa/datos/qr.geojson` |
+| Rutas | Línea | `https://canarias.africa/datos/rutas.geojson` |
+| Artistas | Punto (solo si muestran un espacio público suyo) | `https://canarias.africa/datos/artistas.geojson` |
 
 - El `id` de una obra (UUID) no se cambia nunca, aunque la obra se mueva o desaparezca. Una obra desaparecida no se borra: se cambia su `fase` a `desaparicion` o `memoria`.
 - El servidor ya oculta lo sensible: las difusas salen en el centro de su celda de 0,02°, las reservadas sin punto y los códigos de las etiquetas QR nunca. El trazado dibujado de una ruta solo se publica si todas sus paradas son abiertas.
@@ -66,9 +75,9 @@ Si el hosting es compartido y no hay nginx, se puede hacer lo mismo con un peque
 La web y las fichas se sirven como estáticas desde GitHub Pages (`canarias.africa`, repo público). Todo lo dinámico vive en el hosting PHP, en `https://api.canarias.africa` (constante `API_BASE` en el HTML).
 
 - **Teselas:** `https://api.canarias.africa/teselas/osm/{z}/{x}/{y}.png`. Es la caché del apartado 2, pero en el hosting PHP.
-- **Catálogo de obras:** `https://api.canarias.africa/datos/obras.geojson`, generado por el servidor a partir de su base de datos (se edita en `/admin`). Las obras difusas llegan con el centro de su celda de 0,02° y las reservadas sin `geometry`. El repo es público y no guarda el catálogo: ni el HTML ni el repo llevan nunca coordenadas reales de obras sensibles.
+- **Catálogo de obras:** `https://canarias.africa/datos/obras.geojson`, copia del que genera el servidor en `https://api.canarias.africa/datos/obras.geojson` a partir de su base de datos (se edita en `/admin`). Las obras difusas llegan con el centro de su celda de 0,02° y las reservadas sin `geometry`. El repo es público y no guarda el catálogo: ni el HTML ni el repo llevan nunca coordenadas reales de obras sensibles.
 - **Ficha:** la descripción y las relaciones salen del catálogo. Las observaciones aprobadas se piden a `GET https://api.canarias.africa/api/publico/obras/<código>`.
-- **QR, rutas y artistas:** `https://api.canarias.africa/datos/{qr,rutas,artistas}.geojson`, generados al momento con lo publicado. uMap los muestra como «Datos remotos» (apartado 3); la web lee los mismos. `/datos/umap/…` sigue funcionando como nombre antiguo.
+- **QR, rutas y artistas:** igual, en `https://canarias.africa/datos/{qr,rutas,artistas}.geojson` (copia) y `https://api.canarias.africa/datos/…` (origen). uMap muestra la copia como «Datos remotos» (apartado 3); la web lee la misma. `/datos/umap/…` sigue funcionando como nombre antiguo.
 - **QR impresos (decisión del usuario, 28/10/2026):** cada QR tiene su propio UUID y apunta a `https://canarias.africa/<uuid-del-QR>`. La página 404 de GitHub Pages lo convierte en `#/q/<uuid>`, y la web pregunta a `GET https://api.canarias.africa/api/qr/<uuid>` a qué obra corresponde y si está colocado. Los códigos salen de un pool y se asignan en cupos a colaboradores (por ejemplo, 10). Si no confirman la colocación dentro del plazo, el código vuelve al pool. El UUID del QR es distinto del de la obra y no se publica.
 - **Envíos:** se hacen en multipart a las colecciones de PocketBase en `https://api.canarias.africa/api/collections/<colección>/records` (observaciones, contexto, propuestas_obra, propuestas_ruta e inscripciones). Todos llevan `acepta_privacidad`. El servidor solo acepta peticiones (CORS) de `https://canarias.africa`.
 - Si el catálogo no carga, como en la vista previa, la web funciona con los datos de ejemplo.

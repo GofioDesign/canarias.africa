@@ -10,3 +10,5 @@ servidor-php/privado/cache/
 servidor-php/privado/fotos/
 servidor-php/privado/copias/
 servidor-php/privado/umap/
+# Copia del catálogo del servidor: la genera scripts/catalogo-servidor.py al publicar, nunca se sube
+web/datos/*.geojson

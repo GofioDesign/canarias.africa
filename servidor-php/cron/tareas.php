@@ -5,7 +5,9 @@ declare(strict_types=1);
 require __DIR__ . '/../privado/lib.php';
 $c = config();
 
-// El catálogo (obras, rutas, artistas) ya no se copia de fuera: se edita en /admin y uMap lo lee de /datos/*.geojson.
+// 0. Catálogo: se edita en /admin. Si lo publicado ha cambiado (por ejemplo, el estado de una etiqueta QR) y no se ha
+//    publicado aún, se pide a GitHub que vuelva a copiarlo a canarias.africa/datos/.
+publicar_web();
 
 // 1. Etiquetas: plazos de las asignaciones y continuidad de las verificaciones.
 caducar_asignaciones();

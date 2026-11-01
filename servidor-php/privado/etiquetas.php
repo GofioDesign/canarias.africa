@@ -309,7 +309,9 @@ function qr_historial(string $obra): never {
 }
 
 // GET /api/publico/etiquetas.geojson: etiquetas confirmadas para el mapa, con el punto ya ocultado si la obra es difusa.
-function qr_mapa(): never {
+function qr_mapa(): never { enviar_geojson(qr_mapa_features()); }
+
+function qr_mapa_features(): array {
   $filas = db()->query("SELECT q.*, o.sensibilidad FROM qr_codigos q JOIN obras o ON o.uuid = q.obra
                         WHERE q.estado IN ('confirmado','sin_verificar') AND o.sensibilidad != 'reservada' AND o.publicada = 1")->fetchAll();
   $paso = 0.02;
@@ -322,5 +324,5 @@ function qr_mapa(): never {
             'properties' => ['obra' => $q['obra'], 'estado' => $q['estado'], 'ultima_verificacion' => $q['ultima_verificacion'],
                              'precision' => $q['sensibilidad'] === 'abierta' ? 'exacta' : 'zona']];
   }, $filas);
-  enviar_geojson($features);
+  return $features;
 }

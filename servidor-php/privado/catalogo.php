@@ -6,7 +6,17 @@
 const FASES = ['gestacion', 'creacion', 'plenitud', 'desgaste', 'intervencion', 'transformacion', 'desaparicion', 'memoria'];
 const SENSIBILIDADES = ['abierta', 'difusa', 'reservada'];
 const CAMPOS_OBRA = ['titulo', 'sensibilidad', 'lat', 'lon', 'fase', 'municipio', 'lugar', 'tipo', 'descripcion', 'autoria',
-  'fecha_obra', 'foto', 'foto_credito', 'ficha', 'publicada'];
+  'fecha_obra', 'fecha_precision', 'agentes', 'pagadores', 'relaciones', 'fuentes', 'foto', 'foto_credito', 'ficha', 'publicada'];
+// Vocabularios de los nodos de una obra. Son los mismos en /admin y en el formulario público de la web.
+const ROLES_AGENTE = ['autoria' => 'Autoría', 'coautoria' => 'Coautoría', 'ejecucion' => 'Ejecución', 'encargo' => 'Encargo',
+  'restauracion' => 'Restauración', 'colaboracion' => 'Colaboración', 'cuidado' => 'Cuidado'];
+const CERTEZAS = ['confirmada' => 'Confirmada', 'probable' => 'Probable', 'atribuida' => 'Atribuida', 'desconocida' => 'Desconocida'];
+// Quién pagó: entidad pública o privada. Un particular se guarda, pero su nombre no se publica nunca.
+const NATURALEZAS = ['publica' => 'Entidad pública', 'privada' => 'Entidad privada', 'particular' => 'Particular (su nombre no se publica)'];
+const MODALIDADES = ['' => 'Sin indicar', 'encargo' => 'Encargo', 'subvencion' => 'Subvención', 'patrocinio' => 'Patrocinio',
+  'donacion' => 'Donación', 'autofinanciada' => 'Autofinanciada'];
+const MODOS_RELACION = ['continua' => 'continúa', 'responde' => 'responde a', 'superpone' => 'se superpone a', 'serie' => 'forma serie con'];
+const PRECISIONES_FECHA = ['' => 'Sin indicar', 'exacta' => 'Exacta', 'aproximada' => 'Aproximada', 'decada' => 'Década', 'epoca' => 'Época'];
 const PASO_DIFUSA = 0.02;  // cuadrícula fija de ~2 km para las obras difusas
 
 // Añade las columnas nuevas a una base de datos creada con un esquema anterior.
@@ -16,8 +26,49 @@ function migrar_catalogo(PDO $db): void {
     'lugar' => "TEXT NOT NULL DEFAULT ''", 'tipo' => "TEXT NOT NULL DEFAULT ''", 'descripcion' => "TEXT NOT NULL DEFAULT ''",
     'autoria' => "TEXT NOT NULL DEFAULT ''", 'fecha_obra' => "TEXT NOT NULL DEFAULT ''", 'foto' => "TEXT NOT NULL DEFAULT ''",
     'foto_credito' => "TEXT NOT NULL DEFAULT ''", 'ficha' => "TEXT NOT NULL DEFAULT ''", 'publicada' => 'INTEGER NOT NULL DEFAULT 0',
-    'version' => 'INTEGER NOT NULL DEFAULT 0', 'creado' => 'TEXT', 'actualizado' => 'TEXT'];
+    'version' => 'INTEGER NOT NULL DEFAULT 0', 'creado' => 'TEXT', 'actualizado' => 'TEXT', 'fecha_precision' => "TEXT NOT NULL DEFAULT ''",
+    'agentes' => "TEXT NOT NULL DEFAULT '[]'", 'pagadores' => "TEXT NOT NULL DEFAULT '[]'", 'relaciones' => "TEXT NOT NULL DEFAULT '[]'",
+    'fuentes' => "TEXT NOT NULL DEFAULT ''"];
   foreach ($nuevas as $col => $tipo) if (!in_array($col, $hay, true)) $db->exec("ALTER TABLE obras ADD COLUMN $col $tipo");
+  $hay = array_column($db->query('PRAGMA table_info(rutas)')->fetchAll(), 'name');
+  if (!in_array('notas', $hay, true)) $db->exec("ALTER TABLE rutas ADD COLUMN notas TEXT NOT NULL DEFAULT '{}'");
+}
+
+// Listas de nodos de una obra (personas y colectivos, quién pagó, relaciones con otras obras), guardadas en JSON.
+// Admite el JSON que mandan los formularios y descarta las filas incompletas.
+function normalizar_nodos(string $tipo, $v): string {
+  $filas = is_array($v) ? $v : json_decode(trim((string) $v) ?: '[]', true);
+  if (!is_array($filas)) throw new InvalidArgumentException("La lista de $tipo no es válida.");
+  $out = [];
+  foreach (array_slice($filas, 0, 40) as $f) {
+    if (!is_array($f)) continue;
+    $t = fn($k) => trim(mb_substr((string) ($f[$k] ?? ''), 0, 300));
+    if ($tipo === 'agentes') {
+      if ($t('nombre') === '') continue;
+      $out[] = ['nombre' => $t('nombre'), 'rol' => isset(ROLES_AGENTE[$t('rol')]) ? $t('rol') : 'autoria',
+        'certeza' => isset(CERTEZAS[$t('certeza')]) ? $t('certeza') : 'atribuida', 'visible' => !empty($f['visible'])];
+    } elseif ($tipo === 'pagadores') {
+      $n = $t('naturaleza');
+      if (!isset(NATURALEZAS[$n]) || ($n !== 'particular' && $t('entidad') === '')) continue;
+      $out[] = ['naturaleza' => $n, 'entidad' => $t('entidad'), 'modalidad' => isset(MODALIDADES[$t('modalidad')]) ? $t('modalidad') : ''];
+    } elseif ($tipo === 'relaciones') {
+      $u = strtolower($t('obra'));
+      if (!preg_match('/^' . RE_UUID . '$/', $u) || !isset(MODOS_RELACION[$t('modo')])) continue;
+      $out[] = ['modo' => $t('modo'), 'obra' => $u, 'nota' => $t('nota')];
+    }
+  }
+  return json_encode($out, JSON_UNESCAPED_UNICODE);
+}
+
+// Entidades que ya pagaron otras obras, por naturaleza: son las sugerencias del campo «Entidad». Una nueva se escribe sin más.
+function entidades_conocidas(bool $solo_publicadas = true): array {
+  $r = ['publica' => [], 'privada' => []];
+  foreach (db()->query('SELECT pagadores FROM obras' . ($solo_publicadas ? ' WHERE publicada = 1' : '')) as $o) {
+    foreach (json_decode($o['pagadores'] ?: '[]', true) ?: [] as $p) {
+      if (isset($r[$p['naturaleza'] ?? '']) && ($p['entidad'] ?? '') !== '') $r[$p['naturaleza']][$p['entidad']] = true;
+    }
+  }
+  return array_map(function ($l) { $l = array_keys($l); sort($l, SORT_LOCALE_STRING); return $l; }, $r);
 }
 
 function obra(string $uuid): ?array {
@@ -46,6 +97,8 @@ function obra_guardar(array $d, ?string $uuid, string $autor = 'admin'): string 
     }
   }
   $o['publicada'] = $o['publicada'] ? 1 : 0;
+  foreach (['agentes', 'pagadores', 'relaciones'] as $k) $o[$k] = normalizar_nodos($k, $d[$k] ?? '[]');
+  if (!isset(PRECISIONES_FECHA[$o['fecha_precision']])) $o['fecha_precision'] = '';
 
   $db->beginTransaction();
   if ($uuid && ($antes = obra($uuid))) {
@@ -82,24 +135,40 @@ function enviar_geojson(array $features): never {
   exit;
 }
 
-function catalogo_geojson(): never {
+function catalogo_geojson(): never { enviar_geojson(catalogo_geojson_features()); }
+
+function catalogo_geojson_features(): array {
   $features = [];
-  foreach (db()->query('SELECT * FROM obras WHERE publicada = 1 ORDER BY titulo') as $o) {
+  $obras = db()->query('SELECT * FROM obras WHERE publicada = 1 ORDER BY titulo')->fetchAll();
+  $publicadas = array_flip(array_column($obras, 'uuid'));
+  foreach ($obras as $o) {
     $p = punto_publico($o);
     $props = ['id' => $o['uuid'], 'name' => $o['titulo'], 'sensibilidad' => $o['sensibilidad'],
       'precision' => $p === null ? 'municipio' : ($o['sensibilidad'] === 'abierta' ? 'exacta' : 'zona'),
       'version' => (int) $o['version'], 'actualizado' => $o['actualizado']];
-    foreach (['fase', 'municipio', 'tipo', 'descripcion', 'autoria', 'fecha_obra', 'foto', 'foto_credito', 'ficha'] as $k) {
+    foreach (['fase', 'municipio', 'tipo', 'descripcion', 'autoria', 'fecha_obra', 'fecha_precision', 'foto', 'foto_credito', 'ficha'] as $k) {
       if ($o[$k] !== '' && $o[$k] !== null) $props[$k] = $o[$k];
     }
+    // Personas: solo las marcadas como visibles (han aceptado figurar o son públicas). Particulares que pagan: sin nombre.
+    // Relaciones: solo con obras publicadas. Las fuentes se quedan en /admin.
+    $ag = array_values(array_map(fn($a) => ['nombre' => $a['nombre'], 'rol' => $a['rol'], 'certeza' => $a['certeza']],
+      array_filter(json_decode($o['agentes'] ?: '[]', true) ?: [], fn($a) => !empty($a['visible']))));
+    $pg = array_map(fn($p) => array_filter(['naturaleza' => $p['naturaleza'], 'entidad' => $p['naturaleza'] === 'particular' ? '' : $p['entidad'],
+      'modalidad' => $p['modalidad']], fn($v) => $v !== ''), json_decode($o['pagadores'] ?: '[]', true) ?: []);
+    $rl = array_values(array_filter(json_decode($o['relaciones'] ?: '[]', true) ?: [], fn($r) => isset($publicadas[$r['obra']])));
+    if ($ag) $props['agentes'] = $ag;
+    if ($pg) $props['pagadores'] = $pg;
+    if ($rl) $props['relaciones'] = $rl;
     // El lugar concreto de una obra sensible no se publica.
     if ($o['lugar'] !== '' && $o['sensibilidad'] === 'abierta') $props['lugar'] = $o['lugar'];
     $features[] = ['type' => 'Feature', 'geometry' => $p ? ['type' => 'Point', 'coordinates' => $p] : null, 'properties' => $props];
   }
-  enviar_geojson($features);
+  return $features;
 }
 
-function rutas_geojson(): never {
+function rutas_geojson(): never { enviar_geojson(rutas_geojson_features()); }
+
+function rutas_geojson_features(): array {
   $obras = [];
   foreach (db()->query('SELECT * FROM obras WHERE publicada = 1') as $o) $obras[$o['uuid']] = $o;
   $features = [];
@@ -112,9 +181,10 @@ function rutas_geojson(): never {
     $abierta = !array_filter($paradas, fn($u) => $obras[$u]['sensibilidad'] !== 'abierta');
     $coords = $abierta && ($traza['type'] ?? '') === 'LineString' ? $traza['coordinates'] : array_map(fn($u) => punto_publico($obras[$u]), $paradas);
     $features[] = ['type' => 'Feature', 'geometry' => ['type' => 'LineString', 'coordinates' => $coords],
-      'properties' => ['id' => $r['id'], 'name' => $r['nombre'], 'description' => $r['descripcion'], 'curaduria' => $r['curaduria'], 'paradas' => implode(',', $paradas)]];
+      'properties' => ['id' => $r['id'], 'name' => $r['nombre'], 'description' => $r['descripcion'], 'curaduria' => $r['curaduria'], 'paradas' => implode(',', $paradas),
+        'notas' => (object) array_intersect_key(json_decode($r['notas'] ?: '{}', true) ?: [], array_flip($paradas))]];
   }
-  enviar_geojson($features);
+  return $features;
 }
 
 // Fotos de obras subidas desde /admin: solo se sirven si alguna obra publicada las usa.
@@ -137,13 +207,16 @@ function ruta_guardar(array $d, ?string $id): string {
   $id = $id ?: 'RU-' . trim(preg_replace('/[^a-z0-9]+/', '-', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $nombre) ?: 'ruta')), '-');
   $paradas = implode(',', array_filter(array_map(fn($u) => strtolower(trim($u)), preg_split('/[\s,]+/', (string) ($d['paradas'] ?? ''))),
     fn($u) => preg_match('/^' . RE_UUID . '$/', $u)));
+  $notas = json_decode((string) ($d['notas'] ?? '{}'), true);
+  $notas = is_array($notas) ? array_filter(array_map(fn($n) => trim(mb_substr((string) $n, 0, 500)), $notas), fn($n, $u) => $n !== '' && str_contains(",$paradas,", ",$u,"), ARRAY_FILTER_USE_BOTH) : [];
   $traza = trim((string) ($d['trazado'] ?? ''));
   if ($traza !== '' && (json_decode($traza, true)['type'] ?? '') !== 'LineString') throw new InvalidArgumentException('El trazado tiene que ser un LineString en GeoJSON (o quedarse vacío).');
-  db()->prepare("INSERT INTO rutas (id, nombre, descripcion, curaduria, paradas, trazado, publicada, actualizado)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+  db()->prepare("INSERT INTO rutas (id, nombre, descripcion, curaduria, paradas, notas, trazado, publicada, actualizado)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
                  ON CONFLICT(id) DO UPDATE SET nombre = excluded.nombre, descripcion = excluded.descripcion, curaduria = excluded.curaduria,
-                 paradas = excluded.paradas, trazado = excluded.trazado, publicada = excluded.publicada, actualizado = excluded.actualizado")
-      ->execute([$id, $nombre, trim((string) ($d['descripcion'] ?? '')), trim((string) ($d['curaduria'] ?? '')), $paradas, $traza, empty($d['publicada']) ? 0 : 1]);
+                 paradas = excluded.paradas, notas = excluded.notas, trazado = excluded.trazado, publicada = excluded.publicada, actualizado = excluded.actualizado")
+      ->execute([$id, $nombre, trim((string) ($d['descripcion'] ?? '')), trim((string) ($d['curaduria'] ?? '')), $paradas,
+        json_encode((object) $notas, JSON_UNESCAPED_UNICODE), $traza, empty($d['publicada']) ? 0 : 1]);
   return $id;
 }
 
@@ -175,7 +248,9 @@ function artista_guardar(array $d, ?string $id): string {
   return $id;
 }
 
-function artistas_geojson(): never {
+function artistas_geojson(): never { enviar_geojson(artistas_geojson_features()); }
+
+function artistas_geojson_features(): array {
   $features = [];
   foreach (db()->query('SELECT * FROM artistas WHERE publicada = 1 ORDER BY nombre') as $a) {
     $props = ['id' => $a['id'], 'name' => $a['nombre']];
@@ -185,5 +260,37 @@ function artistas_geojson(): never {
     $geo = $a['lat'] !== null ? ['type' => 'Point', 'coordinates' => [round((float) $a['lon'], 6), round((float) $a['lat'], 6)]] : null;
     $features[] = ['type' => 'Feature', 'geometry' => $geo, 'properties' => $props];
   }
-  enviar_geojson($features);
+  return $features;
+}
+
+// ---------- Publicar en canarias.africa ----------
+// La web y uMap leen la copia de /datos/*.geojson que sirve GitHub Pages. Cuando el catálogo publicado cambia
+// (al guardar en /admin, o por el cron si cambian las etiquetas QR), se pide a GitHub que vuelva a publicar la web,
+// que copia los datos nuevos. Hace falta 'github_token' en config.php; sin él, la copia se refresca cada 6 horas.
+function huella_catalogo(): string {
+  return hash('sha256', json_encode([catalogo_geojson_features(), qr_mapa_features(), rutas_geojson_features(), artistas_geojson_features()]));
+}
+
+// Devuelve un texto para mostrar en /admin. $forzar: botón «Publicar ahora» (publica aunque no haya cambios).
+function publicar_web(bool $forzar = false): string {
+  $c = config();
+  $estado = PRIVADO . '/datos/publicacion.json';
+  $e = is_file($estado) ? (json_decode((string) file_get_contents($estado), true) ?: []) : [];
+  $huella = huella_catalogo();
+  if (!$forzar && ($e['huella'] ?? '') === $huella) return 'No hay cambios en lo publicado.';
+  if (empty($c['github_token'])) return 'canarias.africa tomará los datos nuevos en la próxima actualización automática (cada 6 horas). Para publicar al momento, pon github_token en config.php.';
+  // Como mucho una publicación cada 3 minutos; lo que quede pendiente lo publica el cron en la siguiente hora.
+  if (!$forzar && time() - ($e['hora'] ?? 0) < 180) return 'Guardado. Se publicará en canarias.africa en la próxima pasada del cron (como mucho, una hora).';
+  $repo = $c['github_repo'] ?? 'GofioDesign/canarias.africa';
+  $ch = curl_init("https://api.github.com/repos/$repo/actions/workflows/publicar-web.yml/dispatches");
+  curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20,
+    CURLOPT_POSTFIELDS => json_encode(['ref' => 'main']),
+    CURLOPT_HTTPHEADER => ['Accept: application/vnd.github+json', 'Authorization: Bearer ' . $c['github_token'],
+      'X-GitHub-Api-Version: 2022-11-28', 'User-Agent: canarias.africa-admin', 'Content-Type: application/json']]);
+  curl_exec($ch);
+  $codigo = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  if ($codigo !== 204) return "GitHub no ha aceptado la publicación (código $codigo). Revisa github_token en config.php.";
+  @mkdir(dirname($estado), 0700, true);
+  file_put_contents($estado, json_encode(['huella' => $huella, 'hora' => time()]));
+  return 'Publicando en canarias.africa: los datos nuevos estarán en unos 2 minutos.';
 }

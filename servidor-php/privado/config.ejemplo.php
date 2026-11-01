@@ -7,6 +7,10 @@ return [
   'api' => 'https://api.canarias.africa',
   // Correo de contacto: va en el User-Agent de la caché de teselas (lo exige OSM) y recibe los avisos.
   'contacto' => 'hola@canarias.africa',
+  // Remitente de los correos que envía el servidor (enlaces de entrada y confirmaciones). Tiene que ser de un dominio
+  // cuyo SPF autorice a este servidor, o acabarán en spam: api.canarias.africa con su registro SPF en Porkbun.
+  // Las respuestas van a «contacto».
+  'remitente' => 'no-responder@api.canarias.africa',
   'avisar_por_correo' => true,
   // Contraseña de /admin. Genérala con: php -r "echo password_hash('tu-contraseña', PASSWORD_DEFAULT);"
   'admin_hash' => '',

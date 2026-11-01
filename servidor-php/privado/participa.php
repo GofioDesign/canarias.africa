@@ -149,12 +149,8 @@ function enviar_correo_lista(string $para, string $asunto, string $texto, string
   $c = config();
   $url = rtrim($c['api'], '/') . '/api/participa/baja?t=' . $baja;
   $texto .= "\n--\nCANARIAS · Catálogo Atlántico de Núnea Arqueología · " . $c['web'] . "\nPara no recibir más correos: $url\n";
-  @mail($para, '=?UTF-8?B?' . base64_encode($asunto) . '?=', $texto, implode("\r\n", [
-    "From: =?UTF-8?B?" . base64_encode('CANARIAS · Catálogo Atlántico de Núnea Arqueología') . "?= <{$c['contacto']}>",
-    'Content-Type: text/plain; charset=utf-8',
-    "List-Unsubscribe: <$url>",
-    'List-Unsubscribe-Post: List-Unsubscribe=One-Click',
-  ]));
+  enviar_correo($para, $asunto, $texto, cabeceras_remitente('CANARIAS · Catálogo Atlántico de Núnea Arqueología')
+    . "\r\nList-Unsubscribe: <$url>\r\nList-Unsubscribe-Post: List-Unsubscribe=One-Click");
 }
 
 function pagina_simple(string $titulo, string $cuerpo, int $estado = 200): never {

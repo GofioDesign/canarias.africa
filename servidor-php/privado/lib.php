@@ -72,6 +72,19 @@ function guardar_foto(string $tmp, string $tipo): string {
   return $nombre;
 }
 
+// Cabeceras de remitente: «remitente» envía (su dominio tiene el SPF del servidor) y las respuestas van a «contacto».
+function cabeceras_remitente(string $nombre): string {
+  $c = config();
+  $de = $c['remitente'] ?? $c['contacto'];
+  return 'From: =?UTF-8?B?' . base64_encode($nombre) . "?= <$de>\r\nReply-To: {$c['contacto']}";
+}
+
+// mail() con el sobre (Return-Path) del remitente, para que el SPF se compruebe contra su dominio.
+function enviar_correo(string $para, string $asunto, string $texto, string $cabeceras): void {
+  $de = config()['remitente'] ?? config()['contacto'];
+  @mail($para, '=?UTF-8?B?' . base64_encode($asunto) . '?=', $texto, $cabeceras . "\r\nContent-Type: text/plain; charset=utf-8", '-f' . $de);
+}
+
 function avisar(string $asunto, string $texto): void {
   $c = config();
   if (!empty($c['avisar_por_correo']) && $c['contacto']) {

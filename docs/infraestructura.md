@@ -12,7 +12,7 @@ Decidido el 27 de octubre de 2026: empezar sin coste nuevo, con GitHub Pages y e
 | Cuentas, etiquetas QR, formularios, observaciones aprobadas, moderación | Hosting PHP actual, en `api.canarias.africa` (`servidor-php/`) | Ya pagado |
 | Caché de teselas OSM | Hosting PHP: `api.canarias.africa/teselas/osm/{z}/{x}/{y}.png` (máx. 300 MB) | Ya pagado |
 | Capas de uMap (QR, rutas) | uMap público; el cron del hosting las copia cada hora a `api.canarias.africa/datos/umap/` | 0 € |
-| Correo saliente (avisos) | `mail()` del hosting; Brevo si hace falta más | 0 € |
+| Correo saliente (avisos, enlaces y confirmaciones) | `mail()` del hosting con remitente `no-responder@api.canarias.africa` (SPF en Porkbun, sin MX); las respuestas van a `contacto`. Brevo si hace falta más | 0 € |
 | Foro de artistas | Grupo privado (Signal o Telegram) hasta que haya presupuesto para Discourse | 0 € |
 | Copias | Diarias de la base de datos en el hosting (se guardan 7) + descarga manual desde `/admin` | 0 € |
 
@@ -61,6 +61,8 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
    | `@` | AAAA | 2606:50c0:8000::153, 2606:50c0:8001::153, 2606:50c0:8002::153, 2606:50c0:8003::153 (ya están) |
    | `www` | CNAME | `gofiodesign.github.io` |
    | `api` | A o CNAME | El que indique el hosting para el subdominio |
+   | `api` | TXT | `v=spf1 a mx ip4:51.91.107.140 ~all` (SPF que da el panel del hosting: `a` = la IP de la web, 51.91.107.140 = su servidor de correo saliente; autoriza a enviar como `no-responder@api.canarias.africa`) |
+   | `default._domainkey.api` (o el nombre que dé el panel) | TXT | La clave DKIM que genera DirectAdmin para `api.canarias.africa` (opcional, mejora la entrega) |
    | `_github-pages-challenge-GofioDesign` | TXT | El que dé GitHub al verificar el dominio (evita que otra cuenta lo use en Pages) |
 
 3. **Hosting:** crear el subdominio `api.canarias.africa` con certificado SSL y con su carpeta pública apuntando a `servidor-php/publico/`. Subir `servidor-php/privado/` fuera de la carpeta pública si el hosting lo permite (si no, su `.htaccess` la bloquea). Copiar `privado/config.ejemplo.php` como `config.php` y rellenarlo. Programar cada hora: `php …/servidor-php/cron/tareas.php`.

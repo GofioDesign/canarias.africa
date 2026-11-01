@@ -23,9 +23,7 @@ function enviar_enlace(array $c): void {
   $t = crear_token((int) $c['id'], 'enlace', '+24 hours');
   $url = config()['web'] . '/prototipo/#/entrar?t=' . $t; // la web de cuentas y etiquetas es el prototipo
   $texto = "Hola, {$c['alias']}:\n\nPara entrar en canarias.africa abre este enlace (vale 24 horas y una sola vez):\n$url\n\nSi no lo has pedido tú, ignora este correo.\n";
-  $de = config()['contacto'];
-  @mail($c['correo'], '=?UTF-8?B?' . base64_encode('Tu enlace para entrar en canarias.africa') . '?=', $texto,
-    "From: canarias.africa <$de>\r\nContent-Type: text/plain; charset=utf-8");
+  enviar_correo($c['correo'], 'Tu enlace para entrar en canarias.africa', $texto, cabeceras_remitente('canarias.africa'));
 }
 
 // POST /api/cuenta/alta {alias, correo, acepta_privacidad}  ·  POST /api/cuenta/entrar {correo}

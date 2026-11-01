@@ -13,6 +13,8 @@ Modelo (propiedades de cada obra o expresión en el catálogo):
 - "fecha" (y "fecha_fin"): el tiempo siempre está; el espacio no.
 - "espacio": lugar, red o sin_espacio (si falta, se deduce de la geometría, el municipio o la url).
 - "escala": local, zonal, regional, nacional, global o glocal.
+- "autoria": ["Nombre", …] o [{"id", "nombre", "rol"}, …]: la trayectoria de cada artista o colectivo es otra
+  línea temporal que vincula espacios (/agente/<id>/ y /datos/trayectorias.json).
 - "relaciones": [{"tipo", "a": <uuid>, "nota"}]. El tipo "muestra_de" (o el atajo "muestra_de": <uuid> o
   [<uuid>, …]) liga la línea temporal propia a otra más general: un evento global puede dar lugar a x
   muestras locales, y una muestra puede estar ligada a varias líneas a la vez. Los demás tipos (responde_a,
@@ -25,7 +27,9 @@ Uso: python3 scripts/generar-fichas.py
 import html
 import json
 import os
+import re
 import subprocess
+import unicodedata
 from pathlib import Path
 
 CATALOGO = Path("web/datos/obras.geojson")
@@ -191,6 +195,30 @@ def genealogia(feats):
     return gen, props
 
 
+def ident_agente(texto):
+    t = unicodedata.normalize("NFKD", str(texto)).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", "-", t).strip("-")[:60] or "anonimo"
+
+
+def trayectorias(props):
+    """Línea temporal de cada artista o colectivo: sus obras, en cualquier lugar o escala, en orden de fecha.
+
+    "autoria": ["Nombre", …] o [{"id", "nombre", "rol"}, …]. La trayectoria une espacios distintos a través
+    de una biografía; cada ficha enlaza con la obra anterior y la siguiente de cada autoría."""
+    ags = {}
+    for u, p in props.items():
+        for a in p.get("autoria") or []:
+            a = a if isinstance(a, dict) else {"nombre": a}
+            if not a.get("nombre") and not a.get("id"):
+                continue
+            i = ident_agente(a.get("id") or a["nombre"])
+            ag = ags.setdefault(i, {"nombre": a.get("nombre") or i, "obras": []})
+            ag["obras"].append({"obra": u, **({"rol": a["rol"]} if a.get("rol") else {})})
+    for ag in ags.values():
+        ag["obras"].sort(key=lambda x: (str(props[x["obra"]].get("fecha") or "9999"), props[x["obra"]].get("name") or ""))
+    return ags
+
+
 def valor(v):
     if v is None or v == "":
         return "—"
@@ -254,6 +282,7 @@ def main():
     feats = json.loads(CATALOGO.read_text(encoding="utf-8")).get("features", []) if CATALOGO.exists() else []
     nombres = {}
     gen, props = genealogia(feats)
+    ags = trayectorias(props)
 
     def nodo(u):
         q = props.get(u, {})
@@ -297,6 +326,17 @@ def main():
             vinc = '<h2 id="vinculos">Vínculos</h2><ul>' + "".join(
                 f'<li>{e(nombre_vinculo(v["tipo"], v["sentido"] == "entra"))}: {nodo(v["a"])}'
                 + (f' <span class="muted">— {e(v["nota"])}</span>' if v.get("nota") else "") + "</li>" for v in g["vinculos"]) + "</ul>"
+        tray = ""
+        for i, ag in ags.items():
+            pos = next((k for k, x in enumerate(ag["obras"]) if x["obra"] == uuid), None)
+            if pos is None:
+                continue
+            ant = nodo(ag["obras"][pos - 1]["obra"]) if pos > 0 else '<span class="muted">primera obra registrada</span>'
+            sig = nodo(ag["obras"][pos + 1]["obra"]) if pos + 1 < len(ag["obras"]) else '<span class="muted">última obra registrada</span>'
+            tray += (f'<li><a href="/agente/{e(i)}/">{e(ag["nombre"])}</a> <span class="muted">· obra {pos + 1} de {len(ag["obras"])}</span>'
+                     f'<br><span class="muted">anterior:</span> {ant}<br><span class="muted">siguiente:</span> {sig}</li>')
+        if tray:
+            tray = f'<h2 id="trayectoria">Trayectorias</h2><p class="muted">La línea temporal de cada autoría une esta obra con otros lugares y tiempos.</p><ul>{tray}</ul>'
         if p.get("archivar") is False:
             rastro = '<p class="muted">Por decisión de su autoría, esta obra no se inscribe en archive.org.</p>'
         elif p.get("ficticio"):
@@ -316,6 +356,7 @@ def main():
 <dl>{dl}</dl>
 <p><a href="/#obra-{e(uuid)}">Ficha completa, observaciones y mapa</a></p>
 {lineas}
+{tray}
 {vinc}
 <h2 id="arbol">Árbol de modificaciones</h2>
 {arbol(versiones, capturas, uuid)}
@@ -333,6 +374,18 @@ def main():
     (WEB / "estratos").mkdir(parents=True, exist_ok=True)
     (WEB / "estratos" / "index.html").write_text(pagina("Estratos · CANARIAS", cuerpo), encoding="utf-8")
 
+    for i, ag in ags.items():
+        filas = "".join(f'<li>{nodo(x["obra"])}{" · " + e(x["rol"]) if x.get("rol") else ""}</li>' for x in ag["obras"])
+        espacios = sorted({props[x["obra"]].get("municipio") or ESPACIOS[gen[x["obra"]]["espacio"]] for x in ag["obras"]})
+        cuerpo = f"""<p class="eyebrow"><a href="/">CANARIAS</a> · Trayectoria</p>
+<h1>{e(ag['nombre'])}</h1>
+<p class="muted">{len(ag['obras'])} obras · {e(', '.join(espacios))}</p>
+<p>Su línea temporal vincula los espacios donde ha trabajado: cada obra queda unida a la anterior y a la siguiente.</p>
+<ol class="estratos">{filas}</ol>"""
+        destino = WEB / "agente" / i / "index.html"
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        destino.write_text(pagina(f"{ag['nombre']} · CANARIAS", cuerpo), encoding="utf-8")
+
     publico = {"actualizado": reg.get("actualizado"), "capturas": capturas,
                "obras": {u: {k: v for k, v in o.items() if k in ("item", "capas")} for u, o in obras_reg.items()}}
     (WEB / "datos").mkdir(parents=True, exist_ok=True)
@@ -340,6 +393,8 @@ def main():
     resumen = {u: {**({"version": hist[u][-1]["version"], "fecha": hist[u][-1]["fecha"], "versiones": hist[u]} if u in hist else {}),
                    **gen[u]} for u in nombres}
     (WEB / "datos" / "historial.json").write_text(json.dumps(resumen, ensure_ascii=False) + "\n", encoding="utf-8")
+    (WEB / "datos" / "trayectorias.json").write_text(json.dumps(ags, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"{len(ags)} trayectorias.")
     print(f"{len(nombres)} fichas estáticas, {len(capturas)} estratos.")
 
 

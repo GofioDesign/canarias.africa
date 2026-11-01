@@ -1504,11 +1504,11 @@ async function cargarObrasPublicas(){
 }
 /* Arqueología de la red: cada cambio y cada obra se inscriben en archive.org (scripts/archivar.py).
    El rastro se publica en /datos/archivo.json; aquí se muestran los estratos de cada obra. */
-let ARCHIVO=null, HIST=null; // HIST: identificador, versión, fecha y árbol de modificaciones (scripts/generar-fichas.py)
+let ARCHIVO=null, HIST=null, TRAY=null; // HIST: identificador, versión, fecha y árbol de modificaciones (scripts/generar-fichas.py)
 async function cargarArchivo(){
   const leer=async u=>{ try{ const r=await fetch(u); return r.ok?await r.json():null; }catch(e){ return null; } };
-  [ARCHIVO,HIST]=await Promise.all([leer("/datos/archivo.json"),leer("/datos/historial.json")]);
-  if(ARCHIVO||HIST) route();
+  [ARCHIVO,HIST,TRAY]=await Promise.all([leer("/datos/archivo.json"),leer("/datos/historial.json"),leer("/datos/trayectorias.json")]);
+  if(ARCHIVO||HIST||TRAY) route();
 }
 const histDe=o=>HIST&&HIST[o.id.toLowerCase()];
 function idFicha(o){
@@ -1525,14 +1525,18 @@ const ESPACIO_N={lugar:"en un lugar",red:"en la red",sin_espacio:"sin espacio"};
 const VINC_N={responde_a:["responde a","respuestas"],inspirada_en:["inspirada en","ha inspirado"],cita:["cita","citada por"],
   continua:["continúa","continuada por"],se_superpone_a:["se superpone a","debajo"],dialoga:["dialoga con","dialoga con"]};
 function genealogiaObra(o){
-  const h=histDe(o); if(!h||(!(h.arriba||[]).length&&!(h.abajo||[]).length&&!(h.vinculos||[]).length)) return "";
+  const h=histDe(o), id=o.id.toLowerCase();
+  /* La trayectoria de cada artista o colectivo es otra línea temporal: une esta obra con otros lugares y tiempos */
+  const tray=Object.entries(TRAY||{}).map(([i,a])=>{ const k=a.obras.findIndex(x=>x.obra===id); return k<0?null:{i,a,k}; }).filter(Boolean);
+  if(!h||(!(h.arriba||[]).length&&!(h.abajo||[]).length&&!(h.vinculos||[]).length&&!tray.length)) return "";
   const nom=u=>{ const x=byId(u), y=HIST[u]||{}; return `<a href="/obra/${esc(u)}/">${esc(x?x.t:(y.nombre||corto(u)))}</a> <span class="muted">(${[ESCALA_N[y.escala]||y.escala,ESPACIO_N[y.espacio],String((y.tiempo||{}).inicio||"").slice(0,10)].filter(Boolean).map(esc).join(" · ")})</span>`; };
   const vn=v=>{ const n=VINC_N[v.tipo]; return n?n[v.sentido==="entra"?1:0]:v.tipo.replace(/_/g," "); };
   return `<section class="stack">
-    <h2>Líneas temporales y vínculos</h2>
+    <h2>Líneas temporales, trayectorias y vínculos</h2>
     <p class="muted" style="font-size:.9rem">Escala ${esc(ESCALA_N[h.escala]||h.escala)} · ${esc(ESPACIO_N[h.espacio]||"")}. <a href="/obra/${esc(o.id.toLowerCase())}/#lineas">Ver el árbol completo</a></p>
     ${(h.arriba||[]).length?`<p>Ligada a la línea temporal de: ${h.arriba.map(nom).join(", ")}</p>`:""}
     ${(h.abajo||[]).length?`<p class="muted" style="font-size:.95rem">Ha dado lugar a ${h.abajo.length} muestra(s):</p><ul>${h.abajo.map(u=>`<li>${nom(u)}</li>`).join("")}</ul>`:""}
+    ${tray.map(({i,a,k})=>`<p><a href="/agente/${esc(i)}/">${esc(a.nombre)}</a> <span class="muted">· obra ${k+1} de ${a.obras.length}</span>${k>0?`<br><span class="muted">anterior:</span> ${nom(a.obras[k-1].obra)}`:""}${k+1<a.obras.length?`<br><span class="muted">siguiente:</span> ${nom(a.obras[k+1].obra)}`:""}</p>`).join("")}
     ${(h.vinculos||[]).length?`<ul>${h.vinculos.map(v=>`<li>${esc(vn(v))}: ${nom(v.a)}${v.nota?` <span class="muted">— ${esc(v.nota)}</span>`:""}</li>`).join("")}</ul>`:""}
   </section>`;
 }

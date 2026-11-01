@@ -6,5 +6,7 @@ pb_data/
 # Se generan al publicar (scripts/generar-fichas.py)
 web/obra/
 web/estratos/
+web/agente/
+web/datos/trayectorias.json
 web/datos/archivo.json
 web/datos/historial.json

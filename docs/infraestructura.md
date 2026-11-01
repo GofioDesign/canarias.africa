@@ -11,7 +11,7 @@ Decidido el 27 de octubre de 2026: empezar sin coste nuevo, con GitHub Pages y e
 | Lista de correo y votos de la web | Hosting PHP (SQLite), con doble confirmación y baja en cada correo | Ya pagado |
 | Cuentas, etiquetas QR, formularios, observaciones aprobadas, moderación | Hosting PHP actual, en `api.canarias.africa` (`servidor-php/`) | Ya pagado |
 | Caché de teselas OSM | Hosting PHP: `api.canarias.africa/teselas/osm/{z}/{x}/{y}.png` (máx. 300 MB) | Ya pagado |
-| Capas de uMap (QR, rutas) | uMap público; el cron del hosting las copia cada hora a `api.canarias.africa/datos/umap/` | 0 € |
+| Catálogo (obras, QR, rutas, artistas) | Base de datos del hosting, editada en `api.canarias.africa/admin`; uMap solo lo muestra («Datos remotos») | 0 € |
 | Correo saliente (avisos, enlaces y confirmaciones) | `mail()` del hosting con remitente `no-responder@api.canarias.africa` (SPF en Porkbun, sin MX); las respuestas van a `contacto`. Brevo si hace falta más | 0 € |
 | Foro de artistas | Grupo privado (Signal o Telegram) hasta que haya presupuesto para Discourse | 0 € |
 | Copias | Diarias de la base de datos en el hosting (se guardan 7) + descarga manual desde `/admin` | 0 € |
@@ -37,17 +37,18 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 | `POST /api/cuenta/alta`, `/api/cuenta/entrar` | Alta con alias y correo, o entrada: envía un enlace por correo (sin contraseñas) |
 | `POST /api/cuenta/sesion` | Canjea el enlace del correo (`#/entrar?t=…`) por un token de sesión de 90 días (`Authorization: Bearer`) |
 | `GET /api/cuenta/yo` | Alias, nivel, méritos, cupo y etiquetas asignadas |
-| `GET /api/qr/<código>` | Al leer la etiqueta: `{obra, estado}` |
+| `GET /api/qr/<código>` | Al leer la etiqueta: `{soporte, obras, obra, estado}` (la etiqueta identifica un soporte, que puede ser una web) |
 | `POST /api/qr/asignar`, `GET /api/qr/mis-etiquetas` | Pedir etiquetas del pool hasta el cupo y descargarlas para imprimir |
 | `POST /api/qr/<código>/ampliar`, `POST /api/qr/<código>/aviso` | Ampliar el plazo una vez; avisar de etiqueta dañada, desaparecida o retirada |
-| `POST /api/collections/colocaciones/records` | Colocar: etiqueta, obra (o obra nueva), GPS con 25 m o mejor y foto |
+| `POST /api/collections/colocaciones/records` | Colocar: etiqueta, soporte (existente o nuevo), obra (o obra nueva), GPS con 25 m o mejor y foto |
 | `POST /api/collections/verificaciones/records` | Verificar: GPS a 50 m o menos del punto; solo se guarda la distancia |
 | `POST /api/collections/<colección>/records` | Formularios: `observaciones` (exige el código de la etiqueta), `contexto`, `propuestas_obra`, `propuestas_ruta`, `inscripciones` |
 | `GET /api/publico/obras/<uuid>` | Observaciones aprobadas de esa obra |
 | `GET /api/publico/qr/<uuid-obra>/historial` | Historial público de las etiquetas de una obra (sin códigos de etiqueta ni coordenadas de personas) |
 | `GET /api/publico/etiquetas.geojson` | Etiquetas confirmadas para el mapa (difusas en su celda de 0,02°) |
 | `GET /teselas/osm/{z}/{x}/{y}.png` | Teselas de OSM desde la caché |
-| `GET /datos/umap/{qr,rutas}.geojson` | Última copia de las capas de uMap |
+| `GET /datos/{obras,qr,rutas,artistas}.geojson` | Catálogo público (lo leen la web y uMap); `/datos/umap/…` es el nombre antiguo |
+| `GET /datos/fotos/AAAA-MM/<id>.jpg` | Fotos subidas desde `/admin`, solo si una obra o artista publicado las usa |
 | `/admin` | Moderación, pool de etiquetas, personas (nivel Custodia), obras propuestas, lista y votos del lanzamiento (con CSV e ideas nuevas) y descarga de la base de datos (con contraseña) |
 
 ## Puesta en marcha

@@ -71,14 +71,26 @@ function foto_subida(bool $obligatoria): ?string {
   return guardar_foto($f['tmp_name'], mime_content_type($f['tmp_name']) ?: '');
 }
 
-// GET /api/qr/<código> → {obra, estado}. Es lo que pide la web al leer el glifo de una etiqueta.
+// GET /api/qr/<código> → {soporte, obras, obra, estado}. Es lo que pide la web al leer el glifo de una etiqueta.
+// La etiqueta identifica un soporte (una pared, una roca… o una web), y en él puede haber varias obras, de ahora y de antes.
 function qr_resolver(string $codigo): never {
   $q = etiqueta($codigo);
-  if (!$q) json_respuesta(['obra' => null, 'estado' => 'desconocido'], 404);
-  json_respuesta(['obra' => $q['obra'], 'estado' => $q['estado']]);
+  if (!$q) json_respuesta(['obra' => null, 'soporte' => null, 'obras' => [], 'estado' => 'desconocido'], 404);
+  $s = $q['soporte'] ? soporte($q['soporte']) : null;
+  $obras = [];
+  if ($s) foreach (obras_de_soporte($s['uuid'], true) as $o) {
+    $obras[] = array_filter(['uuid' => $o['obra'], 'titulo' => $o['titulo'], 'actual' => $o['hasta'] === '', 'desde' => $o['desde'], 'hasta' => $o['hasta']], fn($v) => $v !== '');
+  }
+  $actual = array_values(array_filter($obras, fn($o) => $o['actual']));
+  // gps: la etiqueta tiene punto y se verifica con el GPS (no lo tiene una que solo se muestra en pantalla).
+  $r = ['estado' => $q['estado'], 'gps' => $q['lat'] !== null, 'obra' => $actual[0]['uuid'] ?? $obras[0]['uuid'] ?? $q['obra'], 'obras' => $obras, 'soporte' => null];
+  if ($s) {
+    $r['soporte'] = array_filter(['uuid' => $s['uuid'], 'nombre' => $s['nombre'], 'tipo' => $s['tipo'], 'url' => $s['url'] ?? '',
+      'municipio' => sensibilidad_soporte($s) === 'reservada' ? '' : $s['municipio']], fn($v) => $v !== '');
+  }
+  json_respuesta($r);
 }
 
-// POST /api/qr/asignar {cantidad}: reparte etiquetas libres del pool hasta completar el cupo.
 function qr_asignar(): never {
   $c = exigir_colaborador();
   $p = perfil((int) $c['id']);
@@ -122,7 +134,9 @@ function qr_ampliar(string $codigo): never {
   json_respuesta(perfil((int) $c['id']));
 }
 
-// POST /api/collections/colocaciones/records (multipart): qr, obra (UUID del catálogo) u obra_nueva_* , lat, lon, precision, foto.
+// POST /api/collections/colocaciones/records (multipart): qr, lat, lon, precision, foto y
+// · soporte (UUID de un soporte que ya existe, si la etiqueta va en él) o soporte_nombre/soporte_tipo para uno nuevo en este punto;
+// · obra (UUID del catálogo) u obra_nueva_*: la obra que hay en el soporte. Con un soporte existente es opcional.
 function qr_colocar(): never {
   $c = exigir_colaborador();
   $db = db();
@@ -137,39 +151,69 @@ function qr_colocar(): never {
   $max = config()['qr']['precision_colocar_m'];
   if ($pre > $max) error_publico("La precisión del GPS es de " . round($pre) . " m y hace falta $max m o mejor. Espera unos segundos al aire libre y vuelve a intentarlo.");
 
+  $soporte = null;
+  if (!empty($_POST['soporte'])) {
+    $soporte = soporte((string) $_POST['soporte']) ?? error_publico('Ese soporte no está en el archivo.', 404);
+    // Un soporte sin punto (una web) puede tener etiquetas físicas en cualquier sitio (un cartel, un local): cada una
+    // guarda su propio punto y se verifica con el GPS. Si el soporte tiene punto, hay que estar junto a él.
+    if ($soporte['lat'] !== null && distancia_m((float) $soporte['lat'], (float) $soporte['lon'], $lat, $lon) > config()['qr']['radio_verificar_m'] + $pre) {
+      error_publico('Estás demasiado lejos de ese soporte. Si es otro sitio, crea un soporte nuevo.');
+    }
+    if (sensibilidad_soporte($soporte) === 'reservada') error_publico('Los soportes con obras de ubicación reservada no llevan etiqueta.', 403);
+  }
+
+  $obra_uuid = null;
+  $obra = null;
   if (!empty($_POST['obra'])) {
     $st = $db->prepare('SELECT * FROM obras WHERE uuid = ?');
     $st->execute([strtolower((string) $_POST['obra'])]);
     $obra = $st->fetch() ?: error_publico('Esa obra no está en el archivo.', 404);
     if ($obra['sensibilidad'] === 'reservada') error_publico('Las obras con ubicación reservada no llevan etiqueta.', 403);
     $obra_uuid = $obra['uuid'];
-  } else {
-    $titulo = trim((string) ($_POST['obra_nueva_titulo'] ?? ''));
-    if ($titulo === '') error_publico('Elige una obra del archivo o describe la obra nueva.');
+  } elseif (trim((string) ($_POST['obra_nueva_titulo'] ?? '')) !== '') {
     if (($_POST['obra_nueva_sensibilidad'] ?? '') === 'reservada') error_publico('Las obras con ubicación reservada no llevan etiqueta.', 403);
     $obra_uuid = uuid4();
     $datos = [];
     foreach ($_POST as $k => $v) if (is_string($v) && str_starts_with($k, 'obra_nueva_')) $datos[substr($k, 11)] = mb_substr($v, 0, 5000);
     $db->prepare('INSERT INTO obras_propuestas (uuid, colaborador, datos) VALUES (?, ?, ?)')
        ->execute([$obra_uuid, $c['id'], json_encode($datos, JSON_UNESCAPED_UNICODE)]);
+  } elseif (!$soporte) {
+    error_publico('Elige el soporte o la obra del archivo, o describe la obra nueva.');
   }
   if (!in_array((string) ($_POST['acepta_derechos'] ?? ''), ['1', 'true', 'on'], true)) error_publico('Hay que aceptar las condiciones de uso de la foto.');
   $foto = foto_subida(true);
 
   $db->beginTransaction();
-  // Si la obra tenía una etiqueta dañada, retirada o desaparecida, esta la sustituye.
-  $st = $db->prepare("SELECT codigo FROM qr_codigos WHERE obra = ? AND estado IN ('danado','retirado','desaparecida') AND codigo != ?");
-  $st->execute([$obra_uuid, $q['codigo']]);
+  if (!$soporte) {
+    $nombre = trim((string) ($_POST['soporte_nombre'] ?? '')) ?: ($obra ? 'Soporte de «' . $obra['titulo'] . '»' : 'Soporte de «' . trim((string) $_POST['obra_nueva_titulo']) . '»');
+    $sens = $obra['sensibilidad'] ?? (in_array($_POST['obra_nueva_sensibilidad'] ?? '', SENSIBILIDADES, true) ? $_POST['obra_nueva_sensibilidad'] : 'abierta');
+    $soporte = soporte(soporte_crear($lat, $lon, $nombre, (string) ($_POST['soporte_tipo'] ?? ''), $sens, $obra ?: []));
+  }
+  if ($obra_uuid) enlazar_obra_soporte($obra_uuid, $soporte['uuid']);
+  // Si el soporte tenía una etiqueta dañada, retirada o desaparecida, esta la sustituye.
+  $st = $db->prepare("SELECT codigo FROM qr_codigos WHERE (soporte = ? OR (soporte IS NULL AND obra = ?)) AND estado IN ('danado','retirado','desaparecida') AND codigo != ?");
+  $st->execute([$soporte['uuid'], $obra_uuid ?? '', $q['codigo']]);
   $sustituida = $st->fetchColumn() ?: null;
   if ($sustituida) cambiar_estado($sustituida, 'sustituido', (int) $c['id'], ['por' => 'nueva etiqueta']);
   $db->prepare('INSERT INTO colocaciones (qr, obra, colaborador, lat, lon, precision, foto) VALUES (?, ?, ?, ?, ?, ?, ?)')
-     ->execute([$q['codigo'], $obra_uuid, $c['id'], $lat, $lon, $pre, $foto]);
-  $db->prepare('UPDATE qr_codigos SET obra = ?, lat = ?, lon = ?, precision = ?, sustituye = ? WHERE codigo = ?')
-     ->execute([$obra_uuid, $lat, $lon, $pre, $sustituida, $q['codigo']]);
+     ->execute([$q['codigo'], $obra_uuid ?? '', $c['id'], $lat, $lon, $pre, $foto]);
+  $db->prepare('UPDATE qr_codigos SET obra = ?, soporte = ?, lat = ?, lon = ?, precision = ?, sustituye = ? WHERE codigo = ?')
+     ->execute([$obra_uuid, $soporte['uuid'], $lat, $lon, $pre, $sustituida, $q['codigo']]);
   $db->prepare("UPDATE asignaciones SET resultado = 'colocado' WHERE id = ?")->execute([$a['id']]);
   cambiar_estado($q['codigo'], 'colocado', (int) $c['id'], ['precision_m' => round($pre)]);
   $db->commit();
-  json_respuesta(['ok' => true, 'obra' => $obra_uuid, 'estado' => 'colocado'], 201);
+  json_respuesta(['ok' => true, 'soporte' => $soporte['uuid'], 'obra' => $obra_uuid, 'estado' => 'colocado'], 201);
+}
+
+// /admin: da de alta una etiqueta libre en un soporte, para etiquetas que se colocaron sin la app o que solo se muestran
+// en pantalla (dentro de la propia web). Una etiqueta impresa de una web se coloca con la app, con GPS, como las demás.
+function qr_vincular_soporte(string $codigo, array $s): void {
+  $q = etiqueta($codigo) ?? throw new InvalidArgumentException('Esa etiqueta no existe.');
+  if ($q['estado'] !== 'libre') throw new InvalidArgumentException('Esa etiqueta no está libre (estado: ' . $q['estado'] . ').');
+  $web = $s['lat'] === null;
+  db()->prepare('UPDATE qr_codigos SET soporte = ?, obra = ?, lat = ?, lon = ?, precision = ? WHERE codigo = ?')
+      ->execute([$s['uuid'], obras_de_soporte($s['uuid'])[0]['obra'] ?? null, $s['lat'], $s['lon'], $web ? null : 0, $q['codigo']]);
+  cambiar_estado($q['codigo'], $web ? 'confirmado' : 'colocado', null, ['motivo' => 'alta en /admin']);
 }
 
 // POST /api/collections/verificaciones/records (multipart): qr, lat, lon, precision, dispositivo, foto (opcional).
@@ -181,6 +225,7 @@ function qr_verificar(): never {
   if (!$c && !$cfg['visitantes_verifican']) error_publico('Para verificar etiquetas hay que entrar con una cuenta.', 401);
   $q = etiqueta((string) ($_POST['qr'] ?? '')) ?? error_publico('Esa etiqueta no existe.', 404);
   if (!in_array($q['estado'], ESTADOS_EN_SITIO, true)) error_publico('Esta etiqueta no está colocada.', 409);
+  if ($q['lat'] === null) error_publico('Esta etiqueta es de un soporte sin punto (por ejemplo, una web): no se verifica con el GPS.', 409);
   $disp = (string) ($_POST['dispositivo'] ?? '');
   if (!preg_match('/^[\w-]{16,64}$/', $disp)) error_publico('Falta el identificador del dispositivo.');
   [$lat, $lon, $pre] = gps();
@@ -268,7 +313,8 @@ function envejecer_etiquetas(): void {
   $cfg = config()['qr'];
   $db = db();
   foreach ([['confirmado', 'sin_verificar', $cfg['meses_sin_verificar']], ['sin_verificar', 'desaparecida', $cfg['meses_desaparecida']]] as [$de, $a, $meses]) {
-    $st = $db->prepare("SELECT codigo FROM qr_codigos WHERE estado = ? AND COALESCE(ultima_verificacion, creado) < datetime('now', ?)");
+    // Las etiquetas de soportes sin punto (webs) no se verifican con GPS: no envejecen.
+    $st = $db->prepare("SELECT codigo FROM qr_codigos WHERE estado = ? AND lat IS NOT NULL AND COALESCE(ultima_verificacion, creado) < datetime('now', ?)");
     $st->execute([$de, "-$meses months"]);
     foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $u) cambiar_estado($u, $a, null, ['motivo' => "sin verificaciones en $meses meses"]);
   }
@@ -280,12 +326,12 @@ function confianza(string $qr): float {
   return round(array_sum(array_map(fn($v) => $v['peso'] * 0.5 ** ($v['dias'] / 365), $st->fetchAll())), 2);
 }
 
-// GET /api/publico/qr/<uuid-obra>/historial: historial público de las etiquetas de una obra.
+// GET /api/publico/qr/<uuid-obra>/historial: historial público de las etiquetas de una obra (las de sus soportes).
 // No incluye el código de las etiquetas, ni coordenadas de personas, ni correos.
 function qr_historial(string $obra): never {
   $db = db();
-  $st = $db->prepare("SELECT * FROM qr_codigos WHERE obra = ? ORDER BY creado");
-  $st->execute([strtolower($obra)]);
+  $st = $db->prepare("SELECT * FROM qr_codigos WHERE obra = ? OR soporte IN (SELECT soporte FROM obra_soporte WHERE obra = ?) ORDER BY creado");
+  $st->execute([strtolower($obra), strtolower($obra)]);
   $etiquetas = [];
   foreach ($st->fetchAll() as $i => $q) {
     $ev = $db->prepare("SELECT e.tipo, e.fecha, e.datos, c.alias FROM qr_eventos e LEFT JOIN colaboradores c ON c.id = e.colaborador
@@ -308,20 +354,8 @@ function qr_historial(string $obra): never {
   json_respuesta(['obra' => strtolower($obra), 'etiquetas' => $etiquetas]);
 }
 
-// GET /api/publico/etiquetas.geojson: etiquetas confirmadas para el mapa, con el punto ya ocultado si la obra es difusa.
-function qr_mapa(): never {
-  $filas = db()->query("SELECT q.*, o.sensibilidad FROM qr_codigos q JOIN obras o ON o.uuid = q.obra
-                        WHERE q.estado IN ('confirmado','sin_verificar') AND o.sensibilidad != 'reservada'")->fetchAll();
-  $paso = 0.02;
-  $features = array_map(function ($q) use ($paso) {
-    [$lat, $lon] = [$q['lat'], $q['lon']];
-    if ($q['sensibilidad'] !== 'abierta') {
-      [$lat, $lon] = array_map(fn($v) => round(floor($v / $paso) * $paso + $paso / 2, 4), [$lat, $lon]);
-    }
-    return ['type' => 'Feature', 'geometry' => ['type' => 'Point', 'coordinates' => [$lon, $lat]],
-            'properties' => ['obra' => $q['obra'], 'estado' => $q['estado'], 'ultima_verificacion' => $q['ultima_verificacion'],
-                             'precision' => $q['sensibilidad'] === 'abierta' ? 'exacta' : 'zona']];
-  }, $filas);
-  header('Cache-Control: public, max-age=300');
-  json_respuesta(['type' => 'FeatureCollection', 'features' => $features]);
-}
+// GET /api/publico/etiquetas.geojson y /datos/soportes.geojson (antes qr.geojson): un punto por soporte con etiqueta
+// u obras publicadas, ya ocultado según la protección. Ver soportes_features() en soportes.php.
+function qr_mapa(): never { enviar_geojson(soportes_features()); }
+
+function qr_mapa_features(): array { return soportes_features(); }

@@ -125,6 +125,11 @@ textarea{min-height:110px;width:100%;resize:vertical}
 .fake{display:inline-block;font-family:var(--f-mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;background:var(--warn-bg);color:var(--warn-ink);padding:2px 6px;border-radius:3px;vertical-align:middle}
 
 /* Ficha */
+.foto-obra{margin:6px 0 4px;display:flex;flex-direction:column;gap:6px}
+.foto-obra img{display:block;width:100%;max-height:min(70vh,560px);object-fit:cover;border-radius:4px;background:var(--line)}
+.foto-obra figcaption{font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.tt-foto{display:flex;flex-direction:column;gap:4px;width:180px;white-space:normal}
+.tt-foto img{width:180px;height:120px;object-fit:cover;border-radius:3px;background:#ddd}
 .ficha-head{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:28px;align-items:start}
 .idline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .idbadge{font-family:var(--f-mono);font-weight:600;font-size:.9rem;background:var(--ink);color:var(--bg);padding:3px 8px;border-radius:3px}
@@ -166,6 +171,13 @@ legend{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);padding:0 6p
 .radios{display:flex;flex-wrap:wrap;gap:8px 16px;font-family:var(--f-body);font-size:.95rem;color:var(--ink)}
 .radios label{flex-direction:row;align-items:center;gap:6px;font-family:var(--f-body);font-size:.95rem;color:var(--ink)}
 .ok{background:var(--surface);border:1px solid var(--ph-plen);padding:14px 16px;max-width:760px}
+/* Listas de nodos del formulario (personas, quién pagó, relaciones) y agregador de paradas de una ruta */
+.rep .repf,.agr li{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 8px}
+.rep .repf>input,.rep .repf>select,.agr li input{flex:1 1 150px;min-width:0}
+.rep input,.agr input{font:inherit;font-family:var(--f-body);font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);padding:9px 10px}
+.btn.mini{padding:5px 10px;font-size:.85rem}
+.agr ol{padding-left:22px;margin:10px 0}.agr li{display:list-item}.agr li>div{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.agr-res{display:flex;flex-direction:column;gap:4px;margin:8px 0}.agr-res button{text-align:left;background:none;border:1px dashed var(--line);padding:6px 10px;font:inherit;color:var(--ink);cursor:pointer}
 
 /* Rutas */
 .routes{display:flex;flex-direction:column;gap:28px}
@@ -1096,7 +1108,13 @@ const CERTEZA = {
   atribuida:{n:"Atribuida",v:2,d:"Una sola fuente o comparación de estilo."},
   desconocida:{n:"Desconocida",v:0,d:"Sin datos. Se pide ayuda a la ciudadanía."}
 };
-const FIN = {publica:"Pública",privada:"Privada",altruista:"Altruista",mixta:"Mixta",desconocida:"Sin determinar"};
+const FIN = {publica:"Pública",privada:"Privada",particular:"Particular",altruista:"Altruista",mixta:"Mixta",desconocida:"Sin determinar"};
+/* Vocabularios de los nodos de una obra: los mismos que /admin (servidor-php/privado/catalogo.php) */
+const ROLES = {autoria:"Autoría",coautoria:"Coautoría",ejecucion:"Ejecución",encargo:"Encargo",restauracion:"Restauración",colaboracion:"Colaboración",cuidado:"Cuidado"};
+const NATUR = {publica:"Entidad pública",privada:"Entidad privada",particular:"Particular (su nombre no se publica)"};
+const MODAL = {"":"Modalidad (si se sabe)",encargo:"Encargo",subvencion:"Subvención",patrocinio:"Patrocinio",donacion:"Donación",autofinanciada:"Autofinanciada"};
+const MODOS = {continua:"continúa",responde:"responde a",superpone:"se superpone a",serie:"forma serie con"};
+const PREC_FECHA = {"":"sin precisar",exacta:"exacta",aproximada:"aprox.",decada:"década",epoca:"época"};
 const MUNIS = {
   ARI:{n:"Arico",isla:"TF",lon:-16.49,lat:28.19},
   FAS:{n:"Fasnia",isla:"TF",lon:-16.45,lat:28.245},
@@ -1227,7 +1245,7 @@ function trazaEtiqueta(o){
    difusa: punto ajustado a una cuadrícula fija de ~2 km (no se puede promediar); reservada: solo el municipio. */
 const SENS={abierta:{n:"Abierta",d:"Ubicación exacta pública, QR en el sitio."},
  difusa:{n:"Difusa",d:"Se muestra una zona de unos 2 km. No entra en rutas. Para obras sin protección suficiente o en terreno privado."},
- reservada:{n:"Reservada",d:"Solo se muestra el municipio. Sin QR en el sitio. Las coordenadas exactas solo las ve el equipo y la investigación acreditada. Para patrimonio protegido, como el arte rupestre aborigen."}};
+ reservada:{n:"Reservada",d:"Obra delicada: solo se publica la isla (o solo que está en Canarias). En el mapa sale un punto simbólico alrededor del centro de la isla, que no tiene nada que ver con su ubicación real. Sin QR en el sitio. Las coordenadas exactas solo las ve el equipo y la investigación acreditada. Para patrimonio protegido, como el arte rupestre aborigen."}};
 const sensOf=o=>(o.sens&&o.sens.n)||"abierta";
 OBRAS.forEach(o=>{ const n=sensOf(o);
   if(n==="difusa"){ const c=.02; o.lat=(Math.floor(o.lat/c)+.5)*c; o.lon=(Math.floor(o.lon/c)+.5)*c; }
@@ -1426,7 +1444,8 @@ function buildGraph(){
       rel(ag,"autoria",ob,{rol:a.rol,certeza:CERTEZA[a.c].n});
       if(a.f){ const fu=addNode("fuente","fu:"+o.id+":"+a.f,a.f,{}); rel(fu,"sostiene",ob,{dato:"autoría de "+a.n}); }
     });
-    if(o.fin.e){ const en=addNode("entidad","en:"+o.fin.e,o.fin.e,{}); rel(en,"financia",ob,{modalidad:FIN[o.fin.t]}); }
+    (o.pags||(o.fin.e?[{naturaleza:o.fin.t,entidad:o.fin.e}]:[])).filter(x=>x.entidad).forEach(x=>{
+      const en=addNode("entidad","en:"+x.entidad,x.entidad,{naturaleza:FIN[x.naturaleza]||""}); rel(en,"financia",ob,{modalidad:MODAL[x.modalidad]&&x.modalidad?MODAL[x.modalidad]:FIN[x.naturaleza]||""}); });
     if(o.qr.inst){ const q=addNode("qr","qr:"+o.id,"QR · "+o.id,{estado:o.qr.st,instalado:fd(o.qr.inst),"última revisión":fd(o.qr.rev)}); rel(q,"senala",ob); }
     o.obs.forEach((b,i)=>{ const n=addNode("observacion","obs:"+o.id+":"+i,`${fd(b[0])} · ${b[1]}`,{vía:b[2],clase:b[3]?"estado (QR)":"contexto (ficha)",...(b[3]?{"fase observada":FASES[b[3]].n}:{}),verificación:b[5],texto:b[4]||"—"}); rel(n,"observa",ob,{fecha:fd(b[0])}); });
   });
@@ -1487,29 +1506,31 @@ function svgIsland(isla,obras,opt){
 function mapa(obras,opt={}){ const islas=opt.islas||islasConObras(obras); return `<div class="map">${islas.map(i=>mapIsland(i,obras,opt)).join("")}</div>`; }
 
 /* Mapas: Leaflet + teselas de OpenStreetMap servidas desde la caché propia de canarias.africa.
-   Los nodos geográficos (obras, QR, rutas) se dibujan y editan en uMap; la web lee sus capas en GeoJSON
-   y las une con la red por la propiedad "id". Si las teselas no cargan, se dibuja el contorno de la isla. */
+   Los nodos geográficos (obras, QR, rutas, artistas) se editan en el archivo (api.canarias.africa/admin); la web y uMap
+   leen sus GeoJSON públicos y los unen con la red por la propiedad "id". Si las teselas no cargan, se dibuja el contorno de la isla. */
 /* La web y las fichas se sirven estáticas desde GitHub Pages (canarias.africa); lo dinámico vive en api.canarias.africa (hosting PHP). */
 const API_BASE = "https://api.canarias.africa";
 const MAPA = {
   teselas: API_BASE+"/teselas/osm/{z}/{x}/{y}.png",
   atribucion: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
-  umap: API_BASE+"/datos/umap/" // copia horaria de las capas de uMap que hace el servidor: qr.geojson, rutas.geojson
+  capas: ["/datos/",API_BASE+"/datos/"] // qr.geojson, rutas.geojson: copia en GitHub Pages; si falta, directo del servidor
 };
 /* Si el catálogo no carga (vista previa), la web funciona con los datos de ejemplo. */
 const API = {
-  obras: "/datos/obras.geojson", // catálogo estático en el repo; difusas ya en el centro de su celda de 0,02°, reservadas sin geometry
+  obras: ["/datos/obras.geojson",API_BASE+"/datos/obras.geojson"], // copia en GitHub Pages del catálogo del servidor (se refresca al guardar en /admin); respaldo: el servidor. Difusas ya en el centro de su celda, reservadas sin geometry
   ficha: API_BASE+"/api/publico/obras/", // + <código>: solo las observaciones aprobadas
   qr: "https://canarias.africa/", // cada QR impreso apunta a canarias.africa/<uuid-del-QR>; la página 404 de GitHub Pages lo pasa a #/q/<uuid>
-  qrResolver: API_BASE+"/api/qr/", // + <uuid-del-QR> → {obra, estado}
+  qrResolver: API_BASE+"/api/qr/", // + <código> → {soporte, obras, obra, estado}: la etiqueta identifica un soporte (un muro, una roca… o una web)
   envios: Object.fromEntries(Object.entries({ qr: "observaciones", contexto: "contexto", nueva: "propuestas_obra", ruta: "propuestas_ruta", inscripcion: "inscripciones" })
     .map(([k,c])=>[k,`${API_BASE}/api/collections/${c}/records`])) // PocketBase, multipart
 };
 let DEMO = true; // pasa a false cuando carga el catálogo
-/* Catálogo real (capa Obras de uMap copiada a /datos/obras.geojson al publicar). Cuando carga, sustituye a las obras de ejemplo:
+/* Catálogo real (obras publicadas desde /admin del servidor). Cuando carga, sustituye a las obras de ejemplo:
    actualiza las que ya conoce por id, crea las nuevas y retira las ficticias, con sus rutas y diálogos. */
 function obraDeCatalogo(f){
-  const p=f.properties||{}, pt=f.geometry&&f.geometry.type==="Point"&&Array.isArray(f.geometry.coordinates)?f.geometry.coordinates:null;
+  const p=f.properties||{};
+  /* Una obra reservada trae un punto ficticio (alrededor del centro de su isla o del archipiélago): solo sirve para uMap. */
+  const pt=p.sensibilidad!=="reservada"&&f.geometry&&f.geometry.type==="Point"&&Array.isArray(f.geometry.coordinates)?f.geometry.coordinates:null;
   if(!p.id) return null;
   let o=byId(p.id);
   if(!o){ o={id:String(p.id),t:"",tipo:"Obra",m:null,lugar:"",lon:null,lat:null,fecha:{v:"—",p:"sin datos"},
@@ -1520,30 +1541,48 @@ function obraDeCatalogo(f){
   if(SENS[p.sensibilidad]) o.sens={...(o.sens||{}),n:p.sensibilidad};
   if(p.descripcion) o.desc=String(p.descripcion);
   if(p.ficha){ const fi=String(p.ficha).trim(); if(/^https?:\/\//i.test(fi)) o.fichaUrl=fi; else if(!o.desc) o.desc=fi; }
+  if(Array.isArray(p.agentes)&&p.agentes.length) o.aut=p.agentes.map(a=>({n:String(a.nombre),rol:ROLES[a.rol]||"",c:CERTEZA[a.certeza]?a.certeza:"atribuida",f:""}));
+  else if(p.autoria&&!byId(p.id)) o.aut=[{n:String(p.autoria),rol:"Autoría",c:"atribuida",f:""}];
+  if(Array.isArray(p.pagadores)&&p.pagadores.length){ o.pags=p.pagadores.filter(x=>NATUR[x.naturaleza]);
+    const nat=[...new Set(o.pags.map(x=>x.naturaleza))];
+    o.fin={t:nat.length>1?"mixta":nat[0]||"desconocida",e:o.pags.map(x=>x.entidad).filter(Boolean).join(" · ")}; }
+  if(p.fecha_obra) o.fecha={v:String(p.fecha_obra),p:PREC_FECHA[p.fecha_precision]||"sin precisar"};
   if(Array.isArray(p.relaciones)) o.rels=p.relaciones;
+  /* Foto actual: URL https directa a la imagen (normalmente Wikimedia Commons) y su crédito (autoría y licencia) */
+  if(p.foto&&/^https:\/\//i.test(String(p.foto).trim())){ o.foto=String(p.foto).trim(); o.fotoCredito=p.foto_credito?String(p.foto_credito):""; }
   o.precision=p.precision; // exacta | zona | municipio: el servidor ya ha ocultado; aquí no se recalcula nada
   if(pt){ [o.lon,o.lat]=pt.map(Number); }
-  const m=muniDe(p.municipio, pt?o.lat:null, pt?o.lon:null) || (o.m&&MUNIS[o.m]?o.m:null);
+  let m=muniDe(p.municipio, pt?o.lat:null, pt?o.lon:null) || (o.m&&MUNIS[o.m]?o.m:null);
+  /* Obra reservada (delicada): el servidor solo da la isla. Se sitúa en el centro de la isla, sin punto en el mapa. */
+  if(!m&&ISLAS[p.isla]){ const b=ISLA_BOX[p.isla]; m="IS-"+p.isla;
+    MUNIS[m]=MUNIS[m]||{n:ISLAS[p.isla]+" (ubicación protegida)",isla:p.isla,lon:(b[0]+b[1])/2,lat:(b[2]+b[3])/2}; }
+  if(!m&&p.sensibilidad==="reservada"){ m="IS-CAN"; MUNIS[m]=MUNIS[m]||{n:"Canarias (ubicación protegida)",isla:"TF",lon:-15.8,lat:28.3,canarias:true}; }
   if(!m) return null; // sin punto ni municipio no se puede situar
   o.m=m; if(!pt){ o.lat=MUNIS[m].lat; o.lon=MUNIS[m].lon; }
   if(!o.lugar||!byId(o.id)) o.lugar=p.lugar?String(p.lugar):MUNIS[m].n;
   if(!o.t) o.t="Obra sin título";
   return o;
 }
+/* Lee el primer GeoJSON que responda de una lista de URL (copia en canarias.africa y, si falta, el servidor) */
+async function geojson(urls){
+  for(const u of urls){ try{ const r=await fetch(u,{headers:{Accept:"application/geo+json, application/json"}}); if(!r.ok) continue;
+    const gj=await r.json(); if(gj&&Array.isArray(gj.features)) return gj; }catch(e){} }
+  return null;
+}
 async function cargarObrasPublicas(){
   try{
-    const r=await fetch(API.obras,{headers:{Accept:"application/geo+json, application/json"}}); if(!r.ok) return;
-    const gj=await r.json(); if(!gj||!Array.isArray(gj.features)) return;
+    const gj=await geojson(API.obras); if(!gj) return;
     const nuevas=gj.features.map(obraDeCatalogo).filter(Boolean);
     DEMO=false;
     OBRAS.splice(0,OBRAS.length,...nuevas);
     const hay=id=>OBRAS.some(o=>o.id===id);
     for(let i=RUTAS.length-1;i>=0;i--){ const r=RUTAS[i]; r.stops=r.stops.filter(hay); if(r.stops.length<2) RUTAS.splice(i,1); }
     for(let i=DIALOGOS.length-1;i>=0;i--) if(!hay(DIALOGOS[i][0])||!hay(DIALOGOS[i][2])) DIALOGOS.splice(i,1);
+    OBRAS.forEach(o=>(o.rels||[]).forEach(r=>{ if(r&&MODOS[r.modo]&&hay(r.obra)) DIALOGOS.push([o.id,MODOS[r.modo],r.obra,r.nota||""]); }));
     const usados=new Set([...OBRAS.map(o=>o.m),...RUTAS.flatMap(r=>r.ms)]);
     Object.keys(MUNIS).forEach(k=>{ if(!usados.has(k)) delete MUNIS[k]; });
     G.byKey.clear(); G.byId.clear(); G.edges.length=0; buildGraph();
-    const av=document.getElementById("aviso-proto"); if(av) av.textContent="EN PRUEBAS · Las obras vienen del catálogo real, editado en uMap. Algunas funciones todavía son de prueba. Las convocatorias de «Ayudas a artistas» son reales.";
+    const av=document.getElementById("aviso-proto"); if(av) av.textContent="EN PRUEBAS · Las obras vienen del catálogo real del archivo. Algunas funciones todavía son de prueba. Las convocatorias de «Ayudas a artistas» son reales.";
     route();
   }catch(e){ console.warn("Catálogo no disponible; se muestran los datos de ejemplo",e); }
 }
@@ -1557,13 +1596,27 @@ async function cargarFicha(o){
     o._ficha=true; return true;
   }catch(e){ return false; }
 }
-async function cargarUMap(){
-  const capa=async c=>{ const r=await fetch(MAPA.umap+c+".geojson"); if(!r.ok) throw new Error(c); return (await r.json()).features||[]; };
-  let cambio=false;
-  try{ (await capa("qr")).forEach(f=>{ const p=f.properties||{}, o=byId(p.obra); if(o&&p.estado){ o.qr.st=p.estado; cambio=true; } }); }catch(e){}
+/* Estados de etiqueta del servidor → estados que muestra la ficha */
+const QR_ESTADO={confirmado:"activo",sin_verificar:"activo",activo:"activo",pendiente:"pendiente","dañado":"dañado",retirado:"retirado","no aplica":"no aplica"};
+const kmRuta=ids=>{ let d=0; for(let i=1;i<ids.length;i++){ const a=byId(ids[i-1]), b=byId(ids[i]), r=Math.PI/180;
+  const h=Math.sin((b.lat-a.lat)*r/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin((b.lon-a.lon)*r/2)**2; d+=12742*Math.asin(Math.sqrt(h)); } return Math.round(d*10)/10; };
+async function cargarCapas(){
+  const capa=async c=>{ const gj=await geojson(MAPA.capas.map(b=>b+c+".geojson")); if(!gj) throw new Error(c); return gj.features; };
+  let cambio=false, red=false;
+  /* Soportes (antes «qr»): cada uno con su etiqueta y las obras que tiene ahora */
+  const sop=await capa("soportes").catch(()=>capa("qr")).catch(()=>[]);
+  sop.forEach(f=>{ const p=f.properties||{}, st=QR_ESTADO[p.estado];
+    if(st) [...new Set([p.obra,...String(p.obras||"").split(",")])].map(x=>byId((x||"").trim())).filter(Boolean).forEach(o=>{ o.qr.st=st; cambio=true; }); });
   try{ (await capa("rutas")).forEach(f=>{ const p=f.properties||{}, r=RUTAS.find(x=>x.id===p.id||("RU-"+x.id).toUpperCase()===p.id);
     const ids=String(p.paradas||"").split(",").map(x=>x.trim()).filter(x=>byId(x)&&enMapa(byId(x)));
-    if(r&&ids.length>1){ r.stops=ids; cambio=true; } }); }catch(e){}
+    if(ids.length<2) return;
+    if(r){ r.stops=ids; if(p.notas&&typeof p.notas==="object") r.notas={...r.notas,...p.notas}; cambio=true; return; }
+    if(DEMO||!p.id) return;
+    /* Ruta creada en el archivo: se añade con lo que publica el servidor */
+    RUTAS.push({id:String(p.id).replace(/^RU-/i,"").toLowerCase(),n:String(p.name||p.id),cur:String(p.curaduria||"canarias.africa"),
+      ms:[...new Set(ids.map(x=>byId(x).m))],km:kmRuta(ids),h:"—",dif:"Sin indicar",tesis:String(p.description||""),notas:p.notas&&typeof p.notas==="object"?p.notas:{},stops:ids,sal:[]});
+    cambio=red=true; }); }catch(e){}
+  if(red){ G.byKey.clear(); G.byId.clear(); G.edges.length=0; buildGraph(); }
   if(cambio) route();
 }
 let MAPSEQ=0, MAPQ=[];
@@ -1589,7 +1642,7 @@ function initMaps(){
       const on=!c.opt.only||c.opt.only.includes(o.id), big=c.opt.focus===o.id;
       if(big&&sensOf(o)==="abierta") L.circleMarker([o.lat,o.lon],{radius:14,className:"mk-ring",interactive:false}).addTo(m);
       L.circleMarker([o.lat,o.lon],{radius:big?8:7,className:`mk mk-${o.fase}${on?"":" dim"}`}).addTo(m)
-       .bindTooltip(`${esc(o.t)} · ${FASES[o.fase].n}`).on("click",()=>{ location.hash=slug(o.id); });
+       .bindTooltip(o.foto?`<span class="tt-foto"><img src="${esc(o.foto)}" alt="" loading="lazy" referrerpolicy="no-referrer"><span>${esc(o.t)} · ${FASES[o.fase].n}</span></span>`:`${esc(o.t)} · ${FASES[o.fase].n}`).on("click",()=>{ location.hash=slug(o.id); });
     });
     if(c.cerca){ L.circleMarker([c.lat,c.lon],{radius:8,className:"mk-yo",interactive:false}).addTo(m); L.circle([c.lat,c.lon],{radius:RADIO_KM*1000,className:"radio-yo",interactive:false}).addTo(m); m.setView([c.lat,c.lon],11); }
     else if(c.opt.focus){ const o=byId(c.opt.focus), n=sensOf(o); m.setView([o.lat,o.lon],n==="reservada"?11:n==="difusa"?13:14); }
@@ -1914,7 +1967,8 @@ function vObra(o){
     <div class="stack">
       <div class="idline"><span class="idbadge" title="${o.id}">${corto(o.id)}</span>${chip(o.fase)}${DEMO?`<span class="fake">datos ficticios</span>`:""}</div>
       <h1>${esc(o.t)}</h1>
-      <p class="lede muted">${o.tipo} · ${esc(o.lugar)} · ${M.n}, ${ISLAS[M.isla]}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}${o.fichaUrl?`<p><a href="${esc(o.fichaUrl)}" target="_blank" rel="noopener">Ficha completa ↗</a></p>`:""}
+      <p class="lede muted">${esc(o.tipo)} · ${o.lugar&&o.lugar!==M.n?esc(o.lugar)+" · ":""}${M.n}${o.m.startsWith("IS-")?"":`, ${ISLAS[M.isla]}`}</p>${o.desc?`<p class="prose">${esc(o.desc)}</p>`:""}${o.fichaUrl?`<p><a href="${esc(o.fichaUrl)}" target="_blank" rel="noopener">Ficha completa ↗</a></p>`:""}
+      ${o.foto?`<figure class="foto-obra"><img src="${esc(o.foto)}" alt="Foto actual de ${esc(o.t)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.closest('figure').remove()">${o.fotoCredito?`<figcaption>${esc(o.fotoCredito)}</figcaption>`:""}</figure>`:""}
       <div class="btns"><a class="btn lichen" href="#contexto-${o.id.toLowerCase()}">Aportar contexto</a></div>
       <div class="qrhint">${o.qr.st==="activo"?`<p><b>¿Estás junto a la obra?</b> Escanea su QR para contar cómo está hoy. El estado de una obra solo se puede observar desde su QR.</p>${DEMO?`<div class="btns" style="align-items:center"><a class="btn alt" href="#${qrHash(o)}" style="padding:6px 12px;font-size:.88rem">Simular escaneo del QR</a><span class="fake">solo en el prototipo</span></div>`:""}`
         :sensOf(o)==="reservada"?`<p class="muted">Esta obra no lleva QR en el sitio, para no señalar dónde está. Su estado lo revisa el equipo junto con la autoridad de patrimonio. Puedes aportar contexto.</p>`
@@ -1930,9 +1984,9 @@ function vObra(o){
       <dl class="dl">
         <dt>Fecha</dt><dd>${esc(o.fecha.v)} <span class="muted">(${o.fecha.p})</span></dd>
         <dt>Autoría</dt><dd>${o.aut.map(a=>`<div>${cert(a.c)}<b>${esc(a.n)}</b>${a.rol?` · ${a.rol}`:""}<br><span class="muted" style="font-size:.88rem">${CERTEZA[a.c].n}${a.f?`: ${esc(a.f)}`:""}</span></div>`).join("")}</dd>
-        <dt>Financiación</dt><dd>${FIN[o.fin.t]}${o.fin.e?` <span class="muted">· ${esc(o.fin.e)}</span>`:""}</dd>
+        <dt>Financiación</dt><dd>${o.pags&&o.pags.length?o.pags.map(x=>`<div>${FIN[x.naturaleza]}${x.entidad?` <span class="muted">· ${esc(x.entidad)}</span>`:""}${x.modalidad&&MODAL[x.modalidad]?` <span class="muted">· ${MODAL[x.modalidad]}</span>`:""}</div>`).join(""):`${FIN[o.fin.t]}${o.fin.e?` <span class="muted">· ${esc(o.fin.e)}</span>`:""}`}</dd>
         <dt>Ubicación</dt><dd>${sensOf(o)==="abierta"?`<span class="mono">${o.lat.toFixed(4)}° N, ${Math.abs(o.lon).toFixed(4)}° O · ±25 m</span>`
-          :`<span class="sens">${sensOf(o)==="reservada"?"Reservada":"Zona aproximada (~2 km)"}</span><br><span class="muted" style="font-size:.88rem">${SENS[sensOf(o)].d}${o.sens.m?` Motivo: ${esc(o.sens.m)}.`:""}</span>`}</dd>
+          :`<span class="sens">${sensOf(o)==="reservada"?(MUNIS[o.m].canarias?"Reservada · solo se indica que está en Canarias":`Reservada · solo se indica la isla (${ISLAS[MUNIS[o.m].isla]})`):"Zona aproximada (~2 km)"}</span><br><span class="muted" style="font-size:.88rem">${SENS[sensOf(o)].d}${o.sens.m?` Motivo: ${esc(o.sens.m)}.`:""}</span>`}</dd>
         <dt>QR</dt><dd>${qrTxt2}${o.qr.inst?`<br><span class="muted" style="font-size:.88rem">Instalado ${fd(o.qr.inst)} · última revisión ${fd(o.qr.rev)} · próxima ${fd(prox)}${prox&&prox<HOY?" <b>(vencida)</b>":""}</span>`:""}</dd>
         <dt>Derechos</dt><dd>Obra © su autoría · ficha © CANARIAS.AFRICA · <a href="#derechos">uso y permisos</a></dd>
       </dl>
@@ -1977,7 +2031,7 @@ function cabObra(o,eyebrow){ return `<p class="eyebrow"><a href="#${slug(o.id)}"
   <p class="eyebrow">${eyebrow}</p><h1>${esc(o.t)}</h1><p class="lede muted">${esc(o.lugar)} · ${MUNIS[o.m].n}</p></section>`; }
 
 /* Observación del estado: solo al escanear el QR junto a la obra */
-function vQR(o,cod,estado){
+function vQR(o,cod,estado,web){
   return cabObra(o,"Has escaneado el QR de esta obra")+`
   <div id="okbox" style="margin-top:20px"></div>
   <form class="obsf" id="obsf" data-modo="qr" data-obra="${o.id}" novalidate style="margin-top:20px">
@@ -1990,7 +2044,7 @@ function vQR(o,cod,estado){
     ${ALIAS}${LIC}${PRIV}
     <p class="full muted" id="o-err" style="font-size:.9rem"></p>
     <div class="full btns"><button class="btn" type="submit">Enviar observación</button></div>
-  </form>${bloqueVerificar(cod,estado,o)}`;
+  </form>${web?"":bloqueVerificar(cod,estado,o)}`;
 }
 /* Contexto: desde la ficha, sin estar junto a la obra */
 const TCTX=["Historia o testimonio","Dato de autoría","Fuente o documento","Corrección de la ficha"];
@@ -2021,18 +2075,66 @@ function vAportar(){
   <div id="okbox" style="margin-top:20px"></div>
   <form class="obsf" id="obsf" data-modo="nueva" novalidate style="margin-top:20px">
     <label class="full" for="o-n-tit">Qué es<input id="o-n-tit" type="text" required placeholder="Por ejemplo: mural en la fachada del colegio"></label>
+    <label for="o-n-tipo">Tipo<input id="o-n-tipo" type="text" list="tipolist" placeholder="Mural, escultura, grafiti…"><datalist id="tipolist">${["mural","escultura","grafiti","instalación","grabado","relieve","arquitectura","acción","obra web"].map(t=>`<option value="${t}">`).join("")}</datalist></label>
+    <label for="o-n-fase">Cómo está hoy<select id="o-n-fase">${Object.entries(FASES).map(([k,f])=>`<option value="${k}"${k==="plenitud"?" selected":""}>${f.n}</option>`).join("")}</select></label>
+    <label for="o-n-fec">Cuándo se hizo<input id="o-n-fec" type="text" placeholder="1987, años 80, época aborigen…"></label>
+    <label for="o-n-fp">Precisión de la fecha<select id="o-n-fp">${Object.entries(PREC_FECHA).map(([k,n])=>`<option value="${k}">${k?n:"No lo sé"}</option>`).join("")}</select></label>
+    <label for="o-n-mun">Municipio<input id="o-n-mun" type="text" required list="munlist" placeholder="Escribe el municipio"><datalist id="munlist">${MUNIS_CANARIAS.map(m=>`<option value="${m[0]}">`).join("")}</datalist></label>
     <label for="o-n-lug">Dónde está<input id="o-n-lug" type="text" required placeholder="Calle, barrio o paraje"></label>
-    <label for="o-n-mun">Municipio<input id="o-n-mun" type="text" required list="munlist" placeholder="Escribe el municipio"><datalist id="munlist">${MUN_TF.map(m=>`<option value="${m}">`).join("")}</datalist></label>
-    <label class="full" for="o-txt">Lo que sabes de ella (opcional)<textarea id="o-txt" placeholder="Quién la hizo, cuándo, quién la pagó, cómo está."></textarea></label>
-    <label for="o-foto">Foto (opcional)<input id="o-foto" type="file" accept="image/*"></label>
+    <div class="full gps"><button class="btn alt mini" type="button" id="o-gps">Tomar mis coordenadas</button><span class="muted" id="o-gps-txt" style="font-size:.9rem">Si estás junto a la obra, guarda su punto exacto con el GPS del móvil.</span><input type="hidden" id="o-lat"><input type="hidden" id="o-lon"><input type="hidden" id="o-prec"></div>
+    ${repBloque("agentes","Quién la hizo o participó","Autoría, encargo, restauración, cuidado… Las personas que nombres no se publican hasta que el equipo lo revise con ellas.","+ Añadir persona o colectivo")}
+    ${repBloque("pagadores","Quién la pagó","Elige si es una entidad pública o privada y busca en la lista de entidades de otras obras. Si no está, escríbela: se añadirá.","+ Añadir quién la pagó")}
+    ${repBloque("relaciones","Relación con otras obras del archivo","¿Continúa, responde o se superpone a otra obra que ya está en el archivo?","+ Añadir relación")}
+    ${["publica","privada"].map(n=>`<datalist id="ent-${n}">${entidadesDe(n).map(e=>`<option value="${esc(e)}">`).join("")}</datalist>`).join("")}
+    <label class="full" for="o-txt">Lo que sabes de ella (opcional)<textarea id="o-txt" placeholder="Qué representa, técnica, historia, cómo está."></textarea></label>
+    <label class="full" for="o-n-fue">Cómo lo sabes (opcional)<textarea id="o-n-fue" placeholder="Testimonio de vecinos, placa, artículo, documento… No se publica: ayuda a verificar."></textarea></label>
+    <label for="o-foto">Foto (opcional)<input id="o-foto" type="file" accept="image/*" capture="environment"></label>
     ${ALIAS}
-    <label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-sens" style="margin-top:4px"> Puede ser una obra sensible (grabado aborigen, yacimiento, obra sin protección): no publiquéis su ubicación exacta.</label>
-    <p class="full muted" style="font-size:.88rem">La ubicación de una obra nueva no se publica hasta que el equipo la revisa y decide su nivel de protección.</p>
+    <fieldset class="full"><legend>¿Se puede publicar dónde está?</legend><div class="radios" style="flex-direction:column;gap:8px">
+      <label><input type="radio" name="o-ubic" value="abierta" checked> Sí, el punto exacto: está en un espacio público y no corre peligro.</label>
+      <label><input type="radio" name="o-ubic" value="difusa"> Solo la zona (unos 2 km): obra sin protección o en terreno privado.</label>
+      <label><input type="radio" name="o-ubic" value="reservada"> No, es una obra delicada (grabado aborigen, yacimiento, patrimonio frágil): solo se publicará la isla, con un punto simbólico en el mapa.</label>
+    </div><p class="muted" style="font-size:.88rem;margin:8px 0 0">Las coordenadas y el lugar que nos des los guarda solo el equipo. Nada se publica hasta revisarlo, y el equipo puede proteger más una obra, nunca menos de lo que pidas.</p></fieldset>
     ${LIC}${PRIV}
     <p class="full muted" id="o-err" style="font-size:.9rem"></p>
     <div class="full btns"><button class="btn" type="submit">Enviar propuesta</button></div>
   </form>`;
 }
+/* Listas de nodos: filas que se añaden y se quitan. Los campos y sus valores son los de /admin. */
+const REP={
+  agentes:[["nombre","text","Nombre o colectivo"],["rol","select",ROLES],["certeza","select",{atribuida:"Lo he oído o lo creo",probable:"Varias fuentes coinciden",confirmada:"Está confirmado (firma, documento)"}]],
+  pagadores:[["naturaleza","select",NATUR],["entidad","text","Elige de la lista o escribe una nueva"],["modalidad","select",MODAL]],
+  relaciones:[["modo","select",MODOS],["obra","select",()=>({"":"Elige la obra…",...Object.fromEntries(OBRAS.map(o=>[o.id,`${o.t} · ${MUNIS[o.m].n}`]))})],["nota","text","Nota (opcional)"]]
+};
+function repBloque(tipo,leyenda,ayuda,boton){
+  return `<fieldset class="full rep" data-rep="${tipo}"><legend>${leyenda}</legend><p class="muted" style="font-size:.88rem;margin:0 0 10px">${ayuda}</p><div class="repl"></div><button type="button" class="btn alt mini repadd">${boton}</button></fieldset>`;
+}
+function repFila(tipo){
+  return `<div class="repf">${REP[tipo].map(([k,t,o])=>t==="select"
+    ?`<select data-k="${k}" aria-label="${k}">${Object.entries(typeof o==="function"?o():o).map(([v,n])=>`<option value="${esc(v)}">${esc(n)}</option>`).join("")}</select>`
+    :`<input data-k="${k}" type="text" aria-label="${k}" placeholder="${esc(o)}"${k==="entidad"?' list="ent-publica"':""}>`).join("")}<button type="button" class="btn alt mini repx" aria-label="Quitar">✕</button></div>`;
+}
+const repValor=tipo=>JSON.stringify([...document.querySelectorAll(`[data-rep="${tipo}"] .repf`)]
+  .map(f=>Object.fromEntries([...f.querySelectorAll("[data-k]")].map(i=>[i.dataset.k,i.value.trim()])))
+  .filter(x=>tipo==="agentes"?x.nombre:tipo==="pagadores"?(x.entidad||x.naturaleza==="particular"):x.obra));
+/* Entidades que ya pagaron otras obras, por naturaleza: sugerencias del campo «Entidad» */
+const entidadesDe=nat=>[...new Set(OBRAS.flatMap(o=>o.pags||(o.fin&&o.fin.e?[{naturaleza:o.fin.t,entidad:o.fin.e}]:[]))
+  .filter(x=>x.naturaleza===nat&&x.entidad).map(x=>x.entidad))].sort((a,b)=>a.localeCompare(b,"es"));
+document.addEventListener("click",e=>{
+  const add=e.target.closest(".repadd"); if(add){ add.previousElementSibling.insertAdjacentHTML("beforeend",repFila(add.closest("[data-rep]").dataset.rep)); return; }
+  const x=e.target.closest(".repx"); if(x){ x.closest(".repf").remove(); return; }
+  if(e.target.id==="o-gps"){ const t=$("#o-gps-txt");
+    if(!navigator.geolocation){ t.textContent="Este navegador no da la ubicación."; return; }
+    t.textContent="Buscando tu posición…";
+    navigator.geolocation.getCurrentPosition(p=>{ $("#o-lat").value=p.coords.latitude.toFixed(6); $("#o-lon").value=p.coords.longitude.toFixed(6); $("#o-prec").value=Math.round(p.coords.accuracy);
+      t.textContent=`Coordenadas tomadas: ${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)} (±${Math.round(p.coords.accuracy)} m).${p.coords.accuracy>50?" Si puedes, acércate a la obra y vuelve a tomarlas.":""}`; },
+      err=>{ t.textContent="No se ha podido leer la ubicación: "+(err.code===1?"no has dado permiso.":"inténtalo al aire libre."); },
+      {enableHighAccuracy:true,timeout:20000,maximumAge:0}); }
+});
+document.addEventListener("change",e=>{
+  if(e.target.matches('[data-rep="pagadores"] [data-k="naturaleza"]')){ const en=e.target.parentNode.querySelector('[data-k="entidad"]'), part=e.target.value==="particular";
+    en.setAttribute("list","ent-"+e.target.value); en.placeholder=part?"Nombre (opcional: no se publica)":"Elige de la lista o escribe una nueva"; }
+});
 /* Envío al servidor (multipart). En la vista previa no se envía nada. */
 async function enviarAPI(tipo,campos){
   if(DEMO) return true;
@@ -2048,7 +2150,12 @@ async function enviar(e){
   const txt=$("#o-txt").value.trim(), alias=$("#o-alias").value.trim()||"anónimo";
   if(modo==="nueva"){
     if(!$("#o-n-tit").value.trim()||!$("#o-n-lug").value.trim()||!$("#o-n-mun").value.trim()) return bad("Falta decir qué es, dónde está o el municipio.");
-    if(!await enviarAPI("nueva",{titulo:$("#o-n-tit").value.trim(),lugar:$("#o-n-lug").value.trim(),municipio:$("#o-n-mun").value.trim(),texto:txt,alias,posible_sensible:$("#o-sens").checked?"1":"",foto:archivo("#o-foto"),acepta_derechos:"1",acepta_privacidad:"1"})) return bad("No se ha podido enviar. Inténtalo de nuevo en un rato.");
+    const v=sel=>$(sel).value.trim(), ubic=(document.querySelector('input[name="o-ubic"]:checked')||{}).value||"abierta";
+    if(!await enviarAPI("nueva",{titulo:v("#o-n-tit"),tipo:v("#o-n-tipo"),fase:v("#o-n-fase"),fecha_obra:v("#o-n-fec"),fecha_precision:v("#o-n-fp"),
+      lugar:v("#o-n-lug"),municipio:v("#o-n-mun"),lat:v("#o-lat"),lon:v("#o-lon"),precision_gps:v("#o-prec"),
+      agentes:repValor("agentes"),pagadores:repValor("pagadores"),relaciones:repValor("relaciones"),
+      descripcion:txt,texto:txt,fuentes:v("#o-n-fue"),alias,sensibilidad:ubic,posible_sensible:ubic!=="abierta"?"1":"",
+      isla:(()=>{ const f=MUNIS_CANARIAS.find(x=>normNombre(x[0])===normNombre(v("#o-n-mun"))); return (v("#o-lat")?islaDe(+v("#o-lat"),+v("#o-lon")):null)||(f?islaDe(f[2],f[3]):""); })(),foto:archivo("#o-foto"),acepta_derechos:"1",acepta_privacidad:"1"})) return bad("No se ha podido enviar. Inténtalo de nuevo en un rato.");
     $("#okbox").innerHTML=`<div class="ok"><h3>Propuesta recibida</h3><p>El equipo la revisará y abrirá una ficha con identificador nuevo.${DEMO?" En este prototipo no se envía a ningún sitio.":""}</p></div>`;
   } else {
     const id=f.dataset.obra, o=byId(id);
@@ -2079,7 +2186,7 @@ function vRutas(){
       <div class="stack">
         <p class="eyebrow">${r.ms.map(k=>MUNIS[k].n).join(" · ")} · ${ISLAS[isla]}</p>
         <h2>${r.n}</h2>
-        <p class="curline">Curaduría: ${cur?nlink(cur):esc(r.cur)} <span class="fake">ficticio</span></p>
+        <p class="curline">Curaduría: ${cur?nlink(cur):esc(r.cur)}${DEMO?' <span class="fake">ficticio</span>':""}</p>
         <blockquote class="tesis">${esc(r.tesis)}</blockquote>
         <div class="facts"><span>${r.km.toLocaleString("es-ES")} km</span><span>${r.h}</span><span>Dificultad ${r.dif.toLowerCase()}</span><span>${r.stops.length} obras</span></div>
         <ol class="stops">${r.stops.map(id=>{const o=byId(id);return `<li><span><a href="#${slug(id)}">${esc(o.t)}</a> <span class="muted" style="font-size:.85rem">· ${FASES[o.fase].n}</span>${r.notas[id]?`<br><span class="muted" style="font-size:.9rem">${esc(r.notas[id])}</span>`:""}</span></li>`;}).join("")}</ol>
@@ -2096,9 +2203,7 @@ function vProponerRuta(){
   <form class="obsf" id="rutaf" novalidate style="margin-top:20px">
     <label class="full" for="r-tit">Título de la ruta<input id="r-tit" type="text" required></label>
     <label class="full" for="r-tes">Tesis curatorial<textarea id="r-tes" required placeholder="Qué une a estas obras y qué quieres que vea quien camine la ruta."></textarea></label>
-    <fieldset class="full"><legend>Obras catalogadas (en orden de recorrido)</legend><div class="radios" style="flex-direction:column;gap:6px">
-      ${OBRAS.filter(o=>sensOf(o)==="abierta").map(o=>`<label><input type="checkbox" id="r-o-${o.id}" value="${o.id}"> <span class="mono">${corto(o.id)}</span> ${esc(o.t)} <span class="muted">· ${MUNIS[o.m].n}</span></label>`).join("")}
-    </div></fieldset>
+    ${vAgregador()}
     <label for="r-cur">Curaduría (nombre o colectivo)<input id="r-cur" type="text" required></label>
     <label for="r-con">Correo o teléfono<input id="r-con" type="text" required></label>
     ${PRIV.replace('id="o-priv"','id="r-priv"').replace("revisar y publicar mi aportación","revisar mi propuesta y contactarme")}
@@ -2106,13 +2211,71 @@ function vProponerRuta(){
     <div class="full btns"><button class="btn" type="submit">Enviar propuesta de ruta</button></div>
   </form>`;
 }
+/* Agregador de nodos de una ruta: filtra las obras del archivo (texto, municipio, lugar, disciplina, época),
+   las añade en el orden del recorrido y guarda una nota curatorial por parada. Solo obras abiertas con punto. */
+const AGR={ids:[],notas:{},f:{q:"",m:"",l:"",t:"",d:"",h:""}};
+const anyoDe=o=>{ const t=String(o.fecha&&o.fecha.v||""), y=t.match(/\b(1\d{3}|20\d{2})\b/), d=t.match(/años\s*(\d0)\b/i);
+  return y?+y[1]:d?1900+ +d[1]:null; };
+const agrBase=()=>OBRAS.filter(o=>sensOf(o)==="abierta"&&enMapa(o));
+const opts=(vals,todas)=>`<option value="">${todas}</option>`+vals.map(([v,n])=>`<option value="${esc(v)}">${esc(n)}</option>`).join("");
+function vAgregador(){
+  const b=agrBase(), cuenta=a=>Object.entries(a.reduce((m,x)=>(m[x]=(m[x]||0)+1,m),{}));
+  const munis=cuenta(b.map(o=>o.m)).map(([k,n])=>[k,`${MUNIS[k].n} (${n})`]).sort((x,y)=>x[1].localeCompare(y[1],"es"));
+  const lugares=cuenta(b.map(o=>o.lugar).filter(Boolean)).map(([k,n])=>[k,`${k} (${n})`]).sort((x,y)=>x[0].localeCompare(y[0],"es"));
+  const tipos=cuenta(b.map(o=>(o.tipo||"").toLowerCase()).filter(Boolean)).map(([k,n])=>[k,`${k} (${n})`]).sort();
+  return `<fieldset class="full agr" id="r-agr"><legend>Paradas de la ruta: agregador de nodos</legend>
+    <p class="muted" style="font-size:.88rem;margin:0 0 10px">Filtra las obras del archivo y añádelas en el orden del recorrido. Puedes añadir todas las que salen en el filtro, por ejemplo las de un mismo lugar.</p>
+    <div class="nueva" style="border:0;padding:0">
+      <label for="r-fq">Texto<input id="r-fq" type="search" data-f="q" placeholder="Título, autoría, descripción…"></label>
+      <label for="r-fm">Municipio<select id="r-fm" data-f="m">${opts(munis,"Todos")}</select></label>
+      <label for="r-fl">Lugar<select id="r-fl" data-f="l">${opts(lugares,"Todos los lugares")}</select></label>
+      <label for="r-ft">Disciplina<select id="r-ft" data-f="t">${opts(tipos,"Todas")}</select></label>
+      <label for="r-fd">Desde el año<input id="r-fd" type="number" data-f="d" inputmode="numeric" placeholder="1900"></label>
+      <label for="r-fh">Hasta el año<input id="r-fh" type="number" data-f="h" inputmode="numeric" placeholder="${new Date().getFullYear()}"></label>
+    </div>
+    <div class="agr-res" id="r-res"></div>
+    <ol id="r-par"></ol>
+    <p class="muted" id="r-km" style="font-size:.9rem"></p>
+  </fieldset>`;
+}
+function agrFiltradas(){
+  const f=AGR.f, q=f.q.toLowerCase(), d=f.d?+f.d:null, h=f.h?+f.h:null;
+  return agrBase().filter(o=>!AGR.ids.includes(o.id)&&(!f.m||o.m===f.m)&&(!f.l||o.lugar===f.l)&&(!f.t||(o.tipo||"").toLowerCase()===f.t)
+    &&(!q||[o.t,o.tipo,o.lugar,o.desc,...o.aut.map(a=>a.n)].join(" ").toLowerCase().includes(q))
+    &&((d===null&&h===null)||((y=>y!==null&&(d===null||y>=d)&&(h===null||y<=h))(anyoDe(o)))));
+}
+function agrPinta(){
+  const l=agrFiltradas();
+  $("#r-res").innerHTML=(l.length>1?`<button type="button" data-todas="1"><b>+ Añadir las ${l.length} obras filtradas</b></button>`:"")
+    +l.slice(0,12).map(o=>`<button type="button" data-mas="${o.id}">+ ${esc(o.t)} <span class="muted">· ${MUNIS[o.m].n}${o.lugar?` · ${esc(o.lugar)}`:""}${o.tipo?` · ${esc(o.tipo)}`:""}${anyoDe(o)?` · ${anyoDe(o)}`:""}</span></button>`).join("")
+    +(l.length>12?`<p class="muted" style="font-size:.85rem">Y ${l.length-12} más: afina el filtro.</p>`:"")+(l.length?"":`<p class="muted" style="font-size:.88rem">No hay más obras con este filtro.</p>`);
+  const ids=AGR.ids;
+  $("#r-par").innerHTML=ids.map((id,i)=>{ const o=byId(id); return `<li data-id="${id}"><div><b style="flex:1 1 180px">${esc(o.t)} <span class="muted" style="font-weight:400">· ${MUNIS[o.m].n}</span></b>
+    <input data-nota placeholder="Nota curatorial de esta parada" value="${esc(AGR.notas[id]||"")}">
+    <button type="button" class="btn alt mini" data-a="sube"${i?"":" disabled"} aria-label="Subir">↑</button><button type="button" class="btn alt mini" data-a="baja"${i<ids.length-1?"":" disabled"} aria-label="Bajar">↓</button><button type="button" class="btn alt mini" data-a="quita" aria-label="Quitar">✕</button></div></li>`; }).join("");
+  $("#r-km").textContent=ids.length>1?`${ids.length} paradas · ${kmRuta(ids).toLocaleString("es-ES")} km en línea recta entre paradas`:"Añade al menos dos paradas.";
+}
+function wireAgregador(){
+  AGR.ids=[]; AGR.notas={}; AGR.f={q:"",m:"",l:"",t:"",d:"",h:""};
+  const fs=$("#r-agr");
+  fs.addEventListener("input",e=>{ const k=e.target.dataset.f; if(k!==undefined){ AGR.f[k]=e.target.value.trim(); agrPinta(); }
+    if(e.target.dataset.nota!==undefined) AGR.notas[e.target.closest("li").dataset.id]=e.target.value.trim(); });
+  fs.addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return;
+    if(b.dataset.mas) AGR.ids.push(b.dataset.mas);
+    else if(b.dataset.todas) AGR.ids.push(...agrFiltradas().map(o=>o.id));
+    else if(b.dataset.a){ const id=b.closest("li").dataset.id, i=AGR.ids.indexOf(id);
+      if(b.dataset.a==="quita") AGR.ids.splice(i,1); else { const j=b.dataset.a==="sube"?i-1:i+1; [AGR.ids[i],AGR.ids[j]]=[AGR.ids[j],AGR.ids[i]]; } }
+    else return;
+    agrPinta(); });
+  agrPinta();
+}
 async function proponerRuta(e){
-  e.preventDefault(); const err=$("#r-err"), sel=[...document.querySelectorAll('#rutaf input[type=checkbox][id^="r-o-"]:checked')];
+  e.preventDefault(); const err=$("#r-err"), sel=AGR.ids;
   if(!$("#r-tit").value.trim()||!$("#r-tes").value.trim()||!$("#r-cur").value.trim()||!$("#r-con").value.trim()){ err.textContent="Faltan el título, la tesis, la curaduría o un contacto."; err.style.color="var(--ph-desg)"; return; }
   if(sel.length<2){ err.textContent="Elige al menos dos obras del archivo."; err.style.color="var(--ph-desg)"; return; }
   if(!$("#r-priv").checked){ err.textContent="Marca la casilla de privacidad para poder enviar la propuesta."; err.style.color="var(--ph-desg)"; return; }
-  if(!await enviarAPI("ruta",{titulo:$("#r-tit").value.trim(),tesis:$("#r-tes").value.trim(),obras:sel.map(x=>x.value).join(","),curaduria:$("#r-cur").value.trim(),contacto:$("#r-con").value.trim(),acepta_privacidad:"1"})){ err.textContent="No se ha podido enviar. Inténtalo de nuevo en un rato."; err.style.color="var(--ph-desg)"; return; }
-  $("#okbox").innerHTML=`<div class="ok"><h3>Propuesta recibida</h3><p>${sel.length} obras. El equipo revisará el recorrido.${DEMO?" En este prototipo no se envía a ningún sitio.":""}</p></div>`; e.target.reset(); window.scrollTo(0,0);
+  if(!await enviarAPI("ruta",{titulo:$("#r-tit").value.trim(),tesis:$("#r-tes").value.trim(),obras:sel.join(","),notas:JSON.stringify(Object.fromEntries(sel.filter(id=>AGR.notas[id]).map(id=>[id,AGR.notas[id]]))),curaduria:$("#r-cur").value.trim(),contacto:$("#r-con").value.trim(),acepta_privacidad:"1"})){ err.textContent="No se ha podido enviar. Inténtalo de nuevo en un rato."; err.style.color="var(--ph-desg)"; return; }
+  $("#okbox").innerHTML=`<div class="ok"><h3>Propuesta recibida</h3><p>${sel.length} obras. El equipo revisará el recorrido.${DEMO?" En este prototipo no se envía a ningún sitio.":""}</p></div>`; e.target.reset(); AGR.ids=[]; AGR.notas={}; agrPinta(); window.scrollTo(0,0);
 }
 
 /* ---------- Red: utilidades ---------- */
@@ -2689,7 +2852,7 @@ function qrDemo(cod){
 const QRRES=new Map();
 async function resolverQR(cod){
   const r=await api("/api/qr/"+encodeURIComponent(cod));
-  QRRES.set(cod,r.status===0?{estado:"sin_conexion"}:{obra:r.j.obra||null,estado:r.j.estado||"desconocido"});
+  QRRES.set(cod,r.status===0?{estado:"sin_conexion"}:{obra:r.j.obra||null,estado:r.j.estado||"desconocido",soporte:r.j.soporte||null,gps:r.j.gps!==false,obras:Array.isArray(r.j.obras)?r.j.obras:[]});
   route();
 }
 const MSGQR={libre:["Etiqueta sin asignar","Este código todavía está en el pool y no corresponde a ninguna obra."],
@@ -2699,6 +2862,20 @@ const MSGQR={libre:["Etiqueta sin asignar","Este código todavía está en el po
   sustituido:["Etiqueta sustituida","Esta etiqueta se cambió por otra nueva. Busca la etiqueta nueva junto a la obra."],
   desconocido:["Este QR no es válido","El código no existe en canarias.africa. Puede que la etiqueta sea una copia o que esté mal impresa."],
   sin_conexion:["No hay conexión","No se ha podido comprobar el código. Vuelve a escanearlo cuando tengas cobertura."]};
+/* La etiqueta identifica un soporte: un muro, una roca… o una web. En él puede haber varias obras, unas encima de
+   otras con el tiempo. Si hay más de una, se elige cuál se observa; las anteriores quedan como memoria del soporte. */
+const QRSEL=new Map();
+function bloqueSoporte(cod,r,sel){
+  const s=r.soporte, ob=(r.obras||[]).filter(x=>x&&x.uuid);
+  if(!s||(ob.length<2&&!s.url)) return "";
+  const fila=x=>{ const o=byId(x.uuid), t=esc(x.titulo||(o&&o.t)||"Obra"), cuando=x.actual?(x.desde?`desde ${esc(x.desde)}`:"ahora"):`${x.desde?esc(x.desde)+"–":"hasta "}${esc(x.hasta||"")}`;
+    return `<li>${x.uuid===sel?`<strong>${t}</strong> <span class="cinta mini">observando</span>`:o?`<button type="button" class="enlace" data-qrsel="${esc(cod)}|${esc(x.uuid)}">${t}</button>`:t} <span class="muted">· ${cuando}</span></li>`; };
+  const ahora=ob.filter(x=>x.actual), antes=ob.filter(x=>!x.actual);
+  return `<section class="stack" style="margin-bottom:22px"><p class="eyebrow">Soporte${s.tipo==="web"?" web":""}</p><h2 style="margin:0">${esc(s.nombre||"Soporte")}</h2>
+    ${s.url?`<p><a href="${esc(s.url)}" rel="noopener" target="_blank">${esc(s.url)}</a></p>`:""}
+    ${ahora.length?`<p class="muted" style="margin:0">Obras aquí ahora${ahora.length>1?" (elige cuál observas)":""}:</p><ul>${ahora.map(fila).join("")}</ul>`:""}
+    ${antes.length?`<p class="muted" style="margin:0">Antes estuvieron aquí:</p><ul>${antes.map(fila).join("")}</ul>`:""}</section>`;
+}
 function vEtiqueta(cod,r){
   if(r.estado==="asignado"){
     if(SES&&(SES.etiquetas||[]).some(e=>e.qr===cod)) return vColocar(cod);
@@ -2707,7 +2884,7 @@ function vEtiqueta(cod,r){
       <p class="lede muted">Esta etiqueta ya tiene dueño, pero todavía no está unida a ninguna obra.</p>
       <p>¿Es tuya? <a href="#colabora">Entra en tu cuenta</a> y volverás aquí para colocarla.</p></section>`;
   }
-  if(OBSERVABLE.includes(r.estado)){ const o=r.obra&&byId(r.obra); if(o) return vQR(o,cod,r.estado);
+  if(OBSERVABLE.includes(r.estado)){ const sel=QRSEL.get(cod)||r.obra, o=sel&&byId(sel); if(o) return bloqueSoporte(cod,r,o.id)+vQR(o,cod,r.estado,r.gps===false);
     return `<section class="stack"><p class="eyebrow">Etiqueta <span class="cinta id">${ESTQ[r.estado]}</span></p><h1>Obra recién incorporada</h1>
       <p class="lede muted">Esta etiqueta ya está colocada, pero la ficha de la obra se publicará en la próxima actualización del archivo.</p></section>${bloqueVerificar(cod,r.estado,null)}`; }
   const [t,d]=MSGQR[r.estado]||MSGQR.desconocido;
@@ -2982,17 +3159,18 @@ function route(){
   if(h==="ayudas") wireAyudas();
   if(h==="inscripcion") $("#inscf").addEventListener("submit",inscribir);
   if($("#obsf")) $("#obsf").addEventListener("submit",enviar);
-  if($("#rutaf")) $("#rutaf").addEventListener("submit",proponerRuta);
+  if($("#rutaf")){ $("#rutaf").addEventListener("submit",proponerRuta); wireAgregador(); }
   wireEtiquetas(); wireScan(); if(h!=="scan") pararScan();
   if(h==="colabora") refrescarPerfil();
 }
 document.addEventListener("click",e=>{
+  const q=e.target.closest("[data-qrsel]"); if(q){ const [c,u]=q.dataset.qrsel.split("|"); QRSEL.set(c,u); route(); return; }
   const a=e.target.closest("[data-obra]"); if(a) PRESEL=a.dataset.obra;
   const m=e.target.closest("[data-muni]"); if(m){ FILT={m:m.dataset.muni,f:"",c:"",q:""}; }
 });
 addEventListener("hashchange",route);
 buildGraph();
 route();
-cargarObrasPublicas().then(cargarUMap);
+cargarObrasPublicas().then(cargarCapas);
 cargarConvocatorias();
 </script>

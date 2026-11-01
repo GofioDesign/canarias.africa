@@ -9,7 +9,7 @@ CANARIAS — Catálogo Atlántico de Núnea Arqueología · Registro de Interven
 ```
 web/          La web (GitHub Pages): página de lanzamiento en index.html, prototipo en prototipo/, convocatorias.json y sellos
 propuestas/   Propuestas del colectivo, una por archivo .md; se votan en la web y en su issue de GitHub (ver propuestas/README.md)
-servidor-php/ api.canarias.africa en el hosting PHP: formularios, QR, moderación, caché de teselas, copia de uMap
+servidor-php/ api.canarias.africa en el hosting PHP: catálogo (obras, rutas, artistas), formularios, QR, moderación, caché de teselas
 servidor/     Plan B para un VPS propio (nginx + PocketBase), anterior al sistema de etiquetas del 28-10-2026
 scripts/      Comprobación del catálogo (ubicaciones sensibles) y de las propuestas, que genera web/propuestas.json
 datos/        GeoJSON de ejemplo para importar en uMap

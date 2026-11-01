@@ -1,5 +1,5 @@
-# Publica web/ en GitHub Pages cada vez que cambia main, y cada 6 horas para refrescar los votos
-# de GitHub (las reacciones en los issues no disparan acciones) y las obras de la capa Obras de uMap.
+# Publica web/ en GitHub Pages cada vez que cambia main, cada 6 horas (votos de GitHub y catálogo) y cuando
+# /admin pide publicar (workflow_dispatch). Copia el catálogo del servidor a /datos/: la web y uMap leen esa copia.
 # Requisitos (una vez): Settings → Pages → Source: «GitHub Actions», y crear la etiqueta «propuesta».
 name: Publicar la web
 
@@ -42,12 +42,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      - name: Copiar la capa Obras de uMap al catálogo público
+      - name: Copiar el catálogo del servidor (obras, QR, rutas, artistas) a canarias.africa/datos/
         run: |
-          python3 scripts/umap-obras.py "$UMAP_OBRAS"
+          python3 scripts/catalogo-servidor.py
           python3 scripts/comprobar-catalogo.py
-        env:
-          UMAP_OBRAS: https://umap.openstreetmap.fr/es/datalayer/1479087/bea1135f-cb2f-4cc2-b0d4-b1a3f1229d07/
       - name: Generar propuestas.json y abrir el debate de las propuestas nuevas
         run: python3 scripts/propuestas.py
         env:

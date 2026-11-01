@@ -130,6 +130,16 @@ if ($sub === '/obra') {
     $d = $_POST;
     try {
       if ($url = $foto_formulario()) $d['foto'] = $url;
+      // Lo que pidió quien la propuso es el mínimo: se puede proteger más, nunca menos.
+      if (!empty($_POST['desde_envio'])) {
+        $st = $db->prepare('SELECT datos FROM envios WHERE id = ?');
+        $st->execute([(int) $_POST['desde_envio']]);
+        $pedida = json_decode((string) $st->fetchColumn(), true)['sensibilidad'] ?? 'abierta';
+        $nivel = array_flip(SENSIBILIDADES);
+        if (isset($nivel[$pedida]) && ($nivel[$d['sensibilidad'] ?? ''] ?? -1) < $nivel[$pedida]) {
+          throw new InvalidArgumentException("Quien la propuso pidió que fuera «{$pedida}»: se puede proteger más, no menos.");
+        }
+      }
       $id = obra_guardar($d, $id ?: null);
       if (!empty($_POST['desde_propuesta'])) $db->prepare("UPDATE obras_propuestas SET estado = 'aceptada' WHERE uuid = ?")->execute([$id]);
       if (!empty($_POST['desde_envio'])) $db->prepare("UPDATE envios SET estado = 'aprobada' WHERE id = ?")->execute([(int) $_POST['desde_envio']]);

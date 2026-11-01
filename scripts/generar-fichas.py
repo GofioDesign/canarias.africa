@@ -66,6 +66,7 @@ ul.cambios{margin:4px 0;padding-left:18px;list-style:disc;font-size:.95rem} del{
 .enlaces{font-size:.9rem}
 .mundo{margin:18px 0;text-align:center}.mundo figcaption{font-size:.88rem;max-width:30rem;margin:6px auto 0}
 .glifo{max-width:100%;height:auto;color:var(--fg)}
+.linea{width:100%;max-width:640px;height:auto;color:var(--fg);overflow:visible}.tiempo{margin:10px 0}.tiempo figcaption{max-width:40rem}
 .tree ul{list-style:none;padding-left:16px;margin:2px 0;border-left:1px dashed var(--linea)}
 .tree>ul{border-left:0;padding-left:0}
 .mono{font-family:ui-monospace,monospace;font-size:.88rem;word-break:break-all}
@@ -272,9 +273,107 @@ def huellas_api(uuid):
     try:
         with urllib.request.urlopen(f"{API}/api/publico/obras/{uuid}/huellas", timeout=10) as r:
             d = json.loads(r.read())
-            return {k: int(d.get(k) or 0) for k in ("visitas", "escaneos", "verificaciones", "observaciones")}
+            hu = {k: int(d.get(k) or 0) for k in TIPOS_HUELLA}
+            for k in ("meses", "calor_meses"):  # {AAAA-MM: n}: huellas con sesión y calor sin sesión, en el tiempo
+                if isinstance(d.get(k), dict):
+                    hu[k] = {str(m)[:7]: int(n or 0) for m, n in d[k].items() if re.fullmatch(r"\d{4}-\d{2}", str(m)[:7])}
+            return hu
     except Exception:
         return {}
+
+
+TIPOS_HUELLA = ("visitas", "escaneos", "verificaciones", "observaciones")
+
+
+def total_huellas(hu):
+    return sum(int(hu.get(k) or 0) for k in TIPOS_HUELLA)
+
+
+def _mes(f):
+    """Fecha (AAAA, AAAA-MM, AAAA-MM-DD o ISO) → meses desde el año 0, con fracción para el día."""
+    m = re.match(r"(-?\d{4})(?:-(\d{2}))?(?:-(\d{2}))?", str(f or ""))
+    if not m:
+        return None
+    return int(m[1]) * 12 + int(m[2] or 1) - 1 + (int(m[3] or 1) - 1) / 31
+
+
+def glifo_en(svg, x, y, lado):
+    """El mismo glifo de la ficha, en pequeño, colocado dentro de otro SVG (línea de tiempo)."""
+    return re.sub(r'^<svg class="glifo" viewBox="0 0 (\d+) \1" width="\1" height="\1"',
+                  lambda m: f'<svg x="{x - lado / 2:.1f}" y="{y - lado / 2:.1f}" width="{lado}" height="{lado}" viewBox="0 0 {m[1]} {m[1]}"', svg, count=1)
+
+
+def linea_tiempo(glifos=(), puntos=(), versiones=(), capturas=(), calor=None, huellas=None, etiqueta="Línea de tiempo"):
+    """Línea de tiempo en SVG, sin JS. Arriba, los glifos de las obras en su fecha (con su duración si la tienen) y,
+    en verde, las obras ligadas. Sobre el eje, las versiones de la ficha; debajo, los estratos de archive.org.
+    Luego el calor (visitas sin sesión por mes, agregadas) y las huellas de quienes la miraron con sesión.
+    glifos: [(inicio, fin, svg, href, título)] · puntos: [(fecha, href, título)] · versiones/capturas: [fecha]."""
+    calor, huellas = calor or {}, huellas or {}
+    W, X0, X1, EJE = 640, 44, 596, 96
+    ts = [_mes(g[0]) for g in glifos] + [_mes(g[1]) for g in glifos if g[1]] + [_mes(p[0]) for p in puntos]
+    ts += [_mes(v) for v in (*versiones, *capturas)] + [_mes(m) for m in (*calor, *huellas)]
+    ts = [t for t in ts if t is not None]
+    if not ts:
+        return ""
+    ahora = _mes(__import__("datetime").date.today().isoformat())
+    a, b = math.floor(min(ts + [ahora])), math.floor(max(ts + [ahora])) + 1
+    a = min(a, b - 12)
+    x = lambda t: X0 + (t - a) / (b - a) * (X1 - X0)
+    p = [f'<svg class="linea" viewBox="0 0 {W} 156" width="{W}" height="156" role="img" aria-label="{e(etiqueta)}">']
+    # años
+    paso = next(k for k in (1, 2, 5, 10, 25, 50, 100, 250, 500, 1000) if (b - a) / 12 / k <= 12)
+    for anio in range(math.ceil(a / 12 / paso) * paso, b // 12 + 1, paso):
+        xa = x(anio * 12)
+        p.append(f'<line x1="{xa:.1f}" y1="{EJE}" x2="{xa:.1f}" y2="{EJE + 34}" stroke="currentColor" stroke-opacity=".12"/>'
+                 f'<text x="{xa:.1f}" y="150" font-size="9" text-anchor="middle" fill="currentColor" fill-opacity=".6">{anio}</text>')
+    p.append(f'<line x1="{X0}" y1="{EJE}" x2="{X1}" y2="{EJE}" stroke="currentColor" stroke-opacity=".45"/>')
+    # calor: visitas sin sesión por mes
+    if calor:
+        mx = max(calor.values())
+        for m, n in sorted(calor.items()):
+            t = _mes(m)
+            k = math.sqrt(n / mx)
+            p.append(f'<rect class="calor" x="{x(t):.1f}" y="{EJE + 12}" width="{max(x(t + 1) - x(t), 1.5):.1f}" height="12" fill="#e8590c" '
+                     f'fill-opacity="{.15 + .6 * k:.2f}"><title>{e(m)}: {n} visitas sin sesión</title></rect>')
+    # huellas con sesión: polvo bajo el calor
+    for m, n in sorted(huellas.items()):
+        t = _mes(m)
+        for j in range(min(6, round(1.5 * math.log2(1 + n)))):
+            p.append(f'<circle cx="{x(t + (j + .5) / 6):.1f}" cy="{EJE + 30 + (j % 2) * 3}" r="1.3" fill="currentColor" fill-opacity=".35">'
+                     f'<title>{e(m)}: {n} huellas con sesión</title></circle>')
+    for v in versiones:
+        t = _mes(v)
+        if t is not None:
+            p.append(f'<line x1="{x(t):.1f}" y1="{EJE - 5}" x2="{x(t):.1f}" y2="{EJE + 5}" stroke="currentColor" stroke-width="1.4"><title>versión · {e(str(v)[:10])}</title></line>')
+    for c in capturas:
+        t = _mes(c)
+        if t is not None:
+            p.append(f'<rect x="{x(t) - 2:.1f}" y="{EJE + 4}" width="4" height="4" fill="none" stroke="currentColor" stroke-opacity=".7"><title>estrato en archive.org · {e(str(c)[:10])}</title></rect>')
+    for f, href, tit in puntos:
+        t = _mes(f)
+        if t is not None:
+            p.append(f'<a href="{e(href)}"><line x1="{x(t):.1f}" y1="{EJE - 12}" x2="{x(t):.1f}" y2="{EJE}" stroke="var(--verde)" stroke-opacity=".6"/>'
+                     f'<circle cx="{x(t):.1f}" cy="{EJE - 12}" r="4" fill="var(--verde)"><title>{e(tit)} · {e(str(f)[:10])}</title></circle></a>')
+    lado = 80 if len(glifos) <= 6 else 48
+    for ini, fin, svg, href, tit in glifos:
+        t = _mes(ini)
+        if t is None:
+            continue
+        if fin and _mes(fin):
+            p.append(f'<line x1="{x(t):.1f}" y1="{EJE}" x2="{x(_mes(fin)):.1f}" y2="{EJE}" stroke="var(--verde)" stroke-width="4" stroke-linecap="round"/>')
+        p.append(f'<line x1="{x(t):.1f}" y1="{6 + lado}" x2="{x(t):.1f}" y2="{EJE}" stroke="currentColor" stroke-opacity=".35"/>')
+        p.append(f'<circle cx="{x(t):.1f}" cy="{EJE}" r="3.5" fill="var(--fg)"/>')
+        if svg and href:
+            svg = re.sub(r"</?a\b[^>]*>", "", svg)  # sin enlaces dentro de otro enlace
+        g = glifo_en(svg, round(x(t), 1), 6 + lado / 2, lado) if svg else f'<circle cx="{x(t):.1f}" cy="{6 + lado / 2}" r="6" fill="var(--fg)"/>'
+        p.append(f'<a href="{e(href)}"><title>{e(tit)} · {e(str(ini)[:10])}</title>{g}</a>' if href else g)
+    p.append("</svg>")
+    return "".join(p)
+
+
+LEYENDA_LINEA = ("Arriba, el glifo en su fecha; en verde, obras ligadas. Sobre el eje, las versiones de la ficha; debajo, "
+                 "los estratos en archive.org. En naranja, el calor: visitas sin sesión por mes, agregadas y anónimas (solo meses con 5 o más). "
+                 "El polvo de puntos son las huellas de quienes la miraron con sesión.")
 
 
 def trayectorias(props, extra=None):
@@ -376,7 +475,7 @@ def main():
     api = {u: vinculos_api(u) for u in props if not props[u].get("ficticio")}
     huellas = {u: huellas_api(u) for u in api}
     ags = trayectorias(props, {u: v[1] for u, v in api.items()})
-    glifos = {}
+    glifos, lineas_svg = {}, {}
 
     def nodo(u):
         q = props.get(u, {})
@@ -443,7 +542,7 @@ def main():
         vecinos.pop(uuid, None)
         privados = int(p.get("vinculos_privados") or 0) + api.get(uuid, (0, []))[0]
         hu = huellas.get(uuid, {})
-        espectadores = sum(hu.values())
+        espectadores = total_huellas(hu)
         glifos[uuid] = glifo(uuid, list(vecinos.items()), privados, espectadores)
         mundo = (f'<figure class="mundo">{glifos[uuid]}<figcaption class="muted">Mundo de vínculos de esta obra. '
                  f'En trazo continuo, {len(vecinos)} vínculos públicos; en discontinuo, {privados} vínculos entre personas que no son públicos: '
@@ -451,6 +550,17 @@ def main():
                  + (f' Alrededor, {espectadores} huellas anónimas de quienes la han mirado ({hu.get("visitas", 0)}), escaneado ({hu.get("escaneos", 0)}), '
                     f'verificado ({hu.get("verificaciones", 0)}) u observado ({hu.get("observaciones", 0)}): también son trazo de la obra.' if espectadores else "")
                  + '</figcaption></figure>') if vecinos or privados or espectadores else ""
+        inicio = g["tiempo"]["inicio"] or (versiones_de[0]["fecha"] if (versiones_de := hist.get(uuid)) else None)
+        linea = linea_tiempo(
+            glifos=[(inicio, g["tiempo"]["fin"], glifos[uuid], None, p.get("name") or uuid)],
+            puntos=[(gen[v]["tiempo"]["inicio"], f"/obra/{v}/", f'{props[v].get("name") or v} ({nombre_vinculo(t) if t not in ("linea", "trayectoria") else ("línea temporal" if t == "linea" else "trayectoria")})')
+                    for v, t in vecinos.items() if v in gen and gen[v]["tiempo"]["inicio"]],
+            versiones=[v["fecha"] for v in hist.get(uuid, [])],
+            capturas=[c.get("fecha") for c in capturas if c.get("obra") == uuid and c.get("fecha")],
+            calor=hu.get("calor_meses"), huellas=hu.get("meses"), etiqueta=f"Línea de tiempo de {p.get('name') or uuid}")
+        lineas_svg[uuid] = linea
+        if linea:
+            linea = f'<h2 id="tiempo">Línea de tiempo</h2><figure class="mundo tiempo">{linea}<figcaption class="muted">{LEYENDA_LINEA}</figcaption></figure>'
         if tray:
             tray = f'<h2 id="trayectoria">Trayectorias</h2><p class="muted">Quienes la crearon y quienes colaboran en ella también forman parte de la obra: la línea temporal de cada una une esta obra con otros lugares y tiempos.</p><ul>{tray}</ul>'
         if p.get("archivar") is False:
@@ -474,6 +584,7 @@ def main():
 <dl>{dl}</dl>
 <p><a href="/#obra-{e(uuid)}">Ficha completa, observaciones y mapa</a></p>
 {mundo}
+{linea}
 {lineas}
 {tray}
 {vinc}
@@ -496,10 +607,23 @@ def main():
     for i, ag in ags.items():
         filas = "".join(f'<li>{nodo(x["obra"])}{" · " + e(x.get("rol") or ("autoría" if x["clase"] == "autoria" else "colaboración"))}</li>' for x in ag["obras"])
         espacios = sorted({props[x["obra"]].get("municipio") or ESPACIOS[gen[x["obra"]]["espacio"]] for x in ag["obras"]})
+        calor_ag, huellas_ag = {}, {}
+        for x in ag["obras"]:
+            for dst, k in ((calor_ag, "calor_meses"), (huellas_ag, "meses")):
+                for m, n in (huellas.get(x["obra"], {}).get(k) or {}).items():
+                    dst[m] = dst.get(m, 0) + n
+        linea = linea_tiempo(
+            glifos=[(gen[x["obra"]]["tiempo"]["inicio"], gen[x["obra"]]["tiempo"]["fin"], glifos.get(x["obra"]), f'/obra/{x["obra"]}/',
+                     props[x["obra"]].get("name") or x["obra"]) for x in ag["obras"] if gen[x["obra"]]["tiempo"]["inicio"]],
+            calor=calor_ag, huellas=huellas_ag, etiqueta=f"Trayectoria de {ag['nombre']} en el tiempo")
+        if linea:
+            linea = (f'<figure class="mundo tiempo">{linea}<figcaption class="muted">Cada obra de la trayectoria, con su glifo, en su fecha. '
+                     'En naranja, el calor de todas ellas: visitas sin sesión por mes, agregadas y anónimas. El polvo, las huellas con sesión.</figcaption></figure>')
         cuerpo = f"""<p class="eyebrow"><a href="/">CANARIAS</a> · Trayectoria</p>
 <h1>{e(ag['nombre'])}</h1>
 <p class="muted">{len(ag['obras'])} obras · {e(', '.join(espacios))}</p>
 <p>Su línea temporal vincula los espacios donde ha creado, registrado, mapeado o cuidado: cada obra queda unida a la anterior y a la siguiente.</p>
+{linea}
 <ol class="estratos">{filas}</ol>"""
         destino = WEB / "agente" / i / "index.html"
         destino.parent.mkdir(parents=True, exist_ok=True)
@@ -510,7 +634,8 @@ def main():
     (WEB / "datos").mkdir(parents=True, exist_ok=True)
     (WEB / "datos" / "archivo.json").write_text(json.dumps(publico, ensure_ascii=False) + "\n", encoding="utf-8")
     resumen = {u: {**({"version": hist[u][-1]["version"], "fecha": hist[u][-1]["fecha"], "versiones": hist[u]} if u in hist else {}),
-                   **gen[u], "glifo": glifos.get(u), "vinculos_privados": int(props[u].get("vinculos_privados") or 0) + api.get(u, (0, []))[0], "huellas": huellas.get(u) or {}} for u in nombres}
+                   **gen[u], "glifo": glifos.get(u), "vinculos_privados": int(props[u].get("vinculos_privados") or 0) + api.get(u, (0, []))[0], "huellas": {k: v for k, v in (huellas.get(u) or {}).items() if k in TIPOS_HUELLA},
+                   "calor_meses": (huellas.get(u) or {}).get("calor_meses") or {}, "linea": lineas_svg.get(u)} for u in nombres}
     (WEB / "datos" / "historial.json").write_text(json.dumps(resumen, ensure_ascii=False) + "\n", encoding="utf-8")
     (WEB / "datos" / "trayectorias.json").write_text(json.dumps(ags, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"{len(ags)} trayectorias.")

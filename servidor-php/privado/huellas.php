@@ -2,7 +2,8 @@
 // Huellas de espectadores: cada visita a la ficha y cada escaneo de la etiqueta deja un trazo anónimo en la obra.
 // Solo se traza con la sesión iniciada (decisión del 01-11-2026): sin cuenta no se registra nada.
 //   POST /api/obras/<uuid>/huella           la web la envía al abrir una ficha con sesión (no si el navegador pide no ser rastreado)
-//   GET  /api/publico/obras/<uuid>/huellas  {visitas, escaneos, verificaciones, observaciones, meses: {AAAA-MM: n}} (solo con sesión)
+//   GET  /api/publico/obras/<uuid>/huellas  {visitas, escaneos, verificaciones, observaciones, meses: {AAAA-MM: n}, calor_meses: {AAAA-MM: n}}
+//        meses: huellas con sesión; calor_meses: visitas sin sesión, solo meses con CALOR_MINIMO o más
 // Las visitas sin sesión no son trazo de la obra: solo se suman, sin identificar, al mapa de calor.
 //   POST /api/publico/obras/<uuid>/visita   visita sin sesión (una por navegador, obra y día; sin cookies ni IP guardada)
 //   GET  /api/publico/calor                  {desde, obras: {<uuid>: n}} de los últimos 90 días; solo obras con 5 o más
@@ -44,7 +45,7 @@ function visita_anonima(string $obra): never {
 }
 
 function calor(): never {
-  $st = db()->prepare("SELECT obra, SUM(n) AS n FROM huellas WHERE tipo = 'anonima' AND dia >= date('now', ?) GROUP BY obra HAVING n >= ?");
+  $st = db()->prepare("SELECT obra, SUM(n) AS n FROM huellas WHERE tipo = 'anonima' AND dia >= date('now', ?) GROUP BY obra HAVING SUM(n) >= CAST(? AS INTEGER)");
   $st->execute(['-' . CALOR_DIAS . ' days', CALOR_MINIMO]);
   header('Cache-Control: public, max-age=3600');
   json_respuesta(['desde' => gmdate('Y-m-d', time() - CALOR_DIAS * 86400), 'obras' => array_map('intval', $st->fetchAll(PDO::FETCH_KEY_PAIR))]);
@@ -59,6 +60,10 @@ function huellas_publicas(string $obra): never {
   $st = $db->prepare("SELECT substr(dia, 1, 7), SUM(n) FROM huellas WHERE obra = ? AND tipo <> 'anonima' GROUP BY 1 ORDER BY 1");
   $st->execute([$obra]);
   $meses = array_map('intval', $st->fetchAll(PDO::FETCH_KEY_PAIR));
+  // Calor en el tiempo: visitas sin sesión por mes, solo los meses que llegan al mínimo (no dice quién ni dónde).
+  $st = $db->prepare("SELECT substr(dia, 1, 7) AS mes, SUM(n) AS n FROM huellas WHERE obra = ? AND tipo = 'anonima' GROUP BY 1 HAVING SUM(n) >= CAST(? AS INTEGER) ORDER BY 1");
+  $st->execute([$obra, CALOR_MINIMO]);
+  $calor_meses = array_map('intval', $st->fetchAll(PDO::FETCH_KEY_PAIR));
   $st = $db->prepare("SELECT COUNT(*) FROM verificaciones v JOIN qr_codigos q ON q.codigo = v.qr WHERE q.obra = ? AND v.valida = 1");
   $st->execute([$obra]);
   $verificaciones = (int) $st->fetchColumn();
@@ -66,5 +71,6 @@ function huellas_publicas(string $obra): never {
   $st->execute([$obra]);
   header('Cache-Control: public, max-age=600');
   json_respuesta(['obra' => $obra, 'visitas' => (int) ($t['visita'] ?? 0), 'escaneos' => (int) ($t['escaneo'] ?? 0),
-                  'verificaciones' => $verificaciones, 'observaciones' => (int) $st->fetchColumn(), 'meses' => $meses]);
+                  'verificaciones' => $verificaciones, 'observaciones' => (int) $st->fetchColumn(), 'meses' => $meses ?: new stdClass,
+                  'calor_meses' => $calor_meses ?: new stdClass]);
 }

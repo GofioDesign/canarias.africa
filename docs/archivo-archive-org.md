@@ -77,5 +77,11 @@ Quien mira, escanea, verifica u observa una obra también se convierte en trazo 
 - **Solo se traza con la sesión iniciada** (decisión del 01-11-2026). Sin cuenta no se registra nada, y así nadie puede inflar el contador.
 - `POST /api/obras/<uuid>/huella` (con sesión): la web la envía al abrir una ficha, salvo que el navegador pida no ser rastreado (Do Not Track o Global Privacy Control). El escaneo de una etiqueta colocada con sesión suma otra huella.
 - **Sin sesión no hay trazo, pero sí mapa de calor**: la visita se suma sin identificar a `POST /api/publico/obras/<uuid>/visita` (una por navegador, obra y día) y solo alimenta `GET /api/publico/calor`, el recuento agregado de los últimos 90 días, que la web dibuja como manchas de calor en el mapa. Solo aparecen obras con 5 visitas o más y nunca las reservadas; las difusas, en el centro de su celda.
-- `GET /api/publico/obras/<uuid>/huellas` (solo trazos con sesión): `{visitas, escaneos, verificaciones, observaciones, meses}`.
+- `GET /api/publico/obras/<uuid>/huellas`: `{visitas, escaneos, verificaciones, observaciones, meses, calor_meses}`. Los recuentos y `meses` son solo trazos con sesión; `calor_meses` es el calor por mes (visitas sin sesión), solo los meses con 5 o más.
+
+### Calor y glifo, en el mapa y en el tiempo
+
+- **En el mapa**: bajo cada obra, su mancha de calor (últimos 90 días); alrededor de su punto, su glifo. En la ficha, el glifo va grande; en los demás mapas, pequeño y solo desde el zoom 12, para no tapar la isla. Nunca en las reservadas.
+- **En el tiempo**: cada ficha tiene una línea de tiempo (SVG sin JS, la dibuja `scripts/generar-fichas.py` y la reutiliza la web desde `historial.json`, campo `linea`). Arriba, el glifo en la fecha de la obra (y su duración si tiene `fecha_fin`) y, en verde, las obras ligadas en las suyas; sobre el eje, las versiones de la ficha; debajo, los estratos de archive.org; luego el calor por mes en naranja y el polvo de huellas con sesión.
+- **Trayectorias**: la página de cada agente (`/agente/<id>/`) pone el glifo de cada obra en su fecha, con el calor y las huellas de todas ellas sumados por mes.
 - Solo se guardan recuentos por obra, día y tipo. Para no contar dos veces la misma visita en el día se guarda un hash con una sal diaria que no se conserva, y el cron borra esos hashes cada día. No se guarda quién fue ni su IP.

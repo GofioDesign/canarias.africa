@@ -834,6 +834,9 @@ path.isle-fb{fill:var(--land);fill-opacity:1;stroke:var(--land-edge);stroke-widt
 path.mk{stroke:var(--surface);stroke-width:2;fill-opacity:1}
 path.mk.dim{opacity:.25}
 path.mk-ring{fill:none;stroke:var(--lichen);stroke-width:3}
+.glifo-mapa{--fg:var(--ink);--verde:var(--n-obra);color:var(--ink);opacity:.7;pointer-events:none}.glifo-mapa.foco{opacity:.95}
+.glifo-mapa svg{width:100%;height:100%;display:block}
+.glifo-mapa svg>circle:last-child{display:none} /* el centro ya lo marca el punto de la obra */
 path.mk-zona{fill-opacity:.22;stroke-width:1.5;stroke-dasharray:4 3}
 path.mk-zona.mk-plenitud{stroke:var(--ph-plen)} path.mk-zona.mk-desgaste{stroke:var(--ph-desg)}
 .sens{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ph-tran);border:1px dashed currentColor;padding:1px 6px;border-radius:3px}
@@ -1511,6 +1514,7 @@ async function cargarArchivo(){
   if(ARCHIVO||HIST||TRAY) route();
 }
 const histDe=o=>HIST&&HIST[o.id.toLowerCase()];
+const totalHuellas=h=>["visitas","escaneos","verificaciones","observaciones"].reduce((a,k)=>a+(+((h&&h.huellas)||{})[k]||0),0);
 function idFicha(o){
   const h=histDe(o);
   return `<span class="idbadge" title="Identificador permanente">${esc(o.id)}</span>`+
@@ -1528,17 +1532,22 @@ function genealogiaObra(o){
   const h=histDe(o), id=o.id.toLowerCase();
   /* La trayectoria de cada agente (artistas, colectivos y colaboradores, que también forman parte de la obra) es otra línea temporal: une esta obra con otros lugares y tiempos */
   const tray=Object.entries(TRAY||{}).map(([i,a])=>{ const k=a.obras.findIndex(x=>x.obra===id); return k<0?null:{i,a,k}; }).filter(Boolean);
-  if(!h||(!(h.arriba||[]).length&&!(h.abajo||[]).length&&!(h.vinculos||[]).length&&!tray.length&&!h.glifo))
+  if(!h||(!(h.arriba||[]).length&&!(h.abajo||[]).length&&!(h.vinculos||[]).length&&!tray.length&&!h.glifo&&!h.linea))
     return SES&&SES.token&&!DEMO?`<section class="stack"><h2>Vínculos</h2>${misVinculosHueco(o)}</section>`:"";
   /* Glifo del mundo de vínculos (lo genera scripts/generar-fichas.py): públicos en continuo; los de personas que no son
      públicos, en discontinuo y a poco contraste, anónimos. Solo los ven con nombre quienes forman parte de ellos. */
   const mundo=h.glifo?`<figure style="--fg:var(--ink);--verde:var(--n-obra);margin:6px 0 14px;max-width:240px">${h.glifo}
-    <figcaption class="muted" style="font-size:.85rem">Continuo: vínculos públicos. Discontinuo: ${h.vinculos_privados||0} vínculos entre personas que no son públicos.${Object.values(h.huellas||{}).reduce((a,b)=>a+b,0)?` Polvo: ${Object.values(h.huellas).reduce((a,b)=>a+b,0)} huellas anónimas de espectadores.`:""}</figcaption></figure>`:"";
+    <figcaption class="muted" style="font-size:.85rem">Continuo: vínculos públicos. Discontinuo: ${h.vinculos_privados||0} vínculos entre personas que no son públicos.${totalHuellas(h)?` Polvo: ${totalHuellas(h)} huellas anónimas de espectadores con sesión.`:""}</figcaption></figure>`:"";
+  /* Línea de tiempo: el glifo en su fecha, las obras ligadas, versiones y estratos, el calor por mes (visitas sin sesión,
+     agregadas) y el polvo de huellas con sesión. La dibuja también scripts/generar-fichas.py. */
+  const linea=h.linea?`<figure style="--fg:var(--ink);--verde:var(--n-obra);margin:4px 0 14px"><div style="color:var(--ink);overflow-x:auto">${h.linea}</div>
+    <figcaption class="muted" style="font-size:.85rem">Línea de tiempo. Arriba, el glifo en su fecha; en verde, obras ligadas. Marcas sobre el eje: versiones; cuadrados: estratos en archive.org. Naranja: calor por mes de visitas sin sesión, agregadas y anónimas. Polvo: huellas con sesión.</figcaption></figure>`:"";
   const nom=u=>{ const x=byId(u), y=HIST[u]||{}; return `<a href="/obra/${esc(u)}/">${esc(x?x.t:(y.nombre||corto(u)))}</a> <span class="muted">(${[ESCALA_N[y.escala]||y.escala,ESPACIO_N[y.espacio],String((y.tiempo||{}).inicio||"").slice(0,10)].filter(Boolean).map(esc).join(" · ")})</span>`; };
   const vn=v=>{ const n=VINC_N[v.tipo]; return n?n[v.sentido==="entra"?1:0]:v.tipo.replace(/_/g," "); };
   return `<section class="stack">
     <h2>Líneas temporales, trayectorias y vínculos</h2>
     ${mundo}
+    ${linea}
     ${misVinculosHueco(o)}
     <p class="muted" style="font-size:.9rem">Escala ${esc(ESCALA_N[h.escala]||h.escala)} · ${esc(ESPACIO_N[h.espacio]||"")}. <a href="/obra/${esc(o.id.toLowerCase())}/#lineas">Ver el árbol completo</a></p>
     ${(h.arriba||[]).length?`<p>Ligada a la línea temporal de: ${h.arriba.map(nom).join(", ")}</p>`:""}
@@ -1583,6 +1592,22 @@ function capaCalor(m,obras){
     const k=Math.sqrt(CALOR[o.id.toLowerCase()]/max);
     L.circle([o.lat,o.lon],{radius:700+3300*k,stroke:false,fill:true,fillColor:"#e8590c",fillOpacity:.18+.32*k,interactive:false,className:"calor"}).addTo(m);
   });
+}
+/* El glifo de cada obra también en el mapa, sobre su calor y alrededor de su punto: en la ficha, grande; en los demás mapas,
+   pequeño y solo al acercarse, para no tapar la isla. Nunca en las reservadas (su sitio no se publica). */
+function capaGlifos(m,obras,foco){
+  if(!HIST) return;
+  if(!m.getPane("glifos")){ const p=m.createPane("glifos"); p.style.zIndex=450; p.style.pointerEvents="none"; }
+  const capa=L.layerGroup(), grande=L.layerGroup();
+  obras.filter(o=>sensOf(o)!=="reservada").forEach(o=>{
+    const h=HIST[o.id.toLowerCase()]; if(!h||!h.glifo) return;
+    const big=foco===o.id, t=big?132:56;
+    L.marker([o.lat,o.lon],{pane:"glifos",interactive:false,keyboard:false,
+      icon:L.divIcon({className:"glifo-mapa"+(big?" foco":""),html:h.glifo,iconSize:[t,t],iconAnchor:[t/2,t/2]})}).addTo(big?grande:capa);
+  });
+  grande.addTo(m);
+  const ver=()=>{ if(foco||m.getZoom()>=12) capa.addTo(m); else capa.remove(); };
+  m.on("zoomend",ver); m.whenReady(ver);
 }
 /* Tus vínculos con esta obra (api.canarias.africa): solo los ves tú y las otras partes. Públicos solo si todas lo consienten. */
 const TIPOS_VINC_OBRA={colaboracion:"Colaboré en ella",participacion:"Participé en ella",recuerdo:"Forma parte de mi memoria"};
@@ -1664,6 +1689,7 @@ function initMaps(){
       Object.values(MUNIS).filter(x=>islas.includes(x.isla)).forEach(x=>L.marker([x.lat,x.lon],{interactive:false,icon:L.divIcon({className:"mlab",html:x.n,iconSize:null,iconAnchor:[-10,22]})}).addTo(m)); });
     if(c.opt.route){ const pts=c.opt.route.map(byId).filter(o=>MUNIS[o.m].isla===c.isla).map(o=>[o.lat,o.lon]); if(pts.length>1) L.polyline(pts,{className:"route-line",interactive:false}).addTo(m); }
     capaCalor(m,c.obras.filter(o=>islas.includes(MUNIS[o.m].isla)&&enMapa(o)));
+    capaGlifos(m,c.obras.filter(o=>islas.includes(MUNIS[o.m].isla)&&enMapa(o)),c.opt.focus);
     c.obras.filter(o=>islas.includes(MUNIS[o.m].isla)&&enMapa(o)).forEach(o=>{
       if(sensOf(o)==="difusa"){ L.circle([o.lat,o.lon],{radius:1100,className:`mk-zona mk-${o.fase}`}).addTo(m).bindTooltip(`${esc(o.t)} · zona aproximada`).on("click",()=>{ location.hash=slug(o.id); }); return; }
       const on=!c.opt.only||c.opt.only.includes(o.id), big=c.opt.focus===o.id;

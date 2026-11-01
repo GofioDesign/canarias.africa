@@ -75,7 +75,8 @@ function foto_subida(bool $obligatoria): ?string {
 function qr_resolver(string $codigo): never {
   $q = etiqueta($codigo);
   if (!$q) json_respuesta(['obra' => null, 'estado' => 'desconocido'], 404);
-  if ($q['obra'] && in_array($q['estado'], ESTADOS_EN_SITIO, true)) sumar_huella($q['obra'], 'escaneo');  // quien escanea deja su trazo
+  // El escaneo no deja trazo por sí solo: una foto del QR se puede leer desde cualquier sitio. La huella llega desde la
+  // ficha cuando el GPS confirma que se está junto a la obra (huellas.php).
   json_respuesta(['obra' => $q['obra'], 'estado' => $q['estado']]);
 }
 

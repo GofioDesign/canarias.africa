@@ -1,47 +1,95 @@
 <?php
-// Huellas de espectadores: cada visita a la ficha y cada escaneo de la etiqueta deja un trazo anónimo en la obra.
+// Huellas de espectadores: cada visita a la ficha deja un trazo anónimo en la obra.
 // Solo se traza con la sesión iniciada (decisión del 01-11-2026): sin cuenta no se registra nada.
-//   POST /api/obras/<uuid>/huella           la web la envía al abrir una ficha con sesión (no si el navegador pide no ser rastreado)
+// Presencia (decisión del 01-11-2026): en las obras con representación física la visita solo cuenta, como trazo o
+// como calor, si el GPS confirma que se está junto a la obra. Las coordenadas se comparan y se olvidan: no se guardan.
+// Las obras de internet o sin espacio cuentan una vez por persona y día, sin GPS.
+//   POST /api/obras/<uuid>/huella           {lat, lon, precision, qr?} con sesión → {contada, motivo?}
+//   POST /api/publico/obras/<uuid>/visita   {lat, lon, precision} sin sesión → {contada, motivo?} (solo mapa de calor)
 //   GET  /api/publico/obras/<uuid>/huellas  {visitas, escaneos, verificaciones, observaciones, meses: {AAAA-MM: n}, calor_meses: {AAAA-MM: n}}
 //        meses: huellas con sesión; calor_meses: visitas sin sesión, solo meses con CALOR_MINIMO o más
-// Las visitas sin sesión no son trazo de la obra: solo se suman, sin identificar, al mapa de calor.
-//   POST /api/publico/obras/<uuid>/visita   visita sin sesión (una por navegador, obra y día; sin cookies ni IP guardada)
 //   GET  /api/publico/calor                  {desde, obras: {<uuid>: n}} de los últimos 90 días; solo obras con 5 o más
 
 const CALOR_MINIMO = 5;   // por debajo no se publica: con tan pocas visitas se podría adivinar quién fue
 const CALOR_DIAS = 90;
+const PRESENCIA_M = 150;        // a cuántos metros de la obra (o de su etiqueta) cuenta como «aquí»
+const PRESENCIA_DIFUSA_M = 2500; // las difusas solo tienen un punto aproximado (~2 km) en el catálogo
+const PRECISION_MAX_M = 250;     // un GPS menos preciso que esto no confirma nada
 
-function sumar_huella(string $obra, string $tipo): void {
+function metros(float $lat1, float $lon1, float $lat2, float $lon2): float {
+  $r = M_PI / 180;
+  $a = sin(($lat2 - $lat1) * $r / 2) ** 2 + cos($lat1 * $r) * cos($lat2 * $r) * sin(($lon2 - $lon1) * $r / 2) ** 2;
+  return 6371000 * 2 * asin(min(1, sqrt($a)));
+}
+
+// ¿Tiene la obra representación física? Si el cron aún no la ha visto, cuenta como física si tiene etiquetas colocadas.
+function obra_fisica(string $obra): bool {
+  $st = db()->prepare('SELECT fisica FROM obras_sitio WHERE uuid = ?');
+  $st->execute([$obra]);
+  $f = $st->fetchColumn();
+  if ($f !== false) return (bool) $f;
+  $st = db()->prepare('SELECT 1 FROM qr_codigos WHERE obra = ? AND lat IS NOT NULL');
+  $st->execute([$obra]);
+  return (bool) $st->fetchColumn();
+}
+
+// '' si el GPS confirma la presencia; si no, el motivo.
+function presencia(string $obra, array $d): string {
+  if (!isset($d['lat'], $d['lon']) || !is_numeric($d['lat']) || !is_numeric($d['lon'])) return 'sin_gps';
+  [$lat, $lon] = [(float) $d['lat'], (float) $d['lon']];
+  if (abs($lat) > 90 || abs($lon) > 180) return 'sin_gps';
+  $prec = is_numeric($d['precision'] ?? null) ? max(0, (float) $d['precision']) : PRECISION_MAX_M + 1;
+  if ($prec > PRECISION_MAX_M) return 'gps_impreciso';
+  $margen = min($prec, 100);
+  $db = db();
+  $sitios = [];
+  $st = $db->prepare("SELECT lat, lon FROM qr_codigos WHERE obra = ? AND lat IS NOT NULL AND estado IN ('" . implode("','", ESTADOS_EN_SITIO) . "')");
+  $st->execute([$obra]);
+  foreach ($st as $q) $sitios[] = [$q['lat'], $q['lon'], PRESENCIA_M];
+  $st = $db->prepare('SELECT s.lat, s.lon, o.sensibilidad FROM obras_sitio s JOIN obras o ON o.uuid = s.uuid WHERE s.uuid = ? AND s.lat IS NOT NULL');
+  $st->execute([$obra]);
+  if ($s = $st->fetch()) $sitios[] = [$s['lat'], $s['lon'], $s['sensibilidad'] === 'difusa' ? PRESENCIA_DIFUSA_M : PRESENCIA_M];
+  if (!$sitios) return 'sin_sitio';
+  foreach ($sitios as [$la, $lo, $r]) if (metros($lat, $lon, (float) $la, (float) $lo) <= $r + $margen) return '';
+  return 'lejos';
+}
+
+// Suma una huella. Devuelve '' si cuenta, o el motivo por el que no.
+function sumar_huella(string $obra, string $tipo, array $gps = []): string {
   $yo = colaborador_actual();
-  if (!$yo && $tipo !== 'anonima') return;  // sin sesión no hay huella
+  if (!$yo && $tipo !== 'anonima') return 'sin_sesion';  // sin sesión no hay huella
   $obra = strtolower($obra);
   $dia = gmdate('Y-m-d');
   $db = db();
   $st = $db->prepare('SELECT 1 FROM obras WHERE uuid = ?');
   $st->execute([$obra]);
-  if (!$st->fetchColumn()) return;
+  if (!$st->fetchColumn()) return 'no_existe';
+  if (obra_fisica($obra) && ($motivo = presencia($obra, $gps)) !== '') return $motivo;
   // Una huella por persona, obra, tipo y día. La sal cambia cada día y no se guarda: el hash no dice quién fue.
   $sal = hash('sha256', $dia . (config()['admin_hash'] ?? '') . PRIVADO);
   $quien = $yo ? 'c' . $yo['id'] : 'a' . ($_SERVER['REMOTE_ADDR'] ?? '') . ($_SERVER['HTTP_USER_AGENT'] ?? '');
   $h = hash('sha256', $sal . $quien . $obra . $tipo);
   $st = $db->prepare('INSERT OR IGNORE INTO huellas_vistas (hash, dia) VALUES (?, ?)');
   $st->execute([$h, $dia]);
-  if (!$st->rowCount()) return;
+  if (!$st->rowCount()) return 'ya_hoy';
   $db->prepare('INSERT INTO huellas (obra, dia, tipo, n) VALUES (?, ?, ?, 1) ON CONFLICT(obra, dia, tipo) DO UPDATE SET n = n + 1')
      ->execute([$obra, $dia, $tipo]);
+  return '';
+}
+
+function respuesta_huella(string $motivo): never {
+  json_respuesta($motivo === '' ? ['contada' => true] : ['contada' => false, 'motivo' => $motivo]);
 }
 
 function huella_visita(string $obra): never {
   exigir_colaborador();
-  sumar_huella($obra, 'visita');
-  http_response_code(204);
-  exit;
+  $d = cuerpo_json();
+  respuesta_huella(sumar_huella($obra, empty($d['qr']) ? 'visita' : 'escaneo', $d));
 }
 
 function visita_anonima(string $obra): never {
-  if (!colaborador_actual()) sumar_huella($obra, 'anonima');
-  http_response_code(204);
-  exit;
+  if (colaborador_actual()) respuesta_huella('con_sesion');
+  respuesta_huella(sumar_huella($obra, 'anonima', cuerpo_json()));
 }
 
 function calor(): never {

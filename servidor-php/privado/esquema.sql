@@ -167,6 +167,15 @@ CREATE TABLE IF NOT EXISTS huellas_vistas (
   hash   TEXT PRIMARY KEY,
   dia    TEXT NOT NULL
 );
+-- Dónde está cada obra física, copiado del catálogo por el cron, para confirmar con el GPS que la visita es en el sitio.
+-- fisica = 1 si la obra tiene lugar; 0 si está en la red o no tiene espacio. lat/lon son las del catálogo público
+-- (aproximadas en las difusas, ausentes en las reservadas: ahí solo valen las etiquetas colocadas).
+CREATE TABLE IF NOT EXISTS obras_sitio (
+  uuid    TEXT PRIMARY KEY,
+  fisica  INTEGER NOT NULL DEFAULT 1,
+  lat     REAL,
+  lon     REAL
+);
 
 -- Lista de correo de la página de lanzamiento («Quiero participar») y votos de las propuestas.
 -- Lo enviado espera en «pendiente» hasta que la persona abre el enlace de confirmación (solo se guarda su hash).

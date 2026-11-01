@@ -30,9 +30,17 @@ if (curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200 && is_array($cat['features'] ?
   $db->beginTransaction();
   $st = $db->prepare('INSERT INTO obras (uuid, titulo, sensibilidad) VALUES (?, ?, ?)
                       ON CONFLICT(uuid) DO UPDATE SET titulo = excluded.titulo, sensibilidad = excluded.sensibilidad');
+  $sitio = $db->prepare('INSERT OR REPLACE INTO obras_sitio (uuid, fisica, lat, lon) VALUES (?, ?, ?, ?)');
   foreach ($cat['features'] as $f) {
     $p = $f['properties'] ?? [];
-    if (!empty($p['id'])) $st->execute([strtolower($p['id']), $p['name'] ?? null, $p['sensibilidad'] ?? 'reservada']);
+    if (empty($p['id'])) continue;
+    $st->execute([strtolower($p['id']), $p['name'] ?? null, $p['sensibilidad'] ?? 'reservada']);
+    // Igual que scripts/generar-fichas.py (espacio_de): con lugar si lo dice «espacio» o si tiene geometría, municipio o sitio reservado.
+    $g = $f['geometry'] ?? null;
+    $espacio = in_array($p['espacio'] ?? '', ['lugar', 'red', 'sin_espacio'], true) ? $p['espacio']
+      : (($g || !empty($p['municipio']) || in_array($p['sensibilidad'] ?? '', ['difusa', 'reservada'], true)) ? 'lugar' : 'sin_espacio');
+    $punto = ($g['type'] ?? '') === 'Point' ? $g['coordinates'] : [null, null];
+    $sitio->execute([strtolower($p['id']), $espacio === 'lugar' ? 1 : 0, $punto[1] ?? null, $punto[0] ?? null]);
   }
   $db->commit();
 } else {

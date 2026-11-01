@@ -243,7 +243,21 @@ def glifo(uuid, publicos, privados):
     return "".join(partes)
 
 
-def trayectorias(props):
+API = os.environ.get("CA_API", "https://api.canarias.africa").rstrip("/")
+
+
+def vinculos_api(uuid):
+    """Vínculos de personas que guarda api.canarias.africa: el número de privados y los que todas las partes han publicado."""
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"{API}/api/publico/obras/{uuid}/vinculos", timeout=10) as r:
+            d = json.loads(r.read())
+            return int(d.get("privados") or 0), [x for x in d.get("publicos") or [] if isinstance(x, dict)]
+    except Exception:
+        return 0, []  # sin servidor (pruebas, vista previa): solo cuenta lo del catálogo
+
+
+def trayectorias(props, extra=None):
     """Línea temporal de cada agente (artistas, colectivos y colaboradores): sus obras, en orden de fecha.
 
     "autoria": ["Nombre", …] o [{"id", "nombre", "rol"}, …]. "colaboraciones": lo mismo para quienes registran,
@@ -263,6 +277,14 @@ def trayectorias(props):
                 i = ident_agente(a.get("id") or a["nombre"])
                 ag = ags.setdefault(i, {"nombre": a.get("nombre") or i, "obras": []})
                 ag["obras"].append({"obra": u, "clase": clase, **({"rol": a["rol"]} if a.get("rol") else {})})
+    # Colaboraciones publicadas desde la web por sus protagonistas (consentimiento expreso en api.canarias.africa).
+    for u, publicos in (extra or {}).items():
+        for v in publicos:
+            if v.get("obra") and v.get("de") and u in props:
+                i = ident_agente(v["de"])
+                ag = ags.setdefault(i, {"nombre": v["de"], "obras": []})
+                if not any(x["obra"] == u for x in ag["obras"]):
+                    ag["obras"].append({"obra": u, "clase": "colaboracion", **({"rol": v["rol"]} if v.get("rol") else {})})
     for ag in ags.values():
         ag["obras"].sort(key=lambda x: (str(props[x["obra"]].get("fecha") or "9999"), props[x["obra"]].get("name") or ""))
     return ags
@@ -331,7 +353,8 @@ def main():
     feats = json.loads(CATALOGO.read_text(encoding="utf-8")).get("features", []) if CATALOGO.exists() else []
     nombres = {}
     gen, props = genealogia(feats)
-    ags = trayectorias(props)
+    api = {u: vinculos_api(u) for u in props if not props[u].get("ficticio")}
+    ags = trayectorias(props, {u: v[1] for u, v in api.items()})
     glifos = {}
 
     def nodo(u):
@@ -397,7 +420,7 @@ def main():
                 for x in obras_ag[max(k - 1, 0):k] + obras_ag[k + 1:k + 2]:
                     vecinos.setdefault(x, "trayectoria")
         vecinos.pop(uuid, None)
-        privados = int(p.get("vinculos_privados") or 0)
+        privados = int(p.get("vinculos_privados") or 0) + api.get(uuid, (0, []))[0]
         glifos[uuid] = glifo(uuid, list(vecinos.items()), privados)
         mundo = (f'<figure class="mundo">{glifos[uuid]}<figcaption class="muted">Mundo de vínculos de esta obra. '
                  f'En trazo continuo, {len(vecinos)} vínculos públicos; en discontinuo, {privados} vínculos entre personas que no son públicos: '
@@ -461,7 +484,7 @@ def main():
     (WEB / "datos").mkdir(parents=True, exist_ok=True)
     (WEB / "datos" / "archivo.json").write_text(json.dumps(publico, ensure_ascii=False) + "\n", encoding="utf-8")
     resumen = {u: {**({"version": hist[u][-1]["version"], "fecha": hist[u][-1]["fecha"], "versiones": hist[u]} if u in hist else {}),
-                   **gen[u], "glifo": glifos.get(u), "vinculos_privados": int(props[u].get("vinculos_privados") or 0)} for u in nombres}
+                   **gen[u], "glifo": glifos.get(u), "vinculos_privados": int(props[u].get("vinculos_privados") or 0) + api.get(u, (0, []))[0]} for u in nombres}
     (WEB / "datos" / "historial.json").write_text(json.dumps(resumen, ensure_ascii=False) + "\n", encoding="utf-8")
     (WEB / "datos" / "trayectorias.json").write_text(json.dumps(ags, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"{len(ags)} trayectorias.")

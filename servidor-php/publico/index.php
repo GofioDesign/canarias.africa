@@ -18,6 +18,11 @@ try {
   if ($metodo === 'GET' && preg_match('#^/teselas/osm/(\d{1,2})/(\d+)/(\d+)\.png$#', $ruta, $m)) teselas((int) $m[1], (int) $m[2], (int) $m[3]);
   if ($metodo === 'GET' && preg_match('#^/datos/umap/(qr|rutas)\.geojson$#', $ruta, $m)) capa_umap($m[1]);
   if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)$#', $ruta, $m)) observaciones_publicas($m[1]);
+  if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)/vinculos$#', $ruta, $m)) vinculos_obra_publicos($m[1]);
+  if ($metodo === 'POST' && $ruta === '/api/vinculos') vinculo_crear();
+  if ($metodo === 'GET' && $ruta === '/api/vinculos/mios') vinculos_mios();
+  if ($metodo === 'GET' && preg_match('#^/api/vinculos/obra/([\w-]+)$#', $ruta, $m)) vinculos_obra_mios($m[1]);
+  if ($metodo === 'POST' && preg_match('#^/api/vinculos/(\d+)/(aceptar|rechazar|retirar|publicar)$#', $ruta, $m)) vinculo_accion((int) $m[1], $m[2]);
   if ($metodo === 'GET' && preg_match('#^/api/publico/qr/(' . RE_UUID . ')/historial$#', $ruta, $m)) qr_historial($m[1]);
   if ($metodo === 'GET' && $ruta === '/api/publico/etiquetas.geojson') qr_mapa();
   if ($metodo === 'POST' && $ruta === '/api/qr/asignar') qr_asignar();

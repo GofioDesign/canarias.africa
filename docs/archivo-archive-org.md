@@ -50,6 +50,22 @@ Cada ficha (`/obra/<uuid>/` y la ficha de la web) muestra:
 - **Líneas temporales ligadas** (relación `muestra_de`, o el atajo `"muestra_de": "<uuid>"` o una lista): la línea temporal propia se liga a otras más generales, de cualquier escala y a la vez a varias. Un evento global puede dar lugar a x muestras locales. La ficha muestra el árbol hacia arriba (a qué se liga) y hacia abajo (qué ha generado).
 - **Trayectorias** (`"autoria"` y `"colaboraciones"`: `["Nombre o alias", …]` o `[{"id", "nombre", "rol"}]`): la línea temporal de cada artista, colectivo o colaborador (registro, mapeo, foto, documentación, cuidado…) también vincula espacios. Quienes colaboran forman parte de la obra. Cada uno tiene su página `/agente/<id>/` con sus obras en orden, y cada ficha enlaza con la obra anterior y la siguiente de cada autoría.
 - **Privacidad de las personas**: las líneas temporales y de lugares de las personas no son identificables en la red pública. Solo las ven quienes forman parte de ellas, salvo que quieran publicarlas (`"publica": true`) o que ambas sean personajes públicos. La autoría acreditada de una obra es pública salvo `"publica": false`; una colaboración, solo con `"publica": true`. Lo que no es público no entra en el catálogo (que es un repositorio público): solo su número, `"vinculos_privados"`. `comprobar-catalogo.py` lo vigila.
-- **Glifo del mundo de vínculos**: cada ficha dibuja la obra en el centro, sus vínculos públicos en trazo continuo (enlazan a las otras fichas) y los privados en discontinuo y a poco contraste, anónimos: se ve que existen, no quiénes son ni adónde llevan. Pendiente: que cada persona, con su sesión iniciada, vea con nombre los vínculos de los que forma parte (lo servirá `api.canarias.africa`).
+- **Glifo del mundo de vínculos**: cada ficha dibuja la obra en el centro, sus vínculos públicos en trazo continuo (enlazan a las otras fichas) y los privados en discontinuo y a poco contraste, anónimos: se ve que existen, no quiénes son ni adónde llevan. Cada persona, con su sesión iniciada, ve con nombre en la ficha los vínculos de los que forma parte (ver abajo).
 - **Vínculos abiertos** (`"relaciones": [{"tipo", "a", "nota"}]`): responde a, inspirada en, cita, continúa, se superpone a, dialoga con… o cualquier tipo nuevo en minúsculas con guiones bajos, sin tocar el código. Cada vínculo aparece en las dos fichas, con su nombre en los dos sentidos.
 - `comprobar-catalogo.py` rechaza escalas o espacios desconocidos, tipos mal escritos y vínculos a obras que no están en el catálogo.
+
+## Vínculos de personas en api.canarias.africa
+
+Tabla `vinculos` (`servidor-php/privado/esquema.sql`) y rutas en `servidor-php/privado/vinculos.php`. Todo con sesión (`Authorization: Bearer`), salvo la pública:
+
+| Ruta | Qué hace |
+|---|---|
+| `POST /api/vinculos` | `{tipo, alias}` propone un vínculo con otra persona (familia, amistad, colaboracion…), que tiene que aceptarlo; `{tipo, obra, rol}` crea tu vínculo con una obra (colaboracion, participacion, recuerdo…) |
+| `GET /api/vinculos/mios` | Tus vínculos, con nombre, y las propuestas que esperan tu respuesta |
+| `GET /api/vinculos/obra/<uuid>` | Los vínculos de esa obra de los que formas parte, con nombre |
+| `POST /api/vinculos/<id>/aceptar`, `/rechazar` | Responder a una propuesta (solo la persona invitada) |
+| `POST /api/vinculos/<id>/retirar` | Cualquiera de las partes lo retira; deja de contar también en el número público |
+| `POST /api/vinculos/<id>/publicar` | `{publico: true/false}`: tu permiso. Se publica solo cuando lo dan todas las partes |
+| `GET /api/publico/obras/<uuid>/vinculos` | Lo único que ve el público: `{privados: n, publicos: [...]}` |
+
+A quien no forma parte de un vínculo, el servidor le responde que no existe. Al publicar la web, `generar-fichas.py` pide esta ruta pública para cada obra: suma `privados` al glifo y añade a las trayectorias las colaboraciones publicadas.

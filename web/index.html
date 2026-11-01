@@ -1528,7 +1528,8 @@ function genealogiaObra(o){
   const h=histDe(o), id=o.id.toLowerCase();
   /* La trayectoria de cada agente (artistas, colectivos y colaboradores, que también forman parte de la obra) es otra línea temporal: une esta obra con otros lugares y tiempos */
   const tray=Object.entries(TRAY||{}).map(([i,a])=>{ const k=a.obras.findIndex(x=>x.obra===id); return k<0?null:{i,a,k}; }).filter(Boolean);
-  if(!h||(!(h.arriba||[]).length&&!(h.abajo||[]).length&&!(h.vinculos||[]).length&&!tray.length&&!h.glifo)) return "";
+  if(!h||(!(h.arriba||[]).length&&!(h.abajo||[]).length&&!(h.vinculos||[]).length&&!tray.length&&!h.glifo))
+    return SES&&SES.token&&!DEMO?`<section class="stack"><h2>Vínculos</h2>${misVinculosHueco(o)}</section>`:"";
   /* Glifo del mundo de vínculos (lo genera scripts/generar-fichas.py): públicos en continuo; los de personas que no son
      públicos, en discontinuo y a poco contraste, anónimos. Solo los ven con nombre quienes forman parte de ellos. */
   const mundo=h.glifo?`<figure style="--fg:var(--ink);--verde:var(--n-obra);margin:6px 0 14px;max-width:240px">${h.glifo}
@@ -1538,6 +1539,7 @@ function genealogiaObra(o){
   return `<section class="stack">
     <h2>Líneas temporales, trayectorias y vínculos</h2>
     ${mundo}
+    ${misVinculosHueco(o)}
     <p class="muted" style="font-size:.9rem">Escala ${esc(ESCALA_N[h.escala]||h.escala)} · ${esc(ESPACIO_N[h.espacio]||"")}. <a href="/obra/${esc(o.id.toLowerCase())}/#lineas">Ver el árbol completo</a></p>
     ${(h.arriba||[]).length?`<p>Ligada a la línea temporal de: ${h.arriba.map(nom).join(", ")}</p>`:""}
     ${(h.abajo||[]).length?`<p class="muted" style="font-size:.95rem">Ha dado lugar a ${h.abajo.length} muestra(s):</p><ul>${h.abajo.map(u=>`<li>${nom(u)}</li>`).join("")}</ul>`:""}
@@ -1556,6 +1558,48 @@ function estratosObra(o){
       :`<p class="muted">Aún sin estratos: se depositará el primero tras la próxima publicación.</p>`}
   </section>`;
 }
+/* Tus vínculos con esta obra (api.canarias.africa): solo los ves tú y las otras partes. Públicos solo si todas lo consienten. */
+const TIPOS_VINC_OBRA={colaboracion:"Colaboré en ella",participacion:"Participé en ella",recuerdo:"Forma parte de mi memoria"};
+function misVinculosHueco(o){
+  if(!SES||!SES.token||DEMO) return "";
+  setTimeout(()=>cargarMisVinculos(o.id.toLowerCase()),0);
+  return `<div id="misvinc" class="stack" style="margin-top:12px"><p class="muted">Cargando tus vínculos…</p></div>`;
+}
+async function cargarMisVinculos(obra){
+  const el=document.getElementById("misvinc"); if(!el) return;
+  const [r,m]=await Promise.all([api("/api/vinculos/obra/"+encodeURIComponent(obra)),api("/api/vinculos/mios")]);
+  if(!r.ok){ el.innerHTML=`<p class="muted">${esc(errDe(r))}</p>`; return; }
+  const vs=r.j.vinculos||[], pend=(m.ok&&m.j.por_responder)||[];
+  el.innerHTML=`<h3>Tus vínculos aquí</h3>
+    <p class="muted" style="font-size:.9rem">Solo los ves tú y las demás personas de cada vínculo. En el glifo público aparecen en discontinuo y sin nombre, salvo que todas las partes decidan publicarlos.</p>
+    ${vs.length?`<ul>${vs.map(v=>`<li><b>${esc(TIPOS_VINC_OBRA[v.tipo]||v.tipo.replace(/_/g," "))}</b>${v.rol?` · ${esc(v.rol)}`:""}${v.con?` · con ${esc(v.con)}`:""}
+      <span class="muted">· ${v.publico?"público":"privado"}</span>
+      <br><button type="button" class="btn alt" style="margin:4px 6px 0 0;padding:6px 10px;font-size:.85rem" data-vinc="${v.id}" data-acc="publicar" data-pub="${v.mi_consentimiento?0:1}">${v.mi_consentimiento?"Retirar mi permiso para publicarlo":"Doy permiso para publicarlo"}</button>
+      <button type="button" class="btn alt" style="margin:4px 6px 0 0;padding:6px 10px;font-size:.85rem" data-vinc="${v.id}" data-acc="retirar">Retirar el vínculo</button></li>`).join("")}</ul>`
+      :`<p class="muted">No tienes vínculos con esta obra.</p>`}
+    ${pend.length?`<h3>Te proponen un vínculo</h3><ul>${pend.map(v=>`<li><b>${esc(v.tipo.replace(/_/g," "))}</b> con ${esc(v.con)}${v.nota?` <span class="muted">— ${esc(v.nota)}</span>`:""}
+      <br><button type="button" class="btn" style="margin:4px 6px 0 0;padding:6px 10px;font-size:.85rem" data-vinc="${v.id}" data-acc="aceptar">Aceptar</button>
+      <button type="button" class="btn alt" style="margin:4px 6px 0 0;padding:6px 10px;font-size:.85rem" data-vinc="${v.id}" data-acc="rechazar">Rechazar</button></li>`).join("")}</ul>`:""}
+    <form id="vincf" class="obsf" data-obra="${esc(obra)}" style="margin-top:8px">
+      <label>Añadir mi vínculo con esta obra<select name="tipo">${Object.entries(TIPOS_VINC_OBRA).map(([k,n])=>`<option value="${k}">${n}</option>`).join("")}</select></label>
+      <label>Rol (opcional)<input name="rol" maxlength="60" placeholder="registro, mapeo, foto, cuidado…"></label>
+      <button class="btn" type="submit">Añadir</button>
+    </form>`;
+}
+document.addEventListener("click",async ev=>{
+  const b=ev.target.closest&&ev.target.closest("[data-vinc]"); if(!b) return;
+  const acc=b.dataset.acc; if(acc==="retirar"&&!confirm("¿Retirar este vínculo? Dejará de contar también en el glifo público.")) return;
+  b.disabled=true;
+  const r=await api(`/api/vinculos/${b.dataset.vinc}/${acc}`,{metodo:"POST",json:acc==="publicar"?{publico:b.dataset.pub==="1"}:{}});
+  if(!r.ok) alert(errDe(r));
+  const f=document.getElementById("vincf"); if(f) cargarMisVinculos(f.dataset.obra);
+});
+document.addEventListener("submit",async ev=>{
+  const f=ev.target; if(!f||f.id!=="vincf") return; ev.preventDefault();
+  const d=new FormData(f);
+  const r=await api("/api/vinculos",{metodo:"POST",json:{obra:f.dataset.obra,tipo:d.get("tipo"),rol:d.get("rol")||undefined}});
+  if(!r.ok) alert(errDe(r)); cargarMisVinculos(f.dataset.obra);
+});
 /* Ficha: descripción y relaciones vienen del catálogo estático; las observaciones aprobadas, de la API */
 async function cargarFicha(o){
   if(DEMO||o._ficha) return false;

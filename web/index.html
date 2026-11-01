@@ -1526,7 +1526,7 @@ const VINC_N={responde_a:["responde a","respuestas"],inspirada_en:["inspirada en
   continua:["continúa","continuada por"],se_superpone_a:["se superpone a","debajo"],dialoga:["dialoga con","dialoga con"]};
 function genealogiaObra(o){
   const h=histDe(o), id=o.id.toLowerCase();
-  /* La trayectoria de cada artista o colectivo es otra línea temporal: une esta obra con otros lugares y tiempos */
+  /* La trayectoria de cada agente (artistas, colectivos y colaboradores, que también forman parte de la obra) es otra línea temporal: une esta obra con otros lugares y tiempos */
   const tray=Object.entries(TRAY||{}).map(([i,a])=>{ const k=a.obras.findIndex(x=>x.obra===id); return k<0?null:{i,a,k}; }).filter(Boolean);
   if(!h||(!(h.arriba||[]).length&&!(h.abajo||[]).length&&!(h.vinculos||[]).length&&!tray.length)) return "";
   const nom=u=>{ const x=byId(u), y=HIST[u]||{}; return `<a href="/obra/${esc(u)}/">${esc(x?x.t:(y.nombre||corto(u)))}</a> <span class="muted">(${[ESCALA_N[y.escala]||y.escala,ESPACIO_N[y.espacio],String((y.tiempo||{}).inicio||"").slice(0,10)].filter(Boolean).map(esc).join(" · ")})</span>`; };
@@ -1536,7 +1536,7 @@ function genealogiaObra(o){
     <p class="muted" style="font-size:.9rem">Escala ${esc(ESCALA_N[h.escala]||h.escala)} · ${esc(ESPACIO_N[h.espacio]||"")}. <a href="/obra/${esc(o.id.toLowerCase())}/#lineas">Ver el árbol completo</a></p>
     ${(h.arriba||[]).length?`<p>Ligada a la línea temporal de: ${h.arriba.map(nom).join(", ")}</p>`:""}
     ${(h.abajo||[]).length?`<p class="muted" style="font-size:.95rem">Ha dado lugar a ${h.abajo.length} muestra(s):</p><ul>${h.abajo.map(u=>`<li>${nom(u)}</li>`).join("")}</ul>`:""}
-    ${tray.map(({i,a,k})=>`<p><a href="/agente/${esc(i)}/">${esc(a.nombre)}</a> <span class="muted">· obra ${k+1} de ${a.obras.length}</span>${k>0?`<br><span class="muted">anterior:</span> ${nom(a.obras[k-1].obra)}`:""}${k+1<a.obras.length?`<br><span class="muted">siguiente:</span> ${nom(a.obras[k+1].obra)}`:""}</p>`).join("")}
+    ${tray.map(({i,a,k})=>`<p><a href="/agente/${esc(i)}/">${esc(a.nombre)}</a> <span class="muted">· ${esc(a.obras[k].rol||(a.obras[k].clase==="colaboracion"?"colaboración":"autoría"))} · obra ${k+1} de ${a.obras.length}</span>${k>0?`<br><span class="muted">anterior:</span> ${nom(a.obras[k-1].obra)}`:""}${k+1<a.obras.length?`<br><span class="muted">siguiente:</span> ${nom(a.obras[k+1].obra)}`:""}</p>`).join("")}
     ${(h.vinculos||[]).length?`<ul>${h.vinculos.map(v=>`<li>${esc(vn(v))}: ${nom(v.a)}${v.nota?` <span class="muted">— ${esc(v.nota)}</span>`:""}</li>`).join("")}</ul>`:""}
   </section>`;
 }

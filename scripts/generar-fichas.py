@@ -14,8 +14,9 @@ Modelo (propiedades de cada obra o expresión en el catálogo):
 - "espacio": lugar, red o sin_espacio (si falta, se deduce de la geometría, el municipio o la url).
 - "escala": una de datos/escalas.json (persona, familia, amistades, barrio, municipio, mancomunidad, isla,
   provincia, Canarias, Macaronesia, estado, continente, global…). Las íntimas no se archivan sin consentimiento.
-- "autoria": ["Nombre", …] o [{"id", "nombre", "rol"}, …]: la trayectoria de cada artista o colectivo es otra
-  línea temporal que vincula espacios (/agente/<id>/ y /datos/trayectorias.json).
+- "autoria" y "colaboraciones": ["Nombre o alias", …] o [{"id", "nombre", "rol"}, …]: la trayectoria de cada
+  artista, colectivo o colaborador es otra línea temporal que vincula espacios (/agente/<id>/ y
+  /datos/trayectorias.json). Quienes colaboran también forman parte de la obra.
 - "relaciones": [{"tipo", "a": <uuid>, "nota"}]. El tipo "muestra_de" (o el atajo "muestra_de": <uuid> o
   [<uuid>, …]) liga la línea temporal propia a otra más general: un evento global puede dar lugar a x
   muestras locales, y una muestra puede estar ligada a varias líneas a la vez. Los demás tipos (responde_a,
@@ -204,19 +205,23 @@ def ident_agente(texto):
 
 
 def trayectorias(props):
-    """Línea temporal de cada artista o colectivo: sus obras, en cualquier lugar o escala, en orden de fecha.
+    """Línea temporal de cada agente (artistas, colectivos y colaboradores): sus obras, en orden de fecha.
 
-    "autoria": ["Nombre", …] o [{"id", "nombre", "rol"}, …]. La trayectoria une espacios distintos a través
-    de una biografía; cada ficha enlaza con la obra anterior y la siguiente de cada autoría."""
+    "autoria": ["Nombre", …] o [{"id", "nombre", "rol"}, …]. "colaboraciones": lo mismo para quienes registran,
+    mapean, fotografían, documentan o cuidan la obra (rol: registro, mapeo, foto, documentación, cuidado…):
+    también forman parte de la obra y tienen su trayectoria. Se identifican por su alias público.
+    La trayectoria une espacios distintos a través de una biografía; cada ficha enlaza con la obra
+    anterior y la siguiente de cada agente."""
     ags = {}
     for u, p in props.items():
-        for a in p.get("autoria") or []:
-            a = a if isinstance(a, dict) else {"nombre": a}
-            if not a.get("nombre") and not a.get("id"):
-                continue
-            i = ident_agente(a.get("id") or a["nombre"])
-            ag = ags.setdefault(i, {"nombre": a.get("nombre") or i, "obras": []})
-            ag["obras"].append({"obra": u, **({"rol": a["rol"]} if a.get("rol") else {})})
+        for clase, lista_ag in (("autoria", p.get("autoria")), ("colaboracion", p.get("colaboraciones"))):
+            for a in lista_ag or []:
+                a = a if isinstance(a, dict) else {"nombre": a}
+                if not a.get("nombre") and not a.get("id"):
+                    continue
+                i = ident_agente(a.get("id") or a["nombre"])
+                ag = ags.setdefault(i, {"nombre": a.get("nombre") or i, "obras": []})
+                ag["obras"].append({"obra": u, "clase": clase, **({"rol": a["rol"]} if a.get("rol") else {})})
     for ag in ags.values():
         ag["obras"].sort(key=lambda x: (str(props[x["obra"]].get("fecha") or "9999"), props[x["obra"]].get("name") or ""))
     return ags
@@ -336,10 +341,10 @@ def main():
                 continue
             ant = nodo(ag["obras"][pos - 1]["obra"]) if pos > 0 else '<span class="muted">primera obra registrada</span>'
             sig = nodo(ag["obras"][pos + 1]["obra"]) if pos + 1 < len(ag["obras"]) else '<span class="muted">última obra registrada</span>'
-            tray += (f'<li><a href="/agente/{e(i)}/">{e(ag["nombre"])}</a> <span class="muted">· obra {pos + 1} de {len(ag["obras"])}</span>'
+            tray += (f'<li><a href="/agente/{e(i)}/">{e(ag["nombre"])}</a> <span class="muted">· {e(ag["obras"][pos].get("rol") or ("autoría" if ag["obras"][pos]["clase"] == "autoria" else "colaboración"))} · obra {pos + 1} de {len(ag["obras"])}</span>'
                      f'<br><span class="muted">anterior:</span> {ant}<br><span class="muted">siguiente:</span> {sig}</li>')
         if tray:
-            tray = f'<h2 id="trayectoria">Trayectorias</h2><p class="muted">La línea temporal de cada autoría une esta obra con otros lugares y tiempos.</p><ul>{tray}</ul>'
+            tray = f'<h2 id="trayectoria">Trayectorias</h2><p class="muted">Quienes la crearon y quienes colaboran en ella también forman parte de la obra: la línea temporal de cada una une esta obra con otros lugares y tiempos.</p><ul>{tray}</ul>'
         if p.get("archivar") is False:
             rastro = '<p class="muted">Por decisión de su autoría, esta obra no se inscribe en archive.org.</p>'
         elif p.get("escala") in INTIMAS and p.get("archivar") is not True:
@@ -380,12 +385,12 @@ def main():
     (WEB / "estratos" / "index.html").write_text(pagina("Estratos · CANARIAS", cuerpo), encoding="utf-8")
 
     for i, ag in ags.items():
-        filas = "".join(f'<li>{nodo(x["obra"])}{" · " + e(x["rol"]) if x.get("rol") else ""}</li>' for x in ag["obras"])
+        filas = "".join(f'<li>{nodo(x["obra"])}{" · " + e(x.get("rol") or ("autoría" if x["clase"] == "autoria" else "colaboración"))}</li>' for x in ag["obras"])
         espacios = sorted({props[x["obra"]].get("municipio") or ESPACIOS[gen[x["obra"]]["espacio"]] for x in ag["obras"]})
         cuerpo = f"""<p class="eyebrow"><a href="/">CANARIAS</a> · Trayectoria</p>
 <h1>{e(ag['nombre'])}</h1>
 <p class="muted">{len(ag['obras'])} obras · {e(', '.join(espacios))}</p>
-<p>Su línea temporal vincula los espacios donde ha trabajado: cada obra queda unida a la anterior y a la siguiente.</p>
+<p>Su línea temporal vincula los espacios donde ha creado, registrado, mapeado o cuidado: cada obra queda unida a la anterior y a la siguiente.</p>
 <ol class="estratos">{filas}</ol>"""
         destino = WEB / "agente" / i / "index.html"
         destino.parent.mkdir(parents=True, exist_ok=True)

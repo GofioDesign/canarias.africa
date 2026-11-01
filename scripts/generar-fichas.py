@@ -12,7 +12,8 @@
 Modelo (propiedades de cada obra o expresión en el catálogo):
 - "fecha" (y "fecha_fin"): el tiempo siempre está; el espacio no.
 - "espacio": lugar, red o sin_espacio (si falta, se deduce de la geometría, el municipio o la url).
-- "escala": local, zonal, regional, nacional, global o glocal.
+- "escala": una de datos/escalas.json (persona, familia, amistades, barrio, municipio, mancomunidad, isla,
+  provincia, Canarias, Macaronesia, estado, continente, global…). Las íntimas no se archivan sin consentimiento.
 - "autoria": ["Nombre", …] o [{"id", "nombre", "rol"}, …]: la trayectoria de cada artista o colectivo es otra
   línea temporal que vincula espacios (/agente/<id>/ y /datos/trayectorias.json).
 - "relaciones": [{"tipo", "a": <uuid>, "nota"}]. El tipo "muestra_de" (o el atajo "muestra_de": <uuid> o
@@ -135,8 +136,10 @@ def historial():
 
 # Escalas de las líneas temporales. Una expresión puede no tener espacio (en la red, o ninguno),
 # pero siempre tiene tiempo, y su línea temporal puede estar ligada a otras de cualquier escala.
-ESCALAS = {"local": "Local", "zonal": "Zonal", "regional": "Regional", "nacional": "Nacional",
-           "global": "Global", "glocal": "Glocal"}
+_ESC = json.loads(Path("datos/escalas.json").read_text(encoding="utf-8"))
+ESCALAS = {x["id"]: x["nombre"] for x in _ESC["escalas"]}
+ESCALA_DEF = _ESC["por_defecto"]
+INTIMAS = {x["id"] for x in _ESC["escalas"] if x.get("intima")}
 ESPACIOS = {"lugar": "En un lugar", "red": "En la red", "sin_espacio": "Sin espacio"}
 # Vínculos tipados y abiertos: estos tienen nombre en los dos sentidos; cualquier otro tipo se muestra tal cual,
 # así la comunidad puede proponer tipos nuevos sin tocar el código.
@@ -178,7 +181,7 @@ def genealogia(feats):
     """Escala, espacio, líneas temporales (arriba: a qué se liga; abajo: qué ha generado) y vínculos de cada obra."""
     props = {f["properties"]["id"].lower(): f["properties"] for f in feats if f.get("properties", {}).get("id")}
     esp = {f["properties"]["id"].lower(): espacio_de(f) for f in feats if f.get("properties", {}).get("id")}
-    gen = {u: {"nombre": p.get("name") or u, "escala": p.get("escala") or "local", "espacio": esp[u], "tiempo": {"inicio": p.get("fecha"), "fin": p.get("fecha_fin")},
+    gen = {u: {"nombre": p.get("name") or u, "escala": p.get("escala") or ESCALA_DEF, "espacio": esp[u], "tiempo": {"inicio": p.get("fecha"), "fin": p.get("fecha_fin")},
                "arriba": [], "abajo": [], "vinculos": []} for u, p in props.items()}
     for u, p in props.items():
         for r in relaciones(p):
@@ -286,7 +289,7 @@ def main():
 
     def nodo(u):
         q = props.get(u, {})
-        extra = " · ".join(x for x in (ESCALAS.get(q.get("escala") or "local", q.get("escala")), q.get("municipio") or ESPACIOS[gen[u]["espacio"]],
+        extra = " · ".join(x for x in (ESCALAS.get(q.get("escala") or ESCALA_DEF, q.get("escala")), q.get("municipio") or ESPACIOS[gen[u]["espacio"]],
                                        str(q.get("fecha") or "")[:10]) if x)
         return f'<a href="/obra/{e(u)}/">{e(q.get("name") or u)}</a> <span class="muted">({e(extra)})</span>'
 
@@ -339,6 +342,8 @@ def main():
             tray = f'<h2 id="trayectoria">Trayectorias</h2><p class="muted">La línea temporal de cada autoría une esta obra con otros lugares y tiempos.</p><ul>{tray}</ul>'
         if p.get("archivar") is False:
             rastro = '<p class="muted">Por decisión de su autoría, esta obra no se inscribe en archive.org.</p>'
+        elif p.get("escala") in INTIMAS and p.get("archivar") is not True:
+            rastro = '<p class="muted">Escala íntima: no se inscribe en archive.org sin el consentimiento expreso de quienes aparecen.</p>'
         elif p.get("ficticio"):
             rastro = '<p class="muted">Dato de ejemplo: no se inscribe en archive.org.</p>'
         else:

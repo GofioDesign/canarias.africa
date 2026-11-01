@@ -14,7 +14,8 @@ Qué se captura en cada pasada:
   4. Las observaciones aprobadas de cada obra (api.canarias.africa) cuando cambian.
   5. Un estrato semanal de la portada aunque no haya cambios.
 
-Nunca se archiva una obra con "ficticio": true (datos de ejemplo) ni con "archivar": false.
+Nunca se archiva una obra con "ficticio": true (datos de ejemplo) ni con "archivar": false, y las de escala
+íntima (persona, familia, amistades; ver datos/escalas.json) solo con "archivar": true expreso.
 El catálogo ya llega sin coordenadas sensibles (lo vigila scripts/comprobar-catalogo.py), y aquí
 no se lee nada que no sea público.
 
@@ -189,8 +190,16 @@ def obras_publicas():
     if not CATALOGO.exists():
         return []
     fs = json.loads(CATALOGO.read_text(encoding="utf-8")).get("features", [])
-    return [f for f in fs if f.get("properties", {}).get("id")
-            and not f["properties"].get("ficticio") and f["properties"].get("archivar", True) is not False]
+    esc = Path("datos/escalas.json")
+    intimas = {x["id"] for x in json.loads(esc.read_text(encoding="utf-8"))["escalas"] if x.get("intima")} if esc.exists() else set()
+
+    def archivable(p):
+        if p.get("ficticio") or p.get("archivar") is False:
+            return False
+        # Escalas íntimas (persona, familia, amistades): solo con consentimiento expreso.
+        return p.get("archivar") is True or p.get("escala") not in intimas
+
+    return [f for f in fs if f.get("properties", {}).get("id") and archivable(f["properties"])]
 
 
 def observaciones(uuid):

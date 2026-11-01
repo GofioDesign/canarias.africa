@@ -18,12 +18,13 @@ if not ruta.exists():
 errores = []
 features = json.loads(ruta.read_text(encoding="utf-8")).get("features", [])
 ids = {str(f.get("properties", {}).get("id", "")).lower() for f in features}
+ESCALAS = [x["id"] for x in json.loads(Path("datos/escalas.json").read_text(encoding="utf-8"))["escalas"]]
 TIPO = re.compile(r"^[a-z][a-z0-9_]{1,40}$")
 for f in features:
     p = f.get("properties", {})
     ident = p.get("id", "¿sin id?")
-    if p.get("escala") not in (None, "local", "zonal", "regional", "nacional", "global", "glocal"):
-        errores.append(f"{ident}: escala «{p['escala']}» no es local, zonal, regional, nacional, global ni glocal")
+    if p.get("escala") is not None and p["escala"] not in ESCALAS:
+        errores.append(f"{ident}: escala «{p['escala']}» no está en datos/escalas.json ({', '.join(ESCALAS)})")
     if p.get("espacio") not in (None, "lugar", "red", "sin_espacio"):
         errores.append(f"{ident}: espacio «{p['espacio']}» no es lugar, red ni sin_espacio")
     md = p.get("muestra_de")

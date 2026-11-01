@@ -1,0 +1,65 @@
+{
+  "_nota": "Escalas de las líneas temporales, de la más íntima a la más amplia (propuesta del 01-11-2026; ajustable). Añadir una es añadir una entrada. Las escalas con \"intima\": true no se inscriben en archive.org salvo \"archivar\": true expreso en la obra. «glocal» queda pendiente de decidir si es escala o relación entre escalas.",
+  "escalas": [
+    {
+      "id": "persona",
+      "nombre": "Persona",
+      "intima": true
+    },
+    {
+      "id": "familia",
+      "nombre": "Familia",
+      "intima": true
+    },
+    {
+      "id": "amistades",
+      "nombre": "Amistades",
+      "intima": true
+    },
+    {
+      "id": "barrio",
+      "nombre": "Barrio"
+    },
+    {
+      "id": "municipio",
+      "nombre": "Municipio"
+    },
+    {
+      "id": "mancomunidad",
+      "nombre": "Mancomunidad"
+    },
+    {
+      "id": "isla",
+      "nombre": "Isla"
+    },
+    {
+      "id": "provincia",
+      "nombre": "Provincia"
+    },
+    {
+      "id": "canarias",
+      "nombre": "Canarias"
+    },
+    {
+      "id": "macaronesia",
+      "nombre": "Macaronesia"
+    },
+    {
+      "id": "estado",
+      "nombre": "Estado"
+    },
+    {
+      "id": "continente",
+      "nombre": "Continente"
+    },
+    {
+      "id": "global",
+      "nombre": "Global"
+    },
+    {
+      "id": "glocal",
+      "nombre": "Glocal"
+    }
+  ],
+  "por_defecto": "municipio"
+}

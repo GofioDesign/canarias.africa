@@ -1533,7 +1533,7 @@ function genealogiaObra(o){
   /* Glifo del mundo de vínculos (lo genera scripts/generar-fichas.py): públicos en continuo; los de personas que no son
      públicos, en discontinuo y a poco contraste, anónimos. Solo los ven con nombre quienes forman parte de ellos. */
   const mundo=h.glifo?`<figure style="--fg:var(--ink);--verde:var(--n-obra);margin:6px 0 14px;max-width:240px">${h.glifo}
-    <figcaption class="muted" style="font-size:.85rem">Continuo: vínculos públicos. Discontinuo: ${h.vinculos_privados||0} vínculos entre personas que no son públicos.</figcaption></figure>`:"";
+    <figcaption class="muted" style="font-size:.85rem">Continuo: vínculos públicos. Discontinuo: ${h.vinculos_privados||0} vínculos entre personas que no son públicos.${Object.values(h.huellas||{}).reduce((a,b)=>a+b,0)?` Polvo: ${Object.values(h.huellas).reduce((a,b)=>a+b,0)} huellas anónimas de espectadores.`:""}</figcaption></figure>`:"";
   const nom=u=>{ const x=byId(u), y=HIST[u]||{}; return `<a href="/obra/${esc(u)}/">${esc(x?x.t:(y.nombre||corto(u)))}</a> <span class="muted">(${[ESCALA_N[y.escala]||y.escala,ESPACIO_N[y.espacio],String((y.tiempo||{}).inicio||"").slice(0,10)].filter(Boolean).map(esc).join(" · ")})</span>`; };
   const vn=v=>{ const n=VINC_N[v.tipo]; return n?n[v.sentido==="entra"?1:0]:v.tipo.replace(/_/g," "); };
   return `<section class="stack">
@@ -1557,6 +1557,14 @@ function estratosObra(o){
     ${caps.length?`<ul>${caps.map(c=>`<li><span class="mono">${esc(c.fecha.slice(0,10))}</span> · <a href="${esc(c.wayback)}" target="_blank" rel="noopener">${esc(c.motivo)}</a>${c.pantalla?` · <a href="${esc(c.pantalla)}" target="_blank" rel="noopener">captura de pantalla</a>`:""}</li>`).join("")}</ul>`
       :`<p class="muted">Aún sin estratos: se depositará el primero tras la próxima publicación.</p>`}
   </section>`;
+}
+/* Quien mira la obra también se convierte en su trazo: al abrir la ficha se suma una huella anónima (sin cookies ni IP;
+   una por día). No se envía si el navegador pide no ser rastreado. */
+const HUELLAS=new Set();
+function dejarHuella(o){
+  if(DEMO||!o||HUELLAS.has(o.id)) return; HUELLAS.add(o.id);
+  if(navigator.doNotTrack==="1"||navigator.globalPrivacyControl) return;
+  try{ fetch(API_BASE+"/api/publico/obras/"+encodeURIComponent(o.id.toLowerCase())+"/huella",{method:"POST",keepalive:true,mode:"cors"}).catch(()=>{}); }catch(e){}
 }
 /* Tus vínculos con esta obra (api.canarias.africa): solo los ves tú y las otras partes. Públicos solo si todas lo consienten. */
 const TIPOS_VINC_OBRA={colaboracion:"Colaboré en ella",participacion:"Participé en ella",recuerdo:"Forma parte de mi memoria"};
@@ -3020,7 +3028,7 @@ function route(){
   else if(h.startsWith("/entrar")){ sec="colabora"; html=`<p class="muted">Entrando…</p>`; entrarConToken(new URLSearchParams(h.split("?")[1]||"").get("t")||""); }
   else if(h.startsWith("/observar/")){ const [ruta,qs]=h.split("?"), o=byId(decodeURIComponent(ruta.slice(10))), cod=new URLSearchParams(qs||"").get("qr"); sec="archivo"; html=o&&qrValido(o,cod)?vQR(o,cod):`<h1>Este QR no es válido</h1><p class="muted">Puede que el código se haya sustituido o que la obra no tenga QR activo. <a href="#archivo">Volver al archivo</a></p>`; }
   else if(h.startsWith("contexto-")){ const o=OBRAS.find(x=>"contexto-"+x.id.toLowerCase()===h); sec="archivo"; html=o?vContexto(o):`<h1>Ficha no encontrada</h1>`; }
-  else if(h.startsWith("obra-")){ const o=OBRAS.find(x=>slug(x.id)===h); sec="archivo"; html=o?vObra(o):`<h1>Ficha no encontrada</h1><p><a href="#archivo">Volver al archivo</a></p>`; }
+  else if(h.startsWith("obra-")){ const o=OBRAS.find(x=>slug(x.id)===h); sec="archivo"; dejarHuella(o); html=o?vObra(o):`<h1>Ficha no encontrada</h1><p><a href="#archivo">Volver al archivo</a></p>`; }
   else if(h.startsWith("nodo-")){ const n=G.byId.get(h.slice(5).toUpperCase()); sec="red"; html=n?vNodo(n):`<h1>Nodo no encontrado</h1><p><a href="#red">Volver a la red</a></p>`; }
   else html=({inicio:vInicio,archivo:vArchivo,red:vRed,aportar:vAportar,inscripcion:vInscripcion,"proponer-ruta":vProponerRuta,apoya:vApoya,rutas:vRutas,ayudas:vAyudas,sistema:vSistema,colabora:vColabora,scan:vScan,comunidad:vComunidad,derechos:vDerechos,privacidad:vPrivacidad}[h]||vInicio)();
   app.innerHTML=`<div class="view">${html}</div>`;

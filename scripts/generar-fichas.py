@@ -218,14 +218,23 @@ def agente_publico(a, clase):
     return a.get("publica") is not False if clase == "autoria" else a.get("publica") is True
 
 
-def glifo(uuid, publicos, privados):
+def glifo(uuid, publicos, privados, espectadores=0):
     """Mundo de grafos de la ficha: la obra en el centro, sus vínculos públicos en trazo continuo y los privados
     (personas, familias, amistades, trayectorias no publicadas) en discontinuo y a poco contraste, anónimos:
-    se ve que existen, no quiénes son ni adónde llevan."""
+    se ve que existen, no quiénes son ni adónde llevan. Alrededor, un polvo de puntos: las huellas de quienes la
+    han mirado, escaneado, verificado u observado. Los espectadores también son trazo de la obra."""
     W, C = 240, 120
     semilla = int(hashlib.sha256(uuid.encode()).hexdigest(), 16)
     partes = [f'<svg class="glifo" viewBox="0 0 {W} {W}" width="{W}" height="{W}" role="img" '
-              f'aria-label="{len(publicos)} vínculos públicos y {privados} privados">']
+              f'aria-label="{len(publicos)} vínculos públicos, {privados} privados y {espectadores} huellas de espectadores">']
+    if espectadores:
+        puntos = min(120, round(7 * math.log2(1 + espectadores)))
+        for k in range(puntos):
+            hk = int(hashlib.sha256(f"{uuid}:{k}".encode()).hexdigest()[:12], 16)
+            ang = (hk % 6283) / 1000
+            r = 100 + (hk >> 13) % 18
+            partes.append(f'<circle cx="{C + r * math.cos(ang):.1f}" cy="{C + r * math.sin(ang):.1f}" r="1.3" '
+                          f'fill="currentColor" fill-opacity=".22"/>')
     privados = min(privados, 36)
     for k in range(privados):
         ang = 2 * math.pi * (k / max(privados, 1)) + (semilla % 628) / 100
@@ -255,6 +264,17 @@ def vinculos_api(uuid):
             return int(d.get("privados") or 0), [x for x in d.get("publicos") or [] if isinstance(x, dict)]
     except Exception:
         return 0, []  # sin servidor (pruebas, vista previa): solo cuenta lo del catálogo
+
+
+def huellas_api(uuid):
+    """Huellas anónimas de espectadores (visitas, escaneos, verificaciones, observaciones) en api.canarias.africa."""
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"{API}/api/publico/obras/{uuid}/huellas", timeout=10) as r:
+            d = json.loads(r.read())
+            return {k: int(d.get(k) or 0) for k in ("visitas", "escaneos", "verificaciones", "observaciones")}
+    except Exception:
+        return {}
 
 
 def trayectorias(props, extra=None):
@@ -354,6 +374,7 @@ def main():
     nombres = {}
     gen, props = genealogia(feats)
     api = {u: vinculos_api(u) for u in props if not props[u].get("ficticio")}
+    huellas = {u: huellas_api(u) for u in api}
     ags = trayectorias(props, {u: v[1] for u, v in api.items()})
     glifos = {}
 
@@ -421,10 +442,15 @@ def main():
                     vecinos.setdefault(x, "trayectoria")
         vecinos.pop(uuid, None)
         privados = int(p.get("vinculos_privados") or 0) + api.get(uuid, (0, []))[0]
-        glifos[uuid] = glifo(uuid, list(vecinos.items()), privados)
+        hu = huellas.get(uuid, {})
+        espectadores = sum(hu.values())
+        glifos[uuid] = glifo(uuid, list(vecinos.items()), privados, espectadores)
         mundo = (f'<figure class="mundo">{glifos[uuid]}<figcaption class="muted">Mundo de vínculos de esta obra. '
                  f'En trazo continuo, {len(vecinos)} vínculos públicos; en discontinuo, {privados} vínculos entre personas que no son públicos: '
-                 'solo los ven quienes forman parte de ellos.</figcaption></figure>') if vecinos or privados else ""
+                 'solo los ven quienes forman parte de ellos.'
+                 + (f' Alrededor, {espectadores} huellas anónimas de quienes la han mirado ({hu.get("visitas", 0)}), escaneado ({hu.get("escaneos", 0)}), '
+                    f'verificado ({hu.get("verificaciones", 0)}) u observado ({hu.get("observaciones", 0)}): también son trazo de la obra.' if espectadores else "")
+                 + '</figcaption></figure>') if vecinos or privados or espectadores else ""
         if tray:
             tray = f'<h2 id="trayectoria">Trayectorias</h2><p class="muted">Quienes la crearon y quienes colaboran en ella también forman parte de la obra: la línea temporal de cada una une esta obra con otros lugares y tiempos.</p><ul>{tray}</ul>'
         if p.get("archivar") is False:
@@ -484,7 +510,7 @@ def main():
     (WEB / "datos").mkdir(parents=True, exist_ok=True)
     (WEB / "datos" / "archivo.json").write_text(json.dumps(publico, ensure_ascii=False) + "\n", encoding="utf-8")
     resumen = {u: {**({"version": hist[u][-1]["version"], "fecha": hist[u][-1]["fecha"], "versiones": hist[u]} if u in hist else {}),
-                   **gen[u], "glifo": glifos.get(u), "vinculos_privados": int(props[u].get("vinculos_privados") or 0) + api.get(u, (0, []))[0]} for u in nombres}
+                   **gen[u], "glifo": glifos.get(u), "vinculos_privados": int(props[u].get("vinculos_privados") or 0) + api.get(u, (0, []))[0], "huellas": huellas.get(u) or {}} for u in nombres}
     (WEB / "datos" / "historial.json").write_text(json.dumps(resumen, ensure_ascii=False) + "\n", encoding="utf-8")
     (WEB / "datos" / "trayectorias.json").write_text(json.dumps(ags, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"{len(ags)} trayectorias.")

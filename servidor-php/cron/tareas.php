@@ -74,4 +74,5 @@ if ((int) date('G') === 4) {
   sort($copias);
   foreach (array_slice($copias, 0, -7) as $vieja) unlink($vieja);
   $db->exec("UPDATE envios SET ip_hash = NULL WHERE creado < datetime('now', '-30 days')");
+  $db->exec("DELETE FROM huellas_vistas WHERE dia < date('now')");  // los hashes de las huellas no pasan del día
 }

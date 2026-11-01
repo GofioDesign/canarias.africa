@@ -69,3 +69,11 @@ Tabla `vinculos` (`servidor-php/privado/esquema.sql`) y rutas en `servidor-php/p
 | `GET /api/publico/obras/<uuid>/vinculos` | Lo único que ve el público: `{privados: n, publicos: [...]}` |
 
 A quien no forma parte de un vínculo, el servidor le responde que no existe. Al publicar la web, `generar-fichas.py` pide esta ruta pública para cada obra: suma `privados` al glifo y añade a las trayectorias las colaboraciones publicadas.
+
+## Huellas de espectadores
+
+Quien mira, escanea, verifica u observa una obra también se convierte en trazo de ella. En el glifo aparecen como un polvo de puntos alrededor del mundo de vínculos (más puntos cuantas más huellas, en escala logarítmica).
+
+- `POST /api/publico/obras/<uuid>/huella`: la web la envía al abrir una ficha, salvo que el navegador pida no ser rastreado (Do Not Track o Global Privacy Control). El escaneo de una etiqueta colocada suma otra huella.
+- `GET /api/publico/obras/<uuid>/huellas`: `{visitas, escaneos, verificaciones, observaciones, meses}`.
+- Solo se guardan recuentos por obra, día y tipo. Para no contar dos veces la misma visita en el día se guarda un hash con una sal diaria que no se conserva, y el cron borra esos hashes cada día. Ni IP, ni cookies, ni cuenta.

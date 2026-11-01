@@ -6,7 +6,10 @@ require __DIR__ . '/cuentas.php';
 require __DIR__ . '/etiquetas.php';
 require __DIR__ . '/vinculos.php';
 require __DIR__ . '/huellas.php';
+require __DIR__ . '/versiones.php';
 require __DIR__ . '/participa.php';
+require __DIR__ . '/catalogo.php';
+require __DIR__ . '/soportes.php';
 
 function config(): array {
   static $c = null;
@@ -24,6 +27,8 @@ function db(): PDO {
   $db = new PDO('sqlite:' . PRIVADO . '/datos/canarias.sqlite', null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
   $db->exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   $db->exec(file_get_contents(PRIVADO . '/esquema.sql'));
+  migrar_catalogo($db);
+  migrar_soportes($db);
   return $db;
 }
 
@@ -72,6 +77,19 @@ function guardar_foto(string $tmp, string $tipo): string {
   $nombre = date('Y-m') . '/' . bin2hex(random_bytes(12)) . '.jpg';
   imagejpeg($img, PRIVADO . '/fotos/' . $nombre, 82);
   return $nombre;
+}
+
+// Cabeceras de remitente: «remitente» envía (su dominio tiene el SPF del servidor) y las respuestas van a «contacto».
+function cabeceras_remitente(string $nombre): string {
+  $c = config();
+  $de = $c['remitente'] ?? $c['contacto'];
+  return 'From: =?UTF-8?B?' . base64_encode($nombre) . "?= <$de>\r\nReply-To: {$c['contacto']}";
+}
+
+// mail() con el sobre (Return-Path) del remitente, para que el SPF se compruebe contra su dominio.
+function enviar_correo(string $para, string $asunto, string $texto, string $cabeceras): void {
+  $de = config()['remitente'] ?? config()['contacto'];
+  @mail($para, '=?UTF-8?B?' . base64_encode($asunto) . '?=', $texto, $cabeceras . "\r\nContent-Type: text/plain; charset=utf-8", '-f' . $de);
 }
 
 function avisar(string $asunto, string $texto): void {

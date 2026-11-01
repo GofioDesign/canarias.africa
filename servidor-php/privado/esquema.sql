@@ -22,11 +22,59 @@ CREATE TABLE IF NOT EXISTS tokens (
   usado        INTEGER NOT NULL DEFAULT 0
 );
 
--- Catálogo público copiado de GitHub por el cron: el servidor necesita saber qué obras existen y su sensibilidad.
+-- Catálogo de obras: la fuente es este servidor (se edita en /admin/obras) y se publica en /datos/obras.geojson.
+-- lat/lon son siempre exactos aquí; la publicación los oculta según la sensibilidad (difusa → celda de 2 km, reservada → nada).
+-- Las columnas que faltan en una base de datos antigua las añade migrar_catalogo().
 CREATE TABLE IF NOT EXISTS obras (
   uuid          TEXT PRIMARY KEY,
   titulo        TEXT,
   sensibilidad  TEXT NOT NULL DEFAULT 'reservada'
+);
+
+-- Cada vez que se edita una obra se guarda aquí cómo estaba: es su árbol de versiones.
+CREATE TABLE IF NOT EXISTS obras_versiones (
+  id       INTEGER PRIMARY KEY,
+  obra     TEXT NOT NULL,
+  version  INTEGER NOT NULL,
+  datos    TEXT NOT NULL,
+  autor    TEXT NOT NULL DEFAULT 'admin',
+  fecha    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS obras_versiones_obra ON obras_versiones(obra, version);
+
+-- Rutas curatoriales: paradas = UUID de obras en orden, separados por comas. trazado = LineString GeoJSON opcional.
+CREATE TABLE IF NOT EXISTS rutas (
+  id           TEXT PRIMARY KEY,
+  nombre       TEXT NOT NULL,
+  descripcion  TEXT NOT NULL DEFAULT '',
+  curaduria    TEXT NOT NULL DEFAULT '',
+  paradas      TEXT NOT NULL DEFAULT '',
+  trazado      TEXT NOT NULL DEFAULT '',
+  publicada    INTEGER NOT NULL DEFAULT 0,
+  actualizado  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Galería de artistas: solo con su consentimiento. El punto es opcional y solo para un espacio público suyo
+-- (taller abierto, galería, tienda); nunca su domicilio. Sin punto, se publica solo el municipio.
+CREATE TABLE IF NOT EXISTS artistas (
+  id              TEXT PRIMARY KEY,
+  nombre          TEXT NOT NULL,
+  disciplina      TEXT NOT NULL DEFAULT '',
+  municipio       TEXT NOT NULL DEFAULT '',
+  bio             TEXT NOT NULL DEFAULT '',
+  web             TEXT NOT NULL DEFAULT '',
+  tienda          TEXT NOT NULL DEFAULT '',
+  mecenazgo       TEXT NOT NULL DEFAULT '',
+  redes           TEXT NOT NULL DEFAULT '',
+  foto            TEXT NOT NULL DEFAULT '',
+  foto_credito    TEXT NOT NULL DEFAULT '',
+  espacio         TEXT NOT NULL DEFAULT '',
+  lat             REAL,
+  lon             REAL,
+  obras           TEXT NOT NULL DEFAULT '',
+  consentimiento  TEXT NOT NULL DEFAULT '',
+  publicada       INTEGER NOT NULL DEFAULT 0,
+  actualizado     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 -- Obras nuevas propuestas al colocar una etiqueta, a la espera de entrar en el catálogo de GitHub.
@@ -38,15 +86,44 @@ CREATE TABLE IF NOT EXISTS obras_propuestas (
   creado       TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Soportes: lo que identifica una etiqueta QR (una pared, una roca, un banco… o una web). Un soporte puede tener
+-- varias obras a la vez o unas encima de otras con el tiempo; obra_soporte guarda desde y hasta cuándo.
+CREATE TABLE IF NOT EXISTS soportes (
+  uuid         TEXT PRIMARY KEY,
+  nombre       TEXT NOT NULL DEFAULT '',
+  tipo         TEXT NOT NULL DEFAULT '',
+  sensibilidad TEXT NOT NULL DEFAULT 'abierta',
+  lat          REAL,                            -- opcional: una web no tiene punto
+  lon          REAL,
+  isla         TEXT NOT NULL DEFAULT '',
+  municipio    TEXT NOT NULL DEFAULT '',
+  lugar        TEXT NOT NULL DEFAULT '',
+  url          TEXT NOT NULL DEFAULT '',
+  descripcion  TEXT NOT NULL DEFAULT '',
+  creado       TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS obra_soporte (
+  id       INTEGER PRIMARY KEY,
+  obra     TEXT NOT NULL,
+  soporte  TEXT NOT NULL REFERENCES soportes(uuid),
+  desde    TEXT NOT NULL DEFAULT '',
+  hasta    TEXT NOT NULL DEFAULT '',                -- vacía: la obra sigue en ese soporte
+  nota     TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS obra_soporte_obra ON obra_soporte(obra);
+CREATE INDEX IF NOT EXISTS obra_soporte_soporte ON obra_soporte(soporte);
+
 CREATE TABLE IF NOT EXISTS qr_codigos (
   codigo      TEXT PRIMARY KEY,                -- base32 de Crockford, 8 caracteres al empezar (ampliable)
   lote        TEXT NOT NULL,
   estado      TEXT NOT NULL DEFAULT 'libre' CHECK (estado IN
                 ('libre','asignado','caducado','colocado','confirmado','sin_verificar','desaparecida','danado','retirado','sustituido')),
-  obra        TEXT,
+  obra        TEXT,                            -- obra que se eligió al colocarla (compatibilidad); lo que cuenta es el soporte
   lat         REAL,                            -- punto exacto de la etiqueta: nunca se publica para obras difusas
   lon         REAL,
   precision   REAL,
+  soporte     TEXT,                            -- soporte que identifica la etiqueta (ver soportes)
   sustituye   TEXT REFERENCES qr_codigos(codigo),
   ultima_verificacion TEXT,
   creado      TEXT NOT NULL DEFAULT (datetime('now'))
@@ -166,15 +243,6 @@ CREATE TABLE IF NOT EXISTS huellas (
 CREATE TABLE IF NOT EXISTS huellas_vistas (
   hash   TEXT PRIMARY KEY,
   dia    TEXT NOT NULL
-);
--- Dónde está cada obra física, copiado del catálogo por el cron, para confirmar con el GPS que la visita es en el sitio.
--- fisica = 1 si la obra tiene lugar; 0 si está en la red o no tiene espacio. lat/lon son las del catálogo público
--- (aproximadas en las difusas, ausentes en las reservadas: ahí solo valen las etiquetas colocadas).
-CREATE TABLE IF NOT EXISTS obras_sitio (
-  uuid    TEXT PRIMARY KEY,
-  fisica  INTEGER NOT NULL DEFAULT 1,
-  lat     REAL,
-  lon     REAL
 );
 
 -- Lista de correo de la página de lanzamiento («Quiero participar») y votos de las propuestas.

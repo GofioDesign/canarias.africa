@@ -34,8 +34,10 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Comprobar el catálogo antes de archivar nada
-        run: python3 scripts/comprobar-catalogo.py
+      - name: Copiar el catálogo del servidor y comprobarlo antes de archivar nada
+        run: |
+          python3 scripts/catalogo-servidor.py
+          python3 scripts/comprobar-catalogo.py
       - name: Capturas y capas
         env:
           IA_ACCESS_KEY: ${{ secrets.IA_ACCESS_KEY }}

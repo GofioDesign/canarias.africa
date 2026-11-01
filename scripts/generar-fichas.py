@@ -46,7 +46,10 @@ WEB = Path("web")
 REPO = os.environ.get("GITHUB_REPOSITORY", "GofioDesign/canarias.africa")
 NOMBRES_CAMPO = {"name": "título", "descripcion": "descripción", "description": "descripción", "fase": "fase",
                  "fase_nombre": "fase", "sensibilidad": "ubicación (sensibilidad)", "municipio": "municipio",
-                 "url": "obra web", "relaciones": "relaciones", "precision": "precisión"}
+                 "url": "obra web", "relaciones": "relaciones", "precision": "precisión",
+                 "titulo": "título", "tipo": "tipo", "fecha_obra": "fecha de la obra", "fecha_precision": "precisión de la fecha",
+                 "foto": "foto", "foto_credito": "crédito de la foto", "ficha": "ficha externa", "agentes": "personas y colectivos",
+                 "pagadores": "financiación", "fuentes": "fuentes", "autoria": "autoría", "publicada": "publicación"}
 
 ESTILO = """
 :root{--bg:#faf6ee;--fg:#16130f;--muted:#6b6358;--verde:#008000;--linea:#e2dacb}
@@ -161,7 +164,37 @@ VINCULOS = {
     "continua": ("continúa", "continuada por"),
     "se_superpone_a": ("se superpone a", "debajo"),
     "dialoga": ("dialoga con", "dialoga con"),
+    "serie": ("forma serie con", "forma serie con"),
 }
+# Modos de relación del catálogo del servidor (/admin) → tipos de vínculo de las fichas.
+MODOS = {"continua": "continua", "responde": "responde_a", "superpone": "se_superpone_a", "serie": "serie"}
+ROLES_AUTORIA = {"autoria", "coautoria"}
+
+
+def normalizar(f):
+    """El catálogo lo publica el servidor (/datos/obras.geojson): se traduce a los campos que usan las fichas.
+    fecha_obra → fecha; relaciones {obra, modo} → {tipo, a}; agentes (solo los que han aceptado figurar o son públicos)
+    → autoria y colaboraciones; una obra en una web sin punto está «en la red»."""
+    p = dict(f.get("properties") or {})
+    p.setdefault("fecha", p.get("fecha_obra"))
+    if p.get("soporte_url") and not p.get("url"):
+        p["url"] = p["soporte_url"]
+    rel = []
+    for r in p.get("relaciones") or []:
+        if isinstance(r, dict) and r.get("obra") and not r.get("a"):
+            rel.append({"tipo": MODOS.get(r.get("modo"), r.get("modo") or "relacion"), "a": r["obra"], **({"nota": r["nota"]} if r.get("nota") else {})})
+        else:
+            rel.append(r)
+    p["relaciones"] = rel
+    if isinstance(p.get("agentes"), list) and not isinstance(p.get("autoria"), list):
+        ags = [a for a in p["agentes"] if isinstance(a, dict) and a.get("nombre")]
+        p["autoria"] = [{"nombre": a["nombre"], "rol": a.get("rol")} for a in ags if a.get("rol") in ROLES_AUTORIA]
+        p["colaboraciones"] = [{"nombre": a["nombre"], "rol": a.get("rol"), "publica": True} for a in ags if a.get("rol") not in ROLES_AUTORIA]
+    elif not isinstance(p.get("autoria"), list):
+        p.pop("autoria", None)  # texto para uMap: sin lista no hay trayectoria
+    if not p.get("espacio") and not f.get("geometry") and p.get("url"):
+        p["espacio"] = "red"
+    return {**f, "properties": p}
 
 
 def nombre_vinculo(tipo, inverso=False):
@@ -265,6 +298,16 @@ def vinculos_api(uuid):
             return int(d.get("privados") or 0), [x for x in d.get("publicos") or [] if isinstance(x, dict)]
     except Exception:
         return 0, []  # sin servidor (pruebas, vista previa): solo cuenta lo del catálogo
+
+
+def versiones_api(uuid):
+    """Árbol de modificaciones que guarda el servidor (cada edición en /admin es una versión)."""
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"{API}/api/publico/obras/{uuid}/versiones", timeout=10) as r:
+            return [v for v in json.loads(r.read()).get("versiones") or [] if isinstance(v, dict) and v.get("version")]
+    except Exception:
+        return []
 
 
 def huellas_api(uuid):
@@ -432,14 +475,20 @@ def arbol(versiones, capturas, uuid):
                 cambios.append("<li>Alta de la obra en el catálogo</li>")
             elif c["campo"] == "geometry":
                 cambios.append("<li>Ubicación modificada</li>")
+            elif c["campo"] in ("lat", "lon", "lugar", "municipio", "isla"):
+                if "<li>Ubicación modificada</li>" not in cambios:
+                    cambios.append("<li>Ubicación modificada</li>")  # sin valores: la ubicación puede ser sensible
+            elif "antes" not in c and "ahora" not in c:
+                cambios.append(f'<li>{e(NOMBRES_CAMPO.get(c["campo"], c["campo"]))} modificado</li>')
             else:
                 n = NOMBRES_CAMPO.get(c["campo"], c["campo"])
                 cambios.append(f'<li>{e(n)}: <del>{e(valor(c.get("antes")))}</del> → <ins>{e(valor(c.get("ahora")))}</ins></li>')
+        # Versiones de cuando el catálogo estaba en git: enlazan al cambio; las del servidor, a su copia en archive.org.
         enlaces = [f'<a href="https://github.com/{REPO}/commit/{v["commit"]}">cambio {v["commit"][:7]}</a>',
-                   f'<a href="https://github.com/{REPO}/blob/{v["commit"]}/{CATALOGO.as_posix()}">datos de esta versión</a>']
+                   f'<a href="https://github.com/{REPO}/blob/{v["commit"]}/{CATALOGO.as_posix()}">datos de esta versión</a>'] if v.get("commit") else []
         if estrato:
             enlaces.append(f'<a href="{e(estrato["wayback"])}">ficha archivada</a>')
-        filas.append(f'<li id="v{v["version"]}"><b>v{v["version"]}</b> <span class="muted">· {e(v["fecha"][:10])}</span>'
+        filas.append(f'<li id="v{v["version"]}"><b>v{v["version"]}</b> <span class="muted">· {e((v.get("fecha") or "")[:10])}</span>'
                      f'<ul class="cambios">{"".join(cambios)}</ul><span class="enlaces">{" · ".join(enlaces)}</span></li>')
     return '<ol class="estratos arbol" reversed>' + "".join(reversed(filas)) + "</ol>"
 
@@ -468,12 +517,18 @@ def main():
     reg = json.loads(REGISTRO.read_text(encoding="utf-8")) if REGISTRO.exists() else {}
     capturas = [c for c in reg.get("capturas", []) if not c.get("error")]
     obras_reg = reg.get("obras", {})
-    hist = historial()
-    feats = json.loads(CATALOGO.read_text(encoding="utf-8")).get("features", []) if CATALOGO.exists() else []
+    hist = historial()  # versiones de cuando el catálogo estaba en git
+    feats = [normalizar(f) for f in (json.loads(CATALOGO.read_text(encoding="utf-8")).get("features", []) if CATALOGO.exists() else [])]
     nombres = {}
     gen, props = genealogia(feats)
     api = {u: vinculos_api(u) for u in props if not props[u].get("ficticio")}
     huellas = {u: huellas_api(u) for u in api}
+    for u in api:  # el servidor es ahora la fuente: sus versiones mandan; si no responde, al menos la versión actual
+        vs = versiones_api(u)
+        if vs:
+            hist[u] = vs
+        elif u not in hist and props[u].get("version"):
+            hist[u] = [{"version": int(props[u]["version"]), "fecha": props[u].get("actualizado") or "", "cambios": []}]
     ags = trayectorias(props, {u: v[1] for u, v in api.items()})
     glifos, lineas_svg = {}, {}
 

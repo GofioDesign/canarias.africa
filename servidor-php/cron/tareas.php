@@ -5,53 +5,15 @@ declare(strict_types=1);
 require __DIR__ . '/../privado/lib.php';
 $c = config();
 
-// 1. Copia de las capas públicas de uMap. Si una descarga falla, se conserva la anterior.
-if ($c['umap']['mapa']) {
-  @mkdir(PRIVADO . '/umap', 0700, true);
-  foreach ($c['umap']['capas'] as $nombre => $capa) {
-    if (!$capa) continue;
-    $ch = curl_init("{$c['umap']['servidor']}/datalayer/{$c['umap']['mapa']}/$capa/");
-    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30, CURLOPT_USERAGENT => 'canarias.africa umap sync']);
-    $gj = curl_exec($ch);
-    if (curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200 && (json_decode((string) $gj, true)['type'] ?? '') === 'FeatureCollection') {
-      file_put_contents(PRIVADO . "/umap/$nombre.geojson", $gj);
-    } else {
-      fwrite(STDERR, "uMap: no se pudo actualizar la capa $nombre\n");
-    }
-  }
-}
+// 0. Catálogo: se edita en /admin. Si lo publicado ha cambiado (por ejemplo, el estado de una etiqueta QR) y no se ha
+//    publicado aún, se pide a GitHub que vuelva a copiarlo a canarias.africa/datos/.
+publicar_web();
 
-// 2. Copia del catálogo público de GitHub: qué obras existen y con qué sensibilidad.
-$ch = curl_init($c['catalogo']);
-curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 30, CURLOPT_USERAGENT => 'canarias.africa catalogo']);
-$cat = json_decode((string) curl_exec($ch), true);
-if (curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200 && is_array($cat['features'] ?? null)) {
-  $db = db();
-  $db->beginTransaction();
-  $st = $db->prepare('INSERT INTO obras (uuid, titulo, sensibilidad) VALUES (?, ?, ?)
-                      ON CONFLICT(uuid) DO UPDATE SET titulo = excluded.titulo, sensibilidad = excluded.sensibilidad');
-  $sitio = $db->prepare('INSERT OR REPLACE INTO obras_sitio (uuid, fisica, lat, lon) VALUES (?, ?, ?, ?)');
-  foreach ($cat['features'] as $f) {
-    $p = $f['properties'] ?? [];
-    if (empty($p['id'])) continue;
-    $st->execute([strtolower($p['id']), $p['name'] ?? null, $p['sensibilidad'] ?? 'reservada']);
-    // Igual que scripts/generar-fichas.py (espacio_de): con lugar si lo dice «espacio» o si tiene geometría, municipio o sitio reservado.
-    $g = $f['geometry'] ?? null;
-    $espacio = in_array($p['espacio'] ?? '', ['lugar', 'red', 'sin_espacio'], true) ? $p['espacio']
-      : (($g || !empty($p['municipio']) || in_array($p['sensibilidad'] ?? '', ['difusa', 'reservada'], true)) ? 'lugar' : 'sin_espacio');
-    $punto = ($g['type'] ?? '') === 'Point' ? $g['coordinates'] : [null, null];
-    $sitio->execute([strtolower($p['id']), $espacio === 'lugar' ? 1 : 0, $punto[1] ?? null, $punto[0] ?? null]);
-  }
-  $db->commit();
-} else {
-  fwrite(STDERR, "Catálogo: no se pudo descargar {$c['catalogo']}\n");
-}
-
-// 3. Etiquetas: plazos de las asignaciones y continuidad de las verificaciones.
+// 1. Etiquetas: plazos de las asignaciones y continuidad de las verificaciones.
 caducar_asignaciones();
 envejecer_etiquetas();
 
-// 4. Recortar la caché de teselas: si pasa del límite, se borran primero las menos usadas recientemente.
+// 2. Recortar la caché de teselas: si pasa del límite, se borran primero las menos usadas recientemente.
 $dir = PRIVADO . '/cache/teselas';
 if (is_dir($dir)) {
   $ficheros = [];
@@ -71,7 +33,7 @@ if (is_dir($dir)) {
   }
 }
 
-// 5. Una vez al día: copia de la base de datos (se guardan 7) y borrado de las huellas de IP antiguas.
+// 3. Una vez al día: copia de la base de datos (se guardan 7) y borrado de las huellas de IP antiguas.
 if ((int) date('G') === 4) {
   $db = db();
   @mkdir(PRIVADO . '/copias', 0700, true);

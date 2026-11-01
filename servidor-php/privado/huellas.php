@@ -13,7 +13,6 @@
 const CALOR_MINIMO = 5;   // por debajo no se publica: con tan pocas visitas se podría adivinar quién fue
 const CALOR_DIAS = 90;
 const PRESENCIA_M = 150;        // a cuántos metros de la obra (o de su etiqueta) cuenta como «aquí»
-const PRESENCIA_DIFUSA_M = 2500; // las difusas solo tienen un punto aproximado (~2 km) en el catálogo
 const PRECISION_MAX_M = 250;     // un GPS menos preciso que esto no confirma nada
 
 function metros(float $lat1, float $lon1, float $lat2, float $lon2): float {
@@ -22,35 +21,33 @@ function metros(float $lat1, float $lon1, float $lat2, float $lon2): float {
   return 6371000 * 2 * asin(min(1, sqrt($a)));
 }
 
-// ¿Tiene la obra representación física? Si el cron aún no la ha visto, cuenta como física si tiene etiquetas colocadas.
+// ¿Tiene la obra representación física? No la tiene si su soporte actual es una web sin punto (una obra de internet).
+// Una realidad aumentada es digital pero está anclada a un lugar: tiene punto y cuenta como física.
 function obra_fisica(string $obra): bool {
-  $st = db()->prepare('SELECT fisica FROM obras_sitio WHERE uuid = ?');
-  $st->execute([$obra]);
-  $f = $st->fetchColumn();
-  if ($f !== false) return (bool) $f;
-  $st = db()->prepare('SELECT 1 FROM qr_codigos WHERE obra = ? AND lat IS NOT NULL');
-  $st->execute([$obra]);
-  return (bool) $st->fetchColumn();
+  $s = soporte_de_obra($obra);
+  return !($s && $s['lat'] === null && ($s['url'] ?? '') !== '');
 }
 
-// '' si el GPS confirma la presencia; si no, el motivo.
+// '' si el GPS confirma la presencia; si no, el motivo. Se compara con los puntos exactos que guarda el servidor (la obra,
+// su soporte actual y las etiquetas colocadas), nunca con los aproximados que se publican.
 function presencia(string $obra, array $d): string {
   if (!isset($d['lat'], $d['lon']) || !is_numeric($d['lat']) || !is_numeric($d['lon'])) return 'sin_gps';
   [$lat, $lon] = [(float) $d['lat'], (float) $d['lon']];
   if (abs($lat) > 90 || abs($lon) > 180) return 'sin_gps';
   $prec = is_numeric($d['precision'] ?? null) ? max(0, (float) $d['precision']) : PRECISION_MAX_M + 1;
   if ($prec > PRECISION_MAX_M) return 'gps_impreciso';
-  $margen = min($prec, 100);
   $db = db();
   $sitios = [];
-  $st = $db->prepare("SELECT lat, lon FROM qr_codigos WHERE obra = ? AND lat IS NOT NULL AND estado IN ('" . implode("','", ESTADOS_EN_SITIO) . "')");
+  $st = $db->prepare('SELECT lat, lon FROM obras WHERE uuid = ? AND lat IS NOT NULL');
   $st->execute([$obra]);
-  foreach ($st as $q) $sitios[] = [$q['lat'], $q['lon'], PRESENCIA_M];
-  $st = $db->prepare('SELECT s.lat, s.lon, o.sensibilidad FROM obras_sitio s JOIN obras o ON o.uuid = s.uuid WHERE s.uuid = ? AND s.lat IS NOT NULL');
-  $st->execute([$obra]);
-  if ($s = $st->fetch()) $sitios[] = [$s['lat'], $s['lon'], $s['sensibilidad'] === 'difusa' ? PRESENCIA_DIFUSA_M : PRESENCIA_M];
+  $sitios = array_merge($sitios, $st->fetchAll());
+  if (($s = soporte_de_obra($obra)) && $s['lat'] !== null) $sitios[] = ['lat' => $s['lat'], 'lon' => $s['lon']];
+  $st = $db->prepare("SELECT q.lat, q.lon FROM qr_codigos q LEFT JOIN obra_soporte os ON os.soporte = q.soporte AND os.hasta = ''
+                      WHERE (q.obra = ? OR os.obra = ?) AND q.lat IS NOT NULL AND q.estado IN ('" . implode("','", ESTADOS_EN_SITIO) . "')");
+  $st->execute([$obra, $obra]);
+  $sitios = array_merge($sitios, $st->fetchAll());
   if (!$sitios) return 'sin_sitio';
-  foreach ($sitios as [$la, $lo, $r]) if (metros($lat, $lon, (float) $la, (float) $lo) <= $r + $margen) return '';
+  foreach ($sitios as $x) if (metros($lat, $lon, (float) $x['lat'], (float) $x['lon']) <= PRESENCIA_M + min($prec, 100)) return '';
   return 'lejos';
 }
 

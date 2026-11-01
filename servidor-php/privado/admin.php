@@ -1,5 +1,5 @@
 <?php
-// Moderación de envíos, pool de etiquetas QR, personas colaboradoras y obras propuestas: https://api.canarias.africa/admin
+// Moderación de envíos, catálogo (obras, rutas, artistas), pool de etiquetas QR, personas colaboradoras y obras propuestas: https://api.canarias.africa/admin
 declare(strict_types=1);
 
 session_set_cookie_params(['httponly' => true, 'secure' => true, 'samesite' => 'Strict', 'path' => '/admin']);
@@ -108,15 +108,16 @@ if ($sub === '/copia') {
 
 $csrf = $_SESSION['csrf'];
 $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES);
+require PRIVADO . '/admin-catalogo.php';
 
 if ($sub === '/qr') {
   $cuentas = $db->query('SELECT estado, COUNT(*) n FROM qr_codigos GROUP BY estado ORDER BY estado')->fetchAll(PDO::FETCH_KEY_PAIR);
   $html = "<form method=post action=/admin/qr/lote><input type=hidden name=csrf value=$csrf>
     <label>Generar <input type=number name=cantidad value=50 min=1 max=500 style='width:6em'> códigos libres de <input type=number name=largo value=8 min=8 max=16 style='width:4em'> caracteres</label> <button>Añadir al pool</button></form>
     <p>" . ($cuentas ? implode(' · ', array_map(fn($e, $n) => "{$h($e)}: $n", array_keys($cuentas), $cuentas)) : 'El pool está vacío.') . "</p><table>
-    <tr><th>Etiqueta</th><th>Estado</th><th>Obra</th><th>Última verificación</th></tr>";
+    <tr><th>Etiqueta</th><th>Estado</th><th>Soporte</th><th>Última verificación</th></tr>";
   foreach ($db->query("SELECT * FROM qr_codigos WHERE estado != 'libre' ORDER BY creado DESC LIMIT 300") as $q) {
-    $html .= "<tr><td><code>{$h($q['codigo'])}</code></td><td>{$h($q['estado'])}</td><td><code>{$h($q['obra'])}</code></td><td>{$h($q['ultima_verificacion'])}</td></tr>";
+    $html .= "<tr><td><code>{$h($q['codigo'])}</code></td><td>{$h($q['estado'])}</td><td>" . ($q['soporte'] ? "<a href='/admin/soporte?id={$h($q['soporte'])}'>soporte</a>" : "<code>{$h($q['obra'])}</code>") . "</td><td>{$h($q['ultima_verificacion'])}</td></tr>";
   }
   pagina('Etiquetas QR', $html . '</table>');
 }
@@ -150,11 +151,12 @@ if ($sub === '/participa') {
 }
 
 if ($sub === '/obras') {
-  $html = '<p class=meta>Obras nuevas propuestas al colocar una etiqueta. Al aceptarlas hay que añadirlas al catálogo de GitHub con este mismo UUID.</p>';
+  $html = '<p class=meta>Obras nuevas propuestas al colocar una etiqueta. «Crear en el catálogo» abre la ficha rellena con sus datos y el punto de la etiqueta; al guardarla, la propuesta queda aceptada.</p>';
   foreach ($db->query("SELECT p.*, c.alias FROM obras_propuestas p JOIN colaboradores c ON c.id = p.colaborador ORDER BY p.estado = 'pendiente' DESC, p.creado DESC") as $p) {
     $html .= "<article><strong>{$h(json_decode($p['datos'], true)['titulo'] ?? 'Sin título')}</strong> <span class=meta>{$h($p['estado'])} · {$h($p['alias'])} · {$h($p['creado'])}</span><p><code>{$h($p['uuid'])}</code></p><dl>";
     foreach (json_decode($p['datos'], true) as $k => $v) $html .= "<dt>{$h($k)}</dt><dd>{$h($v)}</dd>";
     $html .= '</dl>';
+    if ($p['estado'] !== 'aceptada') $html .= "<a href='/admin/obra?desde_propuesta={$h($p['uuid'])}'>Crear en el catálogo</a> ";
     foreach (['aceptada' => 'Aceptar', 'rechazada' => 'Rechazar'] as $e => $t) {
       if ($e !== $p['estado']) $html .= "<form method=post action=/admin/propuesta class=inline><input type=hidden name=csrf value=$csrf><input type=hidden name=uuid value={$h($p['uuid'])}><input type=hidden name=estado value=$e><button class=" . ($e === 'aceptada' ? 'aprobada' : 'rechazada') . ">$t</button></form> ";
     }
@@ -175,6 +177,8 @@ foreach ($envios as $e) {
   foreach (json_decode($e['datos'], true) as $k => $v) $html .= "<dt>{$h($k)}</dt><dd>{$h($v)}</dd>";
   $html .= '</dl>';
   foreach (json_decode($e['fotos'], true) as $f) $html .= "<a href='/admin/foto/{$h($f)}'><img src='/admin/foto/{$h($f)}' alt='Foto enviada'></a>";
+  if ($e['formulario'] === 'obra_nueva' && $e['estado'] !== 'aprobada') $html .= "<p><a href='/admin/obra?desde_envio={$e['id']}'>Pasar al catálogo</a></p>";
+  if ($e['formulario'] === 'ruta' && $e['estado'] !== 'aprobada') $html .= "<p><a href='/admin/ruta?desde_envio={$e['id']}'>Pasar a rutas</a></p>";
   foreach (['aprobada' => 'Aprobar', 'rechazada' => 'Rechazar', 'pendiente' => 'Devolver a pendientes'] as $a => $t) {
     if ($a !== $e['estado']) $html .= "<form method=post action=/admin/estado class=inline><input type=hidden name=csrf value=$csrf><input type=hidden name=id value={$e['id']}><input type=hidden name=estado value=$a><input type=hidden name=volver value=$estado><button class=$a>$t</button></form> ";
   }
@@ -183,7 +187,7 @@ foreach ($envios as $e) {
 pagina('Moderación', $html);
 
 function pagina(string $titulo, string $cuerpo): never {
-  $menu = empty($_SESSION['admin']) ? '' : "<p class=meta><a href=/admin>Envíos</a> · <a href=/admin/qr>Etiquetas QR</a> · <a href=/admin/personas>Personas</a> · <a href=/admin/obras>Obras propuestas</a> · <a href=/admin/participa>Lista y votos</a> · <a href=/admin/copia>Descargar copia de la base de datos</a> · <a href=/admin/salir>Salir</a></p>";
+  $menu = empty($_SESSION['admin']) ? '' : "<p class=meta><a href=/admin>Envíos</a> · <a href=/admin/qr>Etiquetas QR</a> · <a href=/admin/personas>Personas</a> · <a href=/admin/catalogo>Catálogo</a> · <a href=/admin/soportes>Soportes</a> · <a href=/admin/rutas>Rutas</a> · <a href=/admin/artistas>Artistas</a> · <a href=/admin/obras>Obras propuestas</a> · <a href=/admin/participa>Lista y votos</a> · <a href=/admin/copia>Descargar copia de la base de datos</a> · <a href=/admin/salir>Salir</a></p>";
   header('Content-Type: text/html; charset=utf-8');
   echo <<<HTML
 <!doctype html><html lang=es><head><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1"><meta name=robots content=noindex>
@@ -194,7 +198,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-
 a{color:inherit}.meta{color:var(--muted);font-size:14px}article{border-top:1px solid var(--rule);padding:16px 0}
 dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px}dt{color:var(--muted)}dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
 img{max-width:220px;border-radius:4px;margin:4px 8px 0 0}.inline{display:inline}table{border-collapse:collapse;width:100%}td,th{border-top:1px solid var(--rule);padding:6px;text-align:left;font-size:14px}
-button,input{font:inherit;padding:6px 10px;border:1px solid var(--rule);background:transparent;color:inherit;border-radius:4px}button{cursor:pointer}
+button,input,select,textarea{font:inherit;padding:6px 10px;border:1px solid var(--rule);background:transparent;color:inherit;border-radius:4px}button{cursor:pointer}
 .aprobada{border-color:var(--ok);color:var(--ok)}.rechazada{border-color:var(--no);color:var(--no)}
 </style></head><body><main><h1>$titulo</h1>$menu$cuerpo</main></body></html>
 HTML;

@@ -1,15 +1,19 @@
 """Comprueba que el catálogo público no publica coordenadas que deberían estar ocultas.
 
 El repositorio es público: las obras «difusa» solo pueden llevar el centro de su celda de 0,02°
-y las «reservada» no pueden llevar coordenadas. Las coordenadas exactas de esas obras no se suben nunca.
+y las «reservada» solo un punto ficticio alrededor del centro de su isla o del archipiélago. Las coordenadas exactas de esas obras no se suben nunca.
 Uso: python3 scripts/comprobar-catalogo.py [web/datos/obras.geojson]
 """
 import json
+import math
 import re
 import sys
 from pathlib import Path
 
 PASO = 0.02
+# Centros de las obras con ubicación protegida: [lat, lon, radio en km]. Iguales que CENTRO_PROTEGIDO en servidor-php/privado/catalogo.php.
+CENTROS = {"CAN": (28.30, -15.80, 50), "TF": (28.27, -16.56, 5), "GC": (27.96, -15.59, 5), "LZ": (29.03, -13.65, 5),
+           "FV": (28.40, -14.03, 5), "LP": (28.68, -17.86, 5), "GO": (28.11, -17.22, 5), "EH": (27.75, -18.00, 5), "LG": (29.245, -13.505, 1.5)}
 ruta = Path(sys.argv[1] if len(sys.argv) > 1 else "web/datos/obras.geojson")
 if not ruta.exists():
     print(f"{ruta} no existe todavía: nada que comprobar.")
@@ -30,7 +34,9 @@ for f in features:
     md = p.get("muestra_de")
     destinos = [("muestra_de", a) for a in (md if isinstance(md, list) else [md] if md else [])]
     for r in p.get("relaciones") or []:
-        if not isinstance(r, dict) or not TIPO.match(str(r.get("tipo", ""))):
+        if isinstance(r, dict) and r.get("obra"):  # formato del servidor: {obra, modo}
+            destinos.append((r.get("modo") or "relacion", r["obra"]))
+        elif not isinstance(r, dict) or not TIPO.match(str(r.get("tipo", ""))):
             errores.append(f"{ident}: relación sin tipo válido (minúsculas y guiones bajos): {r}")
         elif r.get("a"):
             destinos.append((r["tipo"], r["a"]))
@@ -53,7 +59,12 @@ for f in features:
     if sens not in ("abierta", "difusa", "reservada"):
         errores.append(f"{ident}: falta la sensibilidad (abierta, difusa o reservada)")
     elif sens == "reservada" and g:
-        errores.append(f"{ident}: es reservada y no puede llevar coordenadas")
+        # Solo vale el punto ficticio alrededor del centro de su isla o del archipiélago (lo calcula el servidor).
+        centro = CENTROS.get(p.get("isla") or "CAN")
+        lon, lat = (g.get("coordinates") or [None, None])[:2]
+        if not centro or lat is None or p.get("precision") not in ("isla", "canarias") or \
+                math.hypot((lat - centro[0]) * 111.32, (lon - centro[1]) * 111.32 * math.cos(math.radians(centro[0]))) > centro[2] + 0.05:
+            errores.append(f"{ident}: es reservada y solo puede llevar el punto ficticio de su isla o del archipiélago")
     elif sens == "difusa" and g:
         for v in g.get("coordinates", []):
             celda = (v - PASO / 2) / PASO

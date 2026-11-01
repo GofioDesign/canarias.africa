@@ -1,13 +1,14 @@
 <?php
 // Servidor de canarias.africa en un hosting compartido con PHP (api.canarias.africa).
 // La web y las fichas viven en GitHub Pages; aquí solo está lo que necesita servidor: cuentas de colaboradores,
-// etiquetas QR (pool, cupos, colocación, verificaciones), lista de correo y votos del lanzamiento, formularios, caché de teselas OSM, copia de uMap y moderación.
+// etiquetas QR (pool, cupos, colocación, verificaciones), lista de correo y votos del lanzamiento, formularios, caché de teselas OSM, catálogo de obras, rutas y artistas (fuente de los datos que muestran la web y uMap) y moderación.
 declare(strict_types=1);
 require __DIR__ . '/../privado/lib.php';
 
 $ruta = '/' . trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
 $metodo = $_SERVER['REQUEST_METHOD'];
-cors();
+// /datos/ es público y manda su propio Access-Control-Allow-Origin: *; el resto de la API solo acepta la web oficial.
+if (!str_starts_with($ruta, '/datos/')) cors();
 if ($metodo === 'OPTIONS') { http_response_code(204); exit; }
 // Los envíos solo se aceptan desde la web oficial (o sin cabecera Origin, como en las pruebas con curl).
 // La baja se hace desde una página de este servidor o desde el cliente de correo, y la autoriza su token.
@@ -17,13 +18,19 @@ if ($metodo === 'POST' && !str_starts_with($ruta, '/admin') && $ruta !== '/api/p
 
 try {
   if ($metodo === 'GET' && preg_match('#^/teselas/osm/(\d{1,2})/(\d+)/(\d+)\.png$#', $ruta, $m)) teselas((int) $m[1], (int) $m[2], (int) $m[3]);
-  if ($metodo === 'GET' && preg_match('#^/datos/umap/(qr|rutas)\.geojson$#', $ruta, $m)) capa_umap($m[1]);
+  // Datos públicos en GeoJSON: los leen la web y las capas de uMap («datos remotos»). /datos/umap/ es el nombre antiguo.
+  // qr.geojson es el nombre anterior de soportes.geojson: la etiqueta identifica un soporte, no una obra.
+  if ($metodo === 'GET' && preg_match('#^/datos/(?:umap/)?(obras|soportes|qr|rutas|artistas)\.geojson$#', $ruta, $m)) {
+    match ($m[1]) { 'obras' => catalogo_geojson(), 'soportes', 'qr' => qr_mapa(), 'rutas' => rutas_geojson(), 'artistas' => artistas_geojson() };
+  }
+  if ($metodo === 'GET' && preg_match('#^/datos/fotos/(\d{4}-\d{2}/[0-9a-f]{24}\.jpg)$#', $ruta, $m)) foto_publica($m[1]);
   if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)$#', $ruta, $m)) observaciones_publicas($m[1]);
   if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)/vinculos$#', $ruta, $m)) vinculos_obra_publicos($m[1]);
   if ($metodo === 'POST' && preg_match('#^/api/obras/([\w-]+)/huella$#', $ruta, $m)) huella_visita($m[1]);
   if ($metodo === 'POST' && preg_match('#^/api/publico/obras/([\w-]+)/visita$#', $ruta, $m)) visita_anonima($m[1]);
   if ($metodo === 'GET' && $ruta === '/api/publico/calor') calor();
   if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)/huellas$#', $ruta, $m)) huellas_publicas($m[1]);
+  if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)/versiones$#', $ruta, $m)) versiones_publicas($m[1]);
   if ($metodo === 'POST' && $ruta === '/api/vinculos') vinculo_crear();
   if ($metodo === 'GET' && $ruta === '/api/vinculos/mios') vinculos_mios();
   if ($metodo === 'GET' && preg_match('#^/api/vinculos/obra/([\w-]+)$#', $ruta, $m)) vinculos_obra_mios($m[1]);
@@ -80,15 +87,7 @@ function teselas(int $z, int $x, int $y): never {
   exit;
 }
 
-function capa_umap(string $nombre): never {
-  $f = PRIVADO . "/umap/$nombre.geojson";
-  header('Content-Type: application/geo+json');
-  header('Cache-Control: no-cache');
-  is_file($f) ? readfile($f) : print('{"type":"FeatureCollection","features":[]}');
-  exit;
-}
-
-// Observaciones aprobadas de una obra. El resto de la ficha (descripción, relaciones…) está en GitHub.
+// Observaciones aprobadas de una obra. El resto de la ficha está en /datos/obras.geojson.
 function observaciones_publicas(string $obra): never {
   $st = db()->prepare("SELECT creado, datos FROM envios WHERE formulario = 'observacion' AND obra = ? AND estado = 'aprobada' ORDER BY creado DESC");
   $st->execute([$obra]);
@@ -119,7 +118,9 @@ function recibir_envio(string $coleccion): never {
     // El estado de una obra solo se observa con su etiqueta delante: el UUID de la etiqueta no se publica.
     $qr = etiqueta((string) ($_POST['qr_codigo'] ?? ''));
     if (!$qr || !in_array($qr['estado'], ESTADOS_EN_SITIO, true)) error_publico('La etiqueta QR no es válida o no está colocada.');
-    if ($qr['obra'] !== strtolower((string) $obra)) error_publico('La etiqueta QR no corresponde a esta obra.');
+    // Vale cualquier obra que esté o haya estado en el soporte de la etiqueta.
+    $en_soporte = $qr['soporte'] && in_array(strtolower((string) $obra), array_column(obras_de_soporte($qr['soporte']), 'obra'), true);
+    if (!$en_soporte && $qr['obra'] !== strtolower((string) $obra)) error_publico('La etiqueta QR no corresponde a esta obra.');
   }
   $datos = [];
   foreach ($_POST as $k => $v) if (is_string($v)) $datos[substr((string) $k, 0, 60)] = mb_substr($v, 0, 5000);

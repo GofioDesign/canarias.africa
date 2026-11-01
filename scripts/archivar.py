@@ -241,8 +241,9 @@ def main():
         h = huella(o)
         if estado.get("huella") != h:
             nuevas.append({"url": f"{WEB}/obra/{uuid}/", "motivo": "obra nueva" if not estado else "obra cambiada", "obra": uuid})
-            if p.get("url", "").startswith(("http://", "https://")):
-                nuevas.append({"url": p["url"], "motivo": "obra web", "obra": uuid, "pantalla": True})
+            web = p.get("url") or p.get("soporte_url") or ""  # el servidor la publica como soporte_url
+            if web.startswith(("http://", "https://")):
+                nuevas.append({"url": web, "motivo": "obra web", "obra": uuid, "pantalla": True})
             capas.append(o)
             estado["huella"] = h
         hobs = observaciones(uuid)

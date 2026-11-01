@@ -1,5 +1,5 @@
-# Publica web/ en GitHub Pages cada vez que cambia main, y cada 6 horas para refrescar los votos
-# de GitHub (las reacciones en los issues no disparan acciones).
+# Publica web/ en GitHub Pages cada vez que cambia main, cada 6 horas (votos de GitHub y catálogo) y cuando
+# /admin pide publicar (workflow_dispatch). Copia el catálogo del servidor a /datos/: la web y uMap leen esa copia.
 # Requisitos (una vez): Settings → Pages → Source: «GitHub Actions», y crear la etiqueta «propuesta».
 name: Publicar la web
 
@@ -48,6 +48,10 @@ jobs:
         with:
           fetch-depth: 0  # el árbol de modificaciones de cada ficha sale del historial de git
       - uses: actions/configure-pages@v5
+      - name: Copiar el catálogo del servidor (obras, QR, rutas, artistas) a canarias.africa/datos/
+        run: |
+          python3 scripts/catalogo-servidor.py
+          python3 scripts/comprobar-catalogo.py
       - name: Fichas estáticas y estratos de archive.org
         run: python3 scripts/generar-fichas.py
       - name: Generar propuestas.json y abrir el debate de las propuestas nuevas

@@ -6,6 +6,7 @@ require __DIR__ . '/cuentas.php';
 require __DIR__ . '/etiquetas.php';
 require __DIR__ . '/participa.php';
 require __DIR__ . '/catalogo.php';
+require __DIR__ . '/soportes.php';
 
 function config(): array {
   static $c = null;
@@ -24,6 +25,7 @@ function db(): PDO {
   $db->exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   $db->exec(file_get_contents(PRIVADO . '/esquema.sql'));
   migrar_catalogo($db);
+  migrar_soportes($db);
   return $db;
 }
 

@@ -115,9 +115,9 @@ if ($sub === '/qr') {
   $html = "<form method=post action=/admin/qr/lote><input type=hidden name=csrf value=$csrf>
     <label>Generar <input type=number name=cantidad value=50 min=1 max=500 style='width:6em'> códigos libres de <input type=number name=largo value=8 min=8 max=16 style='width:4em'> caracteres</label> <button>Añadir al pool</button></form>
     <p>" . ($cuentas ? implode(' · ', array_map(fn($e, $n) => "{$h($e)}: $n", array_keys($cuentas), $cuentas)) : 'El pool está vacío.') . "</p><table>
-    <tr><th>Etiqueta</th><th>Estado</th><th>Obra</th><th>Última verificación</th></tr>";
+    <tr><th>Etiqueta</th><th>Estado</th><th>Soporte</th><th>Última verificación</th></tr>";
   foreach ($db->query("SELECT * FROM qr_codigos WHERE estado != 'libre' ORDER BY creado DESC LIMIT 300") as $q) {
-    $html .= "<tr><td><code>{$h($q['codigo'])}</code></td><td>{$h($q['estado'])}</td><td><code>{$h($q['obra'])}</code></td><td>{$h($q['ultima_verificacion'])}</td></tr>";
+    $html .= "<tr><td><code>{$h($q['codigo'])}</code></td><td>{$h($q['estado'])}</td><td>" . ($q['soporte'] ? "<a href='/admin/soporte?id={$h($q['soporte'])}'>soporte</a>" : "<code>{$h($q['obra'])}</code>") . "</td><td>{$h($q['ultima_verificacion'])}</td></tr>";
   }
   pagina('Etiquetas QR', $html . '</table>');
 }
@@ -187,7 +187,7 @@ foreach ($envios as $e) {
 pagina('Moderación', $html);
 
 function pagina(string $titulo, string $cuerpo): never {
-  $menu = empty($_SESSION['admin']) ? '' : "<p class=meta><a href=/admin>Envíos</a> · <a href=/admin/qr>Etiquetas QR</a> · <a href=/admin/personas>Personas</a> · <a href=/admin/catalogo>Catálogo</a> · <a href=/admin/rutas>Rutas</a> · <a href=/admin/artistas>Artistas</a> · <a href=/admin/obras>Obras propuestas</a> · <a href=/admin/participa>Lista y votos</a> · <a href=/admin/copia>Descargar copia de la base de datos</a> · <a href=/admin/salir>Salir</a></p>";
+  $menu = empty($_SESSION['admin']) ? '' : "<p class=meta><a href=/admin>Envíos</a> · <a href=/admin/qr>Etiquetas QR</a> · <a href=/admin/personas>Personas</a> · <a href=/admin/catalogo>Catálogo</a> · <a href=/admin/soportes>Soportes</a> · <a href=/admin/rutas>Rutas</a> · <a href=/admin/artistas>Artistas</a> · <a href=/admin/obras>Obras propuestas</a> · <a href=/admin/participa>Lista y votos</a> · <a href=/admin/copia>Descargar copia de la base de datos</a> · <a href=/admin/salir>Salir</a></p>";
   header('Content-Type: text/html; charset=utf-8');
   echo <<<HTML
 <!doctype html><html lang=es><head><meta charset=utf-8><meta name=viewport content="width=device-width, initial-scale=1"><meta name=robots content=noindex>

@@ -7,11 +7,15 @@ Uso: python3 scripts/catalogo-servidor.py [URL-BASE]   (por defecto https://api.
 """
 import json
 import sys
+import urllib.error
 import urllib.request
 from pathlib import Path
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "https://api.canarias.africa").rstrip("/")
-CAPAS = ["obras", "qr", "rutas", "artistas"]
+CAPAS = ["obras", "soportes", "rutas", "artistas"]
+# Los soportes (lo que identifica cada etiqueta QR) se llamaban «qr»: se copia también con ese nombre para las capas
+# de uMap que aún lo usen, y se pide con el nombre antiguo si el servidor no se ha actualizado.
+ALIAS = {"soportes": "qr"}
 destino = Path("web/datos")
 destino.mkdir(parents=True, exist_ok=True)
 
@@ -19,9 +23,17 @@ fallos = 0
 for capa in CAPAS:
     url = f"{BASE}/datos/{capa}.geojson"
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "canarias.africa publicar-web (GitHub Actions)"})
-        with urllib.request.urlopen(req, timeout=60) as r:
-            datos = json.load(r)
+        datos = None
+        for nombre in [capa] + ([ALIAS[capa]] if capa in ALIAS else []):
+            url = f"{BASE}/datos/{nombre}.geojson"
+            req = urllib.request.Request(url, headers={"User-Agent": "canarias.africa publicar-web (GitHub Actions)"})
+            try:
+                with urllib.request.urlopen(req, timeout=60) as r:
+                    datos = json.load(r)
+                break
+            except urllib.error.HTTPError as e:
+                if e.code != 404 or nombre == ALIAS.get(capa, capa):
+                    raise
         if datos.get("type") != "FeatureCollection" or not isinstance(datos.get("features"), list):
             raise ValueError("no es un FeatureCollection")
     except Exception as e:  # noqa: BLE001
@@ -29,7 +41,10 @@ for capa in CAPAS:
         print(f"::warning::{capa}: no se pudo copiar {url} ({e})")
         fallos += 1
         continue
-    (destino / f"{capa}.geojson").write_text(json.dumps(datos, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    texto = json.dumps(datos, ensure_ascii=False, separators=(",", ":"))
+    (destino / f"{capa}.geojson").write_text(texto, encoding="utf-8")
+    if capa in ALIAS:
+        (destino / f"{ALIAS[capa]}.geojson").write_text(texto, encoding="utf-8")
     print(f"{capa}: {len(datos['features'])} elementos")
 
 if fallos == len(CAPAS):

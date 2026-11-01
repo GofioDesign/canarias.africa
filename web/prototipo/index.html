@@ -1520,7 +1520,7 @@ const API = {
   obras: ["/datos/obras.geojson",API_BASE+"/datos/obras.geojson"], // copia en GitHub Pages del catálogo del servidor (se refresca al guardar en /admin); respaldo: el servidor. Difusas ya en el centro de su celda, reservadas sin geometry
   ficha: API_BASE+"/api/publico/obras/", // + <código>: solo las observaciones aprobadas
   qr: "https://canarias.africa/", // cada QR impreso apunta a canarias.africa/<uuid-del-QR>; la página 404 de GitHub Pages lo pasa a #/q/<uuid>
-  qrResolver: API_BASE+"/api/qr/", // + <uuid-del-QR> → {obra, estado}
+  qrResolver: API_BASE+"/api/qr/", // + <código> → {soporte, obras, obra, estado}: la etiqueta identifica un soporte (un muro, una roca… o una web)
   envios: Object.fromEntries(Object.entries({ qr: "observaciones", contexto: "contexto", nueva: "propuestas_obra", ruta: "propuestas_ruta", inscripcion: "inscripciones" })
     .map(([k,c])=>[k,`${API_BASE}/api/collections/${c}/records`])) // PocketBase, multipart
 };
@@ -1603,7 +1603,10 @@ const kmRuta=ids=>{ let d=0; for(let i=1;i<ids.length;i++){ const a=byId(ids[i-1
 async function cargarCapas(){
   const capa=async c=>{ const gj=await geojson(MAPA.capas.map(b=>b+c+".geojson")); if(!gj) throw new Error(c); return gj.features; };
   let cambio=false, red=false;
-  try{ (await capa("qr")).forEach(f=>{ const p=f.properties||{}, o=byId(p.obra), st=QR_ESTADO[p.estado]; if(o&&st){ o.qr.st=st; cambio=true; } }); }catch(e){}
+  /* Soportes (antes «qr»): cada uno con su etiqueta y las obras que tiene ahora */
+  const sop=await capa("soportes").catch(()=>capa("qr")).catch(()=>[]);
+  sop.forEach(f=>{ const p=f.properties||{}, st=QR_ESTADO[p.estado];
+    if(st) [...new Set([p.obra,...String(p.obras||"").split(",")])].map(x=>byId((x||"").trim())).filter(Boolean).forEach(o=>{ o.qr.st=st; cambio=true; }); });
   try{ (await capa("rutas")).forEach(f=>{ const p=f.properties||{}, r=RUTAS.find(x=>x.id===p.id||("RU-"+x.id).toUpperCase()===p.id);
     const ids=String(p.paradas||"").split(",").map(x=>x.trim()).filter(x=>byId(x)&&enMapa(byId(x)));
     if(ids.length<2) return;
@@ -2028,7 +2031,7 @@ function cabObra(o,eyebrow){ return `<p class="eyebrow"><a href="#${slug(o.id)}"
   <p class="eyebrow">${eyebrow}</p><h1>${esc(o.t)}</h1><p class="lede muted">${esc(o.lugar)} · ${MUNIS[o.m].n}</p></section>`; }
 
 /* Observación del estado: solo al escanear el QR junto a la obra */
-function vQR(o,cod,estado){
+function vQR(o,cod,estado,web){
   return cabObra(o,"Has escaneado el QR de esta obra")+`
   <div id="okbox" style="margin-top:20px"></div>
   <form class="obsf" id="obsf" data-modo="qr" data-obra="${o.id}" novalidate style="margin-top:20px">
@@ -2041,7 +2044,7 @@ function vQR(o,cod,estado){
     ${ALIAS}${LIC}${PRIV}
     <p class="full muted" id="o-err" style="font-size:.9rem"></p>
     <div class="full btns"><button class="btn" type="submit">Enviar observación</button></div>
-  </form>${bloqueVerificar(cod,estado,o)}`;
+  </form>${web?"":bloqueVerificar(cod,estado,o)}`;
 }
 /* Contexto: desde la ficha, sin estar junto a la obra */
 const TCTX=["Historia o testimonio","Dato de autoría","Fuente o documento","Corrección de la ficha"];
@@ -2849,7 +2852,7 @@ function qrDemo(cod){
 const QRRES=new Map();
 async function resolverQR(cod){
   const r=await api("/api/qr/"+encodeURIComponent(cod));
-  QRRES.set(cod,r.status===0?{estado:"sin_conexion"}:{obra:r.j.obra||null,estado:r.j.estado||"desconocido"});
+  QRRES.set(cod,r.status===0?{estado:"sin_conexion"}:{obra:r.j.obra||null,estado:r.j.estado||"desconocido",soporte:r.j.soporte||null,obras:Array.isArray(r.j.obras)?r.j.obras:[]});
   route();
 }
 const MSGQR={libre:["Etiqueta sin asignar","Este código todavía está en el pool y no corresponde a ninguna obra."],
@@ -2859,6 +2862,20 @@ const MSGQR={libre:["Etiqueta sin asignar","Este código todavía está en el po
   sustituido:["Etiqueta sustituida","Esta etiqueta se cambió por otra nueva. Busca la etiqueta nueva junto a la obra."],
   desconocido:["Este QR no es válido","El código no existe en canarias.africa. Puede que la etiqueta sea una copia o que esté mal impresa."],
   sin_conexion:["No hay conexión","No se ha podido comprobar el código. Vuelve a escanearlo cuando tengas cobertura."]};
+/* La etiqueta identifica un soporte: un muro, una roca… o una web. En él puede haber varias obras, unas encima de
+   otras con el tiempo. Si hay más de una, se elige cuál se observa; las anteriores quedan como memoria del soporte. */
+const QRSEL=new Map();
+function bloqueSoporte(cod,r,sel){
+  const s=r.soporte, ob=(r.obras||[]).filter(x=>x&&x.uuid);
+  if(!s||(ob.length<2&&!s.url)) return "";
+  const fila=x=>{ const o=byId(x.uuid), t=esc(x.titulo||(o&&o.t)||"Obra"), cuando=x.actual?(x.desde?`desde ${esc(x.desde)}`:"ahora"):`${x.desde?esc(x.desde)+"–":"hasta "}${esc(x.hasta||"")}`;
+    return `<li>${x.uuid===sel?`<strong>${t}</strong> <span class="cinta mini">observando</span>`:o?`<button type="button" class="enlace" data-qrsel="${esc(cod)}|${esc(x.uuid)}">${t}</button>`:t} <span class="muted">· ${cuando}</span></li>`; };
+  const ahora=ob.filter(x=>x.actual), antes=ob.filter(x=>!x.actual);
+  return `<section class="stack" style="margin-bottom:22px"><p class="eyebrow">Soporte${s.tipo==="web"?" web":""}</p><h2 style="margin:0">${esc(s.nombre||"Soporte")}</h2>
+    ${s.url?`<p><a href="${esc(s.url)}" rel="noopener" target="_blank">${esc(s.url)}</a></p>`:""}
+    ${ahora.length?`<p class="muted" style="margin:0">Obras aquí ahora${ahora.length>1?" (elige cuál observas)":""}:</p><ul>${ahora.map(fila).join("")}</ul>`:""}
+    ${antes.length?`<p class="muted" style="margin:0">Antes estuvieron aquí:</p><ul>${antes.map(fila).join("")}</ul>`:""}</section>`;
+}
 function vEtiqueta(cod,r){
   if(r.estado==="asignado"){
     if(SES&&(SES.etiquetas||[]).some(e=>e.qr===cod)) return vColocar(cod);
@@ -2867,7 +2884,7 @@ function vEtiqueta(cod,r){
       <p class="lede muted">Esta etiqueta ya tiene dueño, pero todavía no está unida a ninguna obra.</p>
       <p>¿Es tuya? <a href="#colabora">Entra en tu cuenta</a> y volverás aquí para colocarla.</p></section>`;
   }
-  if(OBSERVABLE.includes(r.estado)){ const o=r.obra&&byId(r.obra); if(o) return vQR(o,cod,r.estado);
+  if(OBSERVABLE.includes(r.estado)){ const sel=QRSEL.get(cod)||r.obra, o=sel&&byId(sel); if(o) return bloqueSoporte(cod,r,o.id)+vQR(o,cod,r.estado,r.soporte&&r.soporte.tipo==="web");
     return `<section class="stack"><p class="eyebrow">Etiqueta <span class="cinta id">${ESTQ[r.estado]}</span></p><h1>Obra recién incorporada</h1>
       <p class="lede muted">Esta etiqueta ya está colocada, pero la ficha de la obra se publicará en la próxima actualización del archivo.</p></section>${bloqueVerificar(cod,r.estado,null)}`; }
   const [t,d]=MSGQR[r.estado]||MSGQR.desconocido;
@@ -3147,6 +3164,7 @@ function route(){
   if(h==="colabora") refrescarPerfil();
 }
 document.addEventListener("click",e=>{
+  const q=e.target.closest("[data-qrsel]"); if(q){ const [c,u]=q.dataset.qrsel.split("|"); QRSEL.set(c,u); route(); return; }
   const a=e.target.closest("[data-obra]"); if(a) PRESEL=a.dataset.obra;
   const m=e.target.closest("[data-muni]"); if(m){ FILT={m:m.dataset.muni,f:"",c:"",q:""}; }
 });

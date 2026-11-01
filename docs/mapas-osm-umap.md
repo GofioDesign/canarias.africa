@@ -62,7 +62,7 @@ En uMap, cada capa usa **«Datos remotos»** con formato `geojson`, **sin** actu
 | Capa | Geometría | URL de «Datos remotos» |
 |---|---|---|
 | Obras | Punto (las reservadas no salen en el mapa) | `https://canarias.africa/datos/obras.geojson` |
-| QR | Punto | `https://canarias.africa/datos/qr.geojson` |
+| Soportes (antes «QR») | Punto: el muro, la roca o el objeto que lleva la etiqueta, con sus obras de ahora y de antes. Las webs no salen | `https://canarias.africa/datos/soportes.geojson` (`qr.geojson` sigue como copia) |
 | Rutas | Línea | `https://canarias.africa/datos/rutas.geojson` |
 | Artistas | Punto (solo si muestran un espacio público suyo) | `https://canarias.africa/datos/artistas.geojson` |
 

@@ -177,6 +177,12 @@ function catalogo_geojson_features(): array {
   $obras = db()->query('SELECT * FROM obras WHERE publicada = 1 ORDER BY titulo')->fetchAll();
   $publicadas = array_flip(array_column($obras, 'uuid'));
   foreach ($obras as $o) {
+    // Sin punto propio, la obra toma el de su soporte actual (y su municipio e isla), con la protección de la obra.
+    $sop = soporte_de_obra($o['uuid']);
+    if ($sop && $o['lat'] === null && $sop['lat'] !== null) {
+      $o['lat'] = $sop['lat']; $o['lon'] = $sop['lon'];
+      foreach (['municipio', 'isla', 'lugar'] as $k) if ($o[$k] === '') $o[$k] = $sop[$k];
+    }
     $p = punto_publico($o);
     $props = ['id' => $o['uuid'], 'name' => $o['titulo'], 'sensibilidad' => $o['sensibilidad'],
       'precision' => $o['sensibilidad'] === 'reservada' ? (($o['isla'] ?: 'CAN') === 'CAN' ? 'canarias' : 'isla') : ($p === null ? 'municipio' : ($o['sensibilidad'] === 'abierta' ? 'exacta' : 'zona')),
@@ -199,6 +205,10 @@ function catalogo_geojson_features(): array {
       . (!empty($p['entidad']) ? ': ' . $p['entidad'] : '') . (!empty($p['modalidad']) ? ' (' . mb_strtolower(MODALIDADES[$p['modalidad']]) . ')' : ''), $pg));
     if ($rl) $props['relaciones'] = $rl;
     if ($o['isla'] !== '') $props['isla'] = $o['isla'];
+    if ($sop && sensibilidad_soporte($sop) !== 'reservada') {
+      $props['soporte'] = $sop['uuid'];
+      if ($sop['url'] !== '') $props['soporte_url'] = $sop['url'];  // obra en una web: su dirección
+    }
     // Obra delicada (reservada): ni municipio ni punto, solo la isla.
     if ($o['sensibilidad'] === 'reservada') unset($props['municipio']);
     // El lugar concreto de una obra sensible no se publica.
@@ -312,7 +322,7 @@ function artistas_geojson_features(): array {
 // (al guardar en /admin, o por el cron si cambian las etiquetas QR), se pide a GitHub que vuelva a publicar la web,
 // que copia los datos nuevos. Hace falta 'github_token' en config.php; sin él, la copia se refresca cada 6 horas.
 function huella_catalogo(): string {
-  return hash('sha256', json_encode([catalogo_geojson_features(), qr_mapa_features(), rutas_geojson_features(), artistas_geojson_features()]));
+  return hash('sha256', json_encode([catalogo_geojson_features(), soportes_features(), rutas_geojson_features(), artistas_geojson_features()]));
 }
 
 // Devuelve un texto para mostrar en /admin. $forzar: botón «Publicar ahora» (publica aunque no haya cambios).

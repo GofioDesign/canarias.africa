@@ -111,7 +111,7 @@ if ($sub === '/publicar' && $metodo === 'POST') {
 
 // ---------------- Obras ----------------
 if ($sub === '/catalogo') {
-  $html = $aviso_pub() . '<p><a href=/admin/obra>+ Nueva obra</a> · <a href=/admin/rutas>Rutas</a> · <a href=/admin/artistas>Artistas</a></p>
+  $html = $aviso_pub() . '<p><a href=/admin/obra>+ Nueva obra</a> · <a href=/admin/soportes>Soportes</a> · <a href=/admin/rutas>Rutas</a> · <a href=/admin/artistas>Artistas</a></p>
     <form method=post action=/admin/publicar><input type=hidden name=csrf value=' . $csrf . '><button>Publicar ahora en canarias.africa</button>
     <span class=meta>Al guardar se publica solo; este botón fuerza una copia nueva.</span></form>
     <p class=meta>La fuente es este servidor (<a href=/datos/obras.geojson>/datos/obras.geojson</a>); canarias.africa sirve una copia en /datos/, que leen la web y uMap.</p>
@@ -210,6 +210,9 @@ if ($sub === '/obra') {
         [['naturaleza', 'select', 'Naturaleza', NATURALEZAS], ['entidad', 'text', 'Entidad', 'ent-publica'], ['modalidad', 'select', 'Modalidad', MODALIDADES]], (string) $v('pagadores'), '+ Añadir pagador')
     . $nodos('relaciones', 'Relación con otras obras', 'Solo se publican las relaciones con obras publicadas.',
         [['modo', 'select', 'Relación', MODOS_RELACION], ['obra', 'select', 'Obra', $obras_ops], ['nota', 'text', 'Nota (opcional)', '']], (string) $v('relaciones'), '+ Añadir relación')
+    . ($id ? '<h2>Soportes</h2>' . (implode('', array_map(fn($x) => "<p><a href='/admin/soporte?id={$h($x['soporte'])}'>{$h($x['nombre'] ?: 'Soporte')}</a> <span class=meta>" . ($x['tipo'] ? '· ' . $h(TIPOS_SOPORTE[$x['tipo']] ?? '') : '') . "" . ($x['desde'] ? " · desde {$h($x['desde'])}" : '') . ($x['hasta'] ? " · hasta {$h($x['hasta'])}" : ' · ahora') . '</span></p>',
+        (function () use ($db, $id) { $st = $db->prepare('SELECT os.*, s.nombre, s.tipo FROM obra_soporte os JOIN soportes s ON s.uuid = os.soporte WHERE os.obra = ? ORDER BY os.hasta != \'\', os.id DESC'); $st->execute([$id]); return $st->fetchAll(); })()))
+        ?: '<p class=meta>Sin soporte. Sin punto propio, la obra toma el de su soporte actual.</p>') . "<p><a href='/admin/soporte?obra={$h($id)}'>+ Nuevo soporte para esta obra</a> <span class=meta>(o añádela a uno que ya existe desde <a href=/admin/soportes>Soportes</a>)</span></p>" : '')
     . $campo('fuentes', 'Fuentes', $v('fuentes'), 'textarea', 'Cómo se sabe: testimonios, documentos, placas, prensa. Uno por línea. No se publica.')
     . $datalists
     . ($v('foto') ? "<img class=foto-actual src=\"{$h($v('foto'))}\" alt='Foto actual'>" : '')
@@ -373,4 +376,73 @@ if ($sub === '/artista') {
     . $campo('publicada', 'Publicado', $v('publicada'), 'checkbox')
     . '<p><button class=aprobada>Guardar</button> <a href=/admin/artistas>Volver</a></p></form>';
   pagina($id ? 'Editar artista' : 'Nuevo perfil de artista', $html);
+}
+
+// ---------------- Soportes ----------------
+// Lo que identifica cada etiqueta QR: una pared, una roca, un banco… o una web. Lleva sus obras con «desde» y «hasta».
+if ($sub === '/soportes') {
+  $html = $aviso_pub() . '<p><a href=/admin/soporte>+ Nuevo soporte</a> · <a href=/admin/catalogo>Obras</a></p>
+    <p class=meta>La etiqueta QR identifica el soporte, no una obra: en un mismo muro puede haber varias obras, o unas encima de otras con el tiempo. Se publica en <a href=/datos/soportes.geojson>/datos/soportes.geojson</a> (los soportes con punto y alguna obra publicada).</p>
+    <table><tr><th>Soporte</th><th>Tipo</th><th>Municipio</th><th>Obras ahora</th><th>Etiquetas</th></tr>';
+  foreach ($db->query('SELECT * FROM soportes ORDER BY actualizado DESC') as $s) {
+    $ob = obras_de_soporte($s['uuid']);
+    $ahora = count(array_filter($ob, fn($o) => $o['hasta'] === ''));
+    $st = $db->prepare('SELECT COUNT(*) FROM qr_codigos WHERE soporte = ?');
+    $st->execute([$s['uuid']]);
+    $html .= "<tr><td><a href='/admin/soporte?id={$h($s['uuid'])}'>{$h($s['nombre'] ?: 'Sin nombre')}</a></td><td>{$h($s['tipo'] ? TIPOS_SOPORTE[$s['tipo']] ?? '' : '')}</td><td>{$h($s['municipio'])}</td><td>$ahora de " . count($ob) . "</td><td>{$st->fetchColumn()}</td></tr>";
+  }
+  pagina('Soportes', $html . '</table>');
+}
+
+if ($sub === '/soporte') {
+  $error = '';
+  $id = (string) ($_REQUEST['id'] ?? '');
+  if ($metodo === 'POST') {
+    $d = $_POST;
+    try {
+      $id = soporte_guardar($d, $id ?: null);
+      if ($codigo = trim((string) ($d['etiqueta_nueva'] ?? ''))) qr_vincular_soporte($codigo, soporte($id));
+      $_SESSION['publicacion'] = publicar_web();
+      header('Location: /admin/soporte?ok=1&id=' . urlencode($id), true, 303);
+      exit;
+    } catch (InvalidArgumentException $e) { $error = $e->getMessage(); $s = $d; }
+  }
+  if (!isset($s) && $id) $s = soporte($id);
+  // Desde una obra: «+ Nuevo soporte para esta obra» ya la trae en la lista.
+  if (!isset($s) && !$id && !empty($_GET['obra']) && ($ob = obra((string) $_GET['obra']))) {
+    $s = ['tipo' => '', 'obras' => json_encode([['obra' => $ob['uuid'], 'desde' => $ob['fecha_obra'], 'hasta' => '', 'nota' => '']], JSON_UNESCAPED_UNICODE),
+      'lat' => $ob['lat'], 'lon' => $ob['lon'], 'municipio' => $ob['municipio'], 'lugar' => $ob['lugar'], 'nombre' => 'Soporte de «' . $ob['titulo'] . '»', 'sensibilidad' => $ob['sensibilidad']];
+  }
+  $s ??= ['nombre' => '', 'tipo' => '', 'sensibilidad' => 'abierta'];
+  if (!isset($s['obras'])) {
+    $s['obras'] = json_encode(array_map(fn($o) => ['obra' => $o['obra'], 'desde' => $o['desde'], 'hasta' => $o['hasta'], 'nota' => $o['nota']],
+      $id ? array_reverse(obras_de_soporte($id)) : []), JSON_UNESCAPED_UNICODE);
+  }
+  $v = fn($k) => $s[$k] ?? '';
+  $obras_ops = ['' => 'Elige la obra…'];
+  foreach ($db->query('SELECT uuid, titulo, municipio FROM obras ORDER BY titulo') as $x) $obras_ops[$x['uuid']] = $x['titulo'] . ' · ' . $x['municipio'];
+  $etiquetas = '';
+  if ($id) {
+    $st = $db->prepare('SELECT codigo, estado, ultima_verificacion FROM qr_codigos WHERE soporte = ? ORDER BY creado');
+    $st->execute([$id]);
+    foreach ($st->fetchAll() as $q) $etiquetas .= "<li><code>{$h($q['codigo'])}</code> · {$h($q['estado'])}" . ($q['ultima_verificacion'] ? " · verificada {$h($q['ultima_verificacion'])}" : '') . '</li>';
+  }
+  $html = $estilo_form . ($error ? "<p class=error>{$h($error)}</p>" : '') . (!empty($_GET['ok']) ? '<p class=hecho>Guardado.</p>' . $aviso_pub() : '')
+    . "<form method=post action=/admin/soporte><input type=hidden name=csrf value=$csrf><input type=hidden name=id value=\"{$h($id)}\">"
+    . ($id ? "<p class=meta>Id: <code>{$h($id)}</code></p>" : '')
+    . $campo('nombre', 'Nombre', $v('nombre'), 'text', 'Por ejemplo: «Muro norte del lavadero», «Web del colectivo».', ['required' => 'required'])
+    . '<div class=par>' . $lista('tipo', 'Tipo', TIPOS_SOPORTE, (string) $v('tipo')) . $lista('sensibilidad', 'Sensibilidad', $ETIQUETAS_SENS, (string) $v('sensibilidad')) . '</div>'
+    . '<p class=meta>La protección que cuenta es la mayor entre la del soporte y la de sus obras: si una obra es delicada, el soporte tampoco se publica con detalle.</p>'
+    . $campo('url', 'URL (si es una web o tiene página propia)', $v('url'), 'url', 'Obligatoria para el tipo «Web o soporte digital». Una web no necesita punto en el mapa.')
+    . $lista('isla', 'Isla', ['' => 'La del punto'] + ISLAS_CODIGO, (string) $v('isla'))
+    . '<div class=par>' . $campo('municipio', 'Municipio', $v('municipio')) . $campo('lugar', 'Lugar', $v('lugar'), 'text', 'Solo se publica si es abierto.') . '</div>'
+    . '<div class=par>' . $campo('lat', 'Latitud', $v('lat'), 'text', '', ['inputmode' => 'decimal']) . $campo('lon', 'Longitud', $v('lon'), 'text', '', ['inputmode' => 'decimal']) . '</div>'
+    . $mapa()
+    . $campo('descripcion', 'Descripción', $v('descripcion'), 'textarea', 'Material, estado, quién lo cuida… No se publica.')
+    . $nodos('obras', 'Obras en este soporte', 'Las de ahora sin «hasta». Si una se pintó encima de otra, la de debajo lleva «hasta» con la fecha (estratigrafía). Si una obra se trasladó, se cierra aquí con «hasta» y se añade en su soporte nuevo.',
+        [['obra', 'select', 'Obra', $obras_ops], ['desde', 'text', 'Desde (año o fecha)', ''], ['hasta', 'text', 'Hasta (vacío: sigue)', ''], ['nota', 'text', 'Nota (opcional)', '']], (string) $v('obras'), '+ Añadir obra')
+    . '<h2>Etiquetas QR</h2>' . ($etiquetas ? "<ul>$etiquetas</ul>" : '<p class=meta>Sin etiquetas todavía.</p>')
+    . $campo('etiqueta_nueva', 'Dar de alta una etiqueta libre en este soporte', '', 'text', 'Código del pool (/admin/qr). En una web queda confirmada (se imprime en un cartel o se muestra en pantalla); en un sitio físico queda «colocada» y se verifica con el GPS. Las etiquetas que se colocan con la app se enlazan solas.')
+    . '<p><button class=aprobada>Guardar</button> <a href=/admin/soportes>Volver</a></p></form>' . $js_nodos;
+  pagina($id ? 'Editar soporte' : 'Nuevo soporte', $html);
 }

@@ -19,8 +19,9 @@ if ($metodo === 'POST' && !str_starts_with($ruta, '/admin') && $ruta !== '/api/p
 try {
   if ($metodo === 'GET' && preg_match('#^/teselas/osm/(\d{1,2})/(\d+)/(\d+)\.png$#', $ruta, $m)) teselas((int) $m[1], (int) $m[2], (int) $m[3]);
   // Datos públicos en GeoJSON: los leen la web y las capas de uMap («datos remotos»). /datos/umap/ es el nombre antiguo.
-  if ($metodo === 'GET' && preg_match('#^/datos/(?:umap/)?(obras|qr|rutas|artistas)\.geojson$#', $ruta, $m)) {
-    match ($m[1]) { 'obras' => catalogo_geojson(), 'qr' => qr_mapa(), 'rutas' => rutas_geojson(), 'artistas' => artistas_geojson() };
+  // qr.geojson es el nombre anterior de soportes.geojson: la etiqueta identifica un soporte, no una obra.
+  if ($metodo === 'GET' && preg_match('#^/datos/(?:umap/)?(obras|soportes|qr|rutas|artistas)\.geojson$#', $ruta, $m)) {
+    match ($m[1]) { 'obras' => catalogo_geojson(), 'soportes', 'qr' => qr_mapa(), 'rutas' => rutas_geojson(), 'artistas' => artistas_geojson() };
   }
   if ($metodo === 'GET' && preg_match('#^/datos/fotos/(\d{4}-\d{2}/[0-9a-f]{24}\.jpg)$#', $ruta, $m)) foto_publica($m[1]);
   if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)$#', $ruta, $m)) observaciones_publicas($m[1]);
@@ -107,7 +108,9 @@ function recibir_envio(string $coleccion): never {
     // El estado de una obra solo se observa con su etiqueta delante: el UUID de la etiqueta no se publica.
     $qr = etiqueta((string) ($_POST['qr_codigo'] ?? ''));
     if (!$qr || !in_array($qr['estado'], ESTADOS_EN_SITIO, true)) error_publico('La etiqueta QR no es válida o no está colocada.');
-    if ($qr['obra'] !== strtolower((string) $obra)) error_publico('La etiqueta QR no corresponde a esta obra.');
+    // Vale cualquier obra que esté o haya estado en el soporte de la etiqueta.
+    $en_soporte = $qr['soporte'] && in_array(strtolower((string) $obra), array_column(obras_de_soporte($qr['soporte']), 'obra'), true);
+    if (!$en_soporte && $qr['obra'] !== strtolower((string) $obra)) error_publico('La etiqueta QR no corresponde a esta obra.');
   }
   $datos = [];
   foreach ($_POST as $k => $v) if (is_string($v)) $datos[substr((string) $k, 0, 60)] = mb_substr($v, 0, 5000);

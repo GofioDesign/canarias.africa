@@ -37,10 +37,10 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 | `POST /api/cuenta/alta`, `/api/cuenta/entrar` | Alta con alias y correo, o entrada: envía un enlace por correo (sin contraseñas) |
 | `POST /api/cuenta/sesion` | Canjea el enlace del correo (`#/entrar?t=…`) por un token de sesión de 90 días (`Authorization: Bearer`) |
 | `GET /api/cuenta/yo` | Alias, nivel, méritos, cupo y etiquetas asignadas |
-| `GET /api/qr/<código>` | Al leer la etiqueta: `{obra, estado}` |
+| `GET /api/qr/<código>` | Al leer la etiqueta: `{soporte, obras, obra, estado}` (la etiqueta identifica un soporte, que puede ser una web) |
 | `POST /api/qr/asignar`, `GET /api/qr/mis-etiquetas` | Pedir etiquetas del pool hasta el cupo y descargarlas para imprimir |
 | `POST /api/qr/<código>/ampliar`, `POST /api/qr/<código>/aviso` | Ampliar el plazo una vez; avisar de etiqueta dañada, desaparecida o retirada |
-| `POST /api/collections/colocaciones/records` | Colocar: etiqueta, obra (o obra nueva), GPS con 25 m o mejor y foto |
+| `POST /api/collections/colocaciones/records` | Colocar: etiqueta, soporte (existente o nuevo), obra (o obra nueva), GPS con 25 m o mejor y foto |
 | `POST /api/collections/verificaciones/records` | Verificar: GPS a 50 m o menos del punto; solo se guarda la distancia |
 | `POST /api/collections/<colección>/records` | Formularios: `observaciones` (exige el código de la etiqueta), `contexto`, `propuestas_obra`, `propuestas_ruta`, `inscripciones` |
 | `GET /api/publico/obras/<uuid>` | Observaciones aprobadas de esa obra |

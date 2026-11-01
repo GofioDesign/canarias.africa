@@ -114,7 +114,7 @@ Todas las colecciones son de solo añadir: los cambios de estado son eventos nue
 | `eventos_merito` | colaborador, tipo, puntos, referencia, fecha |
 
 Endpoints que usa la web:
-- `GET /api/qr/<uuid>` devuelve `{obra, estado}`.
+- `GET /api/qr/<código>` devuelve `{soporte, obras, obra, estado}`: la etiqueta identifica un soporte (muro, roca, objeto o web) con sus obras de ahora y de antes.
 - `POST /api/collections/colocaciones/records`
 - `POST /api/collections/verificaciones/records`
 - `GET /api/publico/qr/<uuid-obra>/historial` devuelve el historial público de la etiqueta de una obra, sin coordenadas de personas.

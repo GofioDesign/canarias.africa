@@ -86,15 +86,44 @@ CREATE TABLE IF NOT EXISTS obras_propuestas (
   creado       TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Soportes: lo que identifica una etiqueta QR (una pared, una roca, un banco… o una web). Un soporte puede tener
+-- varias obras a la vez o unas encima de otras con el tiempo; obra_soporte guarda desde y hasta cuándo.
+CREATE TABLE IF NOT EXISTS soportes (
+  uuid         TEXT PRIMARY KEY,
+  nombre       TEXT NOT NULL DEFAULT '',
+  tipo         TEXT NOT NULL DEFAULT '',
+  sensibilidad TEXT NOT NULL DEFAULT 'abierta',
+  lat          REAL,                            -- opcional: una web no tiene punto
+  lon          REAL,
+  isla         TEXT NOT NULL DEFAULT '',
+  municipio    TEXT NOT NULL DEFAULT '',
+  lugar        TEXT NOT NULL DEFAULT '',
+  url          TEXT NOT NULL DEFAULT '',
+  descripcion  TEXT NOT NULL DEFAULT '',
+  creado       TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS obra_soporte (
+  id       INTEGER PRIMARY KEY,
+  obra     TEXT NOT NULL,
+  soporte  TEXT NOT NULL REFERENCES soportes(uuid),
+  desde    TEXT NOT NULL DEFAULT '',
+  hasta    TEXT NOT NULL DEFAULT '',                -- vacía: la obra sigue en ese soporte
+  nota     TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS obra_soporte_obra ON obra_soporte(obra);
+CREATE INDEX IF NOT EXISTS obra_soporte_soporte ON obra_soporte(soporte);
+
 CREATE TABLE IF NOT EXISTS qr_codigos (
   codigo      TEXT PRIMARY KEY,                -- base32 de Crockford, 8 caracteres al empezar (ampliable)
   lote        TEXT NOT NULL,
   estado      TEXT NOT NULL DEFAULT 'libre' CHECK (estado IN
                 ('libre','asignado','caducado','colocado','confirmado','sin_verificar','desaparecida','danado','retirado','sustituido')),
-  obra        TEXT,
+  obra        TEXT,                            -- obra que se eligió al colocarla (compatibilidad); lo que cuenta es el soporte
   lat         REAL,                            -- punto exacto de la etiqueta: nunca se publica para obras difusas
   lon         REAL,
   precision   REAL,
+  soporte     TEXT,                            -- soporte que identifica la etiqueta (ver soportes)
   sustituye   TEXT REFERENCES qr_codigos(codigo),
   ultima_verificacion TEXT,
   creado      TEXT NOT NULL DEFAULT (datetime('now'))

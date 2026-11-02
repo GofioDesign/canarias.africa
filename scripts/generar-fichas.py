@@ -4,6 +4,12 @@
   estratos en archive.org y su item de Internet Archive. Es HTML sin JavaScript, para que la captura
   se lea igual dentro de veinte años; enlaza a la ficha completa de la web (/prototipo/#obra-<uuid>).
 - web/estratos/index.html: todas las capturas, de la más reciente a la más antigua.
+- web/<UUID>/index.html (en mayúsculas y en minúsculas): página de cada soporte publicado, la dirección que lleva el QR
+  del azulejo. Da la vista previa al compartirla por WhatsApp o redes y pasa al prototipo (/prototipo/#/s/<uuid>);
+  los soportes que aún no están en la copia siguen entrando por 404.html.
+- Cada ficha (obra, soporte, trayectoria) lleva etiquetas Open Graph y Twitter y su propia imagen para compartir
+  (compartir.png, o .jpg con la foto de la obra), hecha con scripts/tarjetas.py si hay Pillow; si no, usa /compartir.png.
+- web/sitemap.xml: la portada, el boceto, los estratos y todas las fichas, para los buscadores.
 - web/datos/archivo.json: el mismo rastro para la web (sección «Estratos en archive.org» de cada ficha).
 - web/datos/historial.json: identificador, versión, fecha y árbol de modificaciones de cada obra,
   sacados del historial de git de web/datos/obras.geojson (cada commit que cambia la obra es una versión),
@@ -90,13 +96,52 @@ def e(v):
     return html.escape(str(v or ""))
 
 
-def pagina(titulo, cuerpo):
+SITIO = "https://canarias.africa"
+IMAGEN_PORTADA = "/compartir.png"
+
+
+def recortar(texto, n=200):
+    texto = re.sub(r"\s+", " ", str(texto or "")).strip()
+    return texto if len(texto) <= n else texto[:n - 1].rsplit(" ", 1)[0].rstrip(" ,.;:·") + "…"
+
+
+def etiquetas(titulo, descripcion, ruta, imagen=None, alt="", tipo="article", indexar=True):
+    """<meta> para buscadores y para la vista previa al compartir (Open Graph: WhatsApp, Telegram, Facebook, LinkedIn; Twitter/X)."""
+    imagen = imagen or IMAGEN_PORTADA
+    mime = "image/jpeg" if imagen.endswith(".jpg") else "image/png"
+    url, img, d = SITIO + ruta, SITIO + imagen, recortar(descripcion)
+    return f"""<meta name="description" content="{e(d)}">
+{'' if indexar else '<meta name="robots" content="noindex, follow">'}
+<link rel="canonical" href="{e(url)}">
+<meta name="theme-color" content="#121614">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="{tipo}">
+<meta property="og:site_name" content="CANARIAS.AFRICA">
+<meta property="og:locale" content="es_ES">
+<meta property="og:title" content="{e(titulo)}">
+<meta property="og:description" content="{e(d)}">
+<meta property="og:url" content="{e(url)}">
+<meta property="og:image" content="{e(img)}">
+<meta property="og:image:type" content="{mime}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{e(alt or titulo)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{e(titulo)}">
+<meta name="twitter:description" content="{e(d)}">
+<meta name="twitter:image" content="{e(img)}">"""
+
+
+def pagina(titulo, cuerpo, meta="", cabeza=""):
     return f"""<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{e(titulo)}</title>
+{meta}
+{cabeza}
 <style>{ESTILO}</style>
 </head>
 <body><main>
@@ -104,6 +149,91 @@ def pagina(titulo, cuerpo):
 </main></body>
 </html>
 """
+
+
+try:  # Pillow solo hace falta para las imágenes de compartir; sin él, todas usan la de la portada
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import tarjetas
+except Exception:  # noqa: BLE001
+    tarjetas = None
+
+
+def foto_obra(url):
+    """Descarga la foto de la obra (solo https, hasta 8 MB) para la tarjeta de compartir; None si no se puede."""
+    if not url or not str(url).startswith("https://"):
+        return None
+    import urllib.request
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "canarias.africa publicar-web (GitHub Actions)"})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            datos = r.read(8 * 1024 * 1024 + 1)
+            return datos if len(datos) <= 8 * 1024 * 1024 else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def imagen_compartir(carpeta, ruta, **kw):
+    """Escribe <carpeta>/compartir.png (o .jpg con foto) y devuelve su ruta pública; sin Pillow, la de la portada."""
+    if tarjetas is None:
+        return IMAGEN_PORTADA
+    try:
+        datos, ext = tarjetas.tarjeta(**kw)
+    except Exception as err:  # noqa: BLE001 — una tarjeta fallida no para la publicación
+        print(f"::warning::tarjeta de {ruta}: {err}")
+        return IMAGEN_PORTADA
+    carpeta.mkdir(parents=True, exist_ok=True)
+    (carpeta / f"compartir.{ext}").write_bytes(datos)
+    return f"{ruta}compartir.{ext}"
+
+
+def soportes():
+    """Página de cada soporte publicado en canarias.africa/<UUID> (lo que abre el QR del azulejo), con vista previa."""
+    fuente = WEB / "datos" / "soportes.geojson"
+    if not fuente.exists():
+        return 0
+    fotos = {}  # la tarjeta del soporte lleva la foto de su obra actual, si la tiene
+    if CATALOGO.exists():
+        for o in json.loads(CATALOGO.read_text(encoding="utf-8")).get("features", []):
+            po = o.get("properties") or {}
+            if po.get("id") and po.get("foto") and not po.get("ficticio"):
+                fotos[str(po["id"]).lower()] = po["foto"]
+    n = 0
+    for f in json.loads(fuente.read_text(encoding="utf-8")).get("features", []):
+        q = f.get("properties") or {}
+        uuid = str(q.get("id") or "").lower()
+        if not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", uuid):
+            continue
+        nombre = q.get("name") or "Soporte"
+        obras = q.get("obras_nombres") or ""
+        lugar = " · ".join(x for x in (q.get("tipo"), q.get("municipio")) if x)
+        desc = (f"Aquí: {obras}. " if obras else "") + (f"{lugar}. " if lugar else "") + \
+            "Escanea, mira cómo está hoy y cuenta lo que sepas: su memoria la construimos entre todos."
+        ruta = f"/{uuid.upper()}/"
+        img = imagen_compartir(WEB / uuid.upper(), ruta, titulo=obras or nombre, antetitulo=" · ".join(x for x in ("Soporte", nombre if obras else "", q.get("municipio")) if x),
+                               texto="¿Conoces más detalles? Colabora.", ident=uuid.upper(),
+                               foto=foto_obra(fotos.get(str(q.get("obra") or "").lower())))
+        destino = f"/prototipo/#/s/{uuid}"
+        cuerpo = f"""<p class="eyebrow"><a href="/">CANARIAS</a> · Soporte</p>
+<h1>{e(nombre)}</h1>
+<p class="idficha"><span class="mono">{e(uuid.upper())}</span></p>
+{f'<p>{e(obras)}</p>' if obras else ''}
+<p><a href="{e(destino)}">Abrir el soporte</a></p>"""
+        cabeza = f'<script>location.replace({json.dumps(destino)});</script>'
+        html_s = pagina(f"{obras or nombre} · CANARIAS", cuerpo,
+                        etiquetas(f"{obras or nombre} · CANARIAS", desc, ruta, img, f"Soporte {nombre}", indexar=False), cabeza)
+        for carpeta in {uuid.upper(), uuid}:  # el QR lleva el UUID en mayúsculas; GitHub Pages distingue mayúsculas
+            (WEB / carpeta).mkdir(parents=True, exist_ok=True)
+            (WEB / carpeta / "index.html").write_text(html_s, encoding="utf-8")
+        n += 1
+    return n
+
+
+def sitemap(urls):
+    hoy = __import__("datetime").date.today().isoformat()
+    filas = "".join(f"<url><loc>{e(SITIO + u)}</loc><lastmod>{hoy}</lastmod></url>\n" for u in urls)
+    (WEB / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n'
+                                     f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{filas}</urlset>\n', encoding="utf-8")
 
 
 def git(*args):
@@ -534,6 +664,7 @@ def main():
             hist[u] = [{"version": int(props[u]["version"]), "fecha": props[u].get("actualizado") or "", "cambios": []}]
     ags = trayectorias(props, {u: v[1] for u, v in api.items()})
     glifos, lineas_svg = {}, {}
+    urls = ["/", "/prototipo/"]
 
     def nodo(u):
         q = props.get(u, {})
@@ -652,7 +783,17 @@ def main():
 {rastro}"""
         destino = WEB / "obra" / uuid / "index.html"
         destino.parent.mkdir(parents=True, exist_ok=True)
-        destino.write_text(pagina(f"{p.get('name') or uuid} · CANARIAS", cuerpo), encoding="utf-8")
+        titulo = p.get("name") or uuid
+        donde = p.get("municipio") or (ESPACIOS[g["espacio"]] if g["espacio"] != "lugar" else "")
+        desc = p.get("descripcion") or p.get("description") or \
+            f"Ficha de obra en CANARIAS{', ' + donde if donde else ''}: su historia, sus vínculos y cómo cambia con el tiempo."
+        ruta = f"/obra/{uuid}/"
+        img = imagen_compartir(destino.parent, ruta, titulo=titulo, antetitulo=" · ".join(x for x in ("Ficha de obra", donde, str(g["tiempo"]["inicio"] or "")[:4]) if x),
+                               texto=recortar(desc, 140), ident=uuid, foto=None if p.get("ficticio") else foto_obra(p.get("foto")))
+        if not p.get("ficticio"):
+            urls.append(ruta)
+        destino.write_text(pagina(f"{titulo} · CANARIAS", cuerpo,
+                                  etiquetas(f"{titulo} · CANARIAS", desc, ruta, img, f"Ficha de la obra {titulo}", indexar=not p.get("ficticio"))), encoding="utf-8")
 
     cuerpo = f"""<p class="eyebrow"><a href="/">CANARIAS</a> · Arqueología de la red</p>
 <h1>Estratos</h1>
@@ -660,7 +801,10 @@ def main():
 <p class="muted">{len(capturas)} capturas · última actualización {e((reg.get('actualizado') or '—')[:16].replace('T', ' '))} UTC · <a href="/datos/archivo.json">datos</a></p>
 {lista(capturas, nombres)}"""
     (WEB / "estratos").mkdir(parents=True, exist_ok=True)
-    (WEB / "estratos" / "index.html").write_text(pagina("Estratos · CANARIAS", cuerpo), encoding="utf-8")
+    (WEB / "estratos" / "index.html").write_text(pagina("Estratos · CANARIAS", cuerpo, etiquetas(
+        "Estratos · CANARIAS", "Arqueología de la red: cada cambio de canarias.africa y cada obra registrada, inscritos en archive.org a medida que suceden.",
+        "/estratos/", tipo="website")), encoding="utf-8")
+    urls.append("/estratos/")
 
     for i, ag in ags.items():
         filas = "".join(f'<li>{nodo(x["obra"])}{" · " + e(x.get("rol") or ("autoría" if x["clase"] == "autoria" else "colaboración"))}</li>' for x in ag["obras"])
@@ -685,7 +829,12 @@ def main():
 <ol class="estratos">{filas}</ol>"""
         destino = WEB / "agente" / i / "index.html"
         destino.parent.mkdir(parents=True, exist_ok=True)
-        destino.write_text(pagina(f"{ag['nombre']} · CANARIAS", cuerpo), encoding="utf-8")
+        ruta = f"/agente/{i}/"
+        desc = f"Trayectoria en CANARIAS: {len(ag['obras'])} obras en {', '.join(espacios)}. Su línea temporal vincula los espacios donde ha creado, mapeado o cuidado."
+        img = imagen_compartir(destino.parent, ruta, titulo=ag["nombre"], antetitulo=f"Trayectoria · {len(ag['obras'])} obras", texto=", ".join(espacios), ident="")
+        urls.append(ruta)
+        destino.write_text(pagina(f"{ag['nombre']} · CANARIAS", cuerpo,
+                                  etiquetas(f"{ag['nombre']} · CANARIAS", desc, ruta, img, f"Trayectoria de {ag['nombre']}", tipo="profile")), encoding="utf-8")
 
     publico = {"actualizado": reg.get("actualizado"), "capturas": capturas,
                "obras": {u: {k: v for k, v in o.items() if k in ("item", "capas")} for u, o in obras_reg.items()}}
@@ -696,6 +845,8 @@ def main():
                    "calor_meses": (huellas.get(u) or {}).get("calor_meses") or {}, "linea": lineas_svg.get(u)} for u in nombres}
     (WEB / "datos" / "historial.json").write_text(json.dumps(resumen, ensure_ascii=False) + "\n", encoding="utf-8")
     (WEB / "datos" / "trayectorias.json").write_text(json.dumps(ags, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"{soportes()} soportes con vista previa.")
+    sitemap(urls)
     print(f"{len(ags)} trayectorias.")
     print(f"{len(nombres)} fichas estáticas, {len(capturas)} estratos.")
 

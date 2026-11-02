@@ -22,3 +22,6 @@ servidor-php/privado/umap/
 # Copia del catálogo del servidor: la genera scripts/catalogo-servidor.py al publicar, nunca se sube
 web/datos/*.geojson
 __pycache__/
+# Las genera también scripts/generar-fichas.py: mapa del sitio y páginas de soporte (canarias.africa/<UUID>/)
+web/sitemap.xml
+web/*-*-*-*-*/

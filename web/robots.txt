@@ -1,0 +1,5 @@
+# canarias.africa: todo se puede indexar. Las páginas de paso (escaneo de QR, soportes) llevan su propio noindex.
+User-agent: *
+Allow: /
+
+Sitemap: https://canarias.africa/sitemap.xml

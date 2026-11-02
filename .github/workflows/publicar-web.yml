@@ -23,6 +23,9 @@ jobs:
           fetch-depth: 0  # el árbol de modificaciones de cada ficha sale del historial de git
       - name: Comprobar que el catálogo no publica ubicaciones sensibles
         run: python3 scripts/comprobar-catalogo.py
+      - name: Pillow y la fuente Inter para las imágenes de compartir (sin ellas se usa la de la portada)
+        continue-on-error: true
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq python3-pil fonts-inter
       - name: Comprobar que las fichas y los estratos se generan
         run: python3 scripts/generar-fichas.py
       - name: Comprobar las propuestas
@@ -52,7 +55,10 @@ jobs:
         run: |
           python3 scripts/catalogo-servidor.py
           python3 scripts/comprobar-catalogo.py
-      - name: Fichas estáticas y estratos de archive.org
+      - name: Pillow y la fuente Inter para las imágenes de compartir (sin ellas se usa la de la portada)
+        continue-on-error: true
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq python3-pil fonts-inter
+      - name: Fichas estáticas, estratos de archive.org, páginas de soporte, imágenes de compartir y sitemap
         run: python3 scripts/generar-fichas.py
       - name: Generar propuestas.json y abrir el debate de las propuestas nuevas
         run: python3 scripts/propuestas.py

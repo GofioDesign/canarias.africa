@@ -82,7 +82,7 @@ document.querySelectorAll('fieldset.nodos[data-campos]').forEach(fs=>{
     campos.forEach(([k,t,et,op])=>{ let i;
       if(t==='select'){ i=document.createElement('select'); Object.entries(op).forEach(([v,n])=>i.add(new Option(n,v))); }
       else { i=document.createElement('input'); i.type=t==='check'?'checkbox':'text'; if(t!=='check') i.placeholder=et; if(op&&t==='text') i.setAttribute('list',op); }
-      i.dataset.k=k; i.title=et; if(t==='check') i.checked=d[k]!==undefined?!!d[k]:true; else if(d[k]!==undefined) i.value=d[k];
+      i.dataset.k=k; i.title=et; if(t==='check') i.checked=d[k]!==undefined?!!d[k]:op!=='no'; else if(d[k]!==undefined) i.value=d[k];
       if(t==='check'){ const l=document.createElement('label'); l.className='chk'; l.append(i,' '+et); f.append(l); } else f.append(i); });
     const x=document.createElement('button'); x.type='button'; x.textContent='Quitar'; x.onclick=()=>{ f.remove(); guardar(); }; f.append(x);
     cont.append(f); lista(f); };
@@ -119,7 +119,7 @@ if ($sub === '/publicar' && $metodo === 'POST') {
 if ($sub === '/campo/subir' && $metodo === 'POST') campo_subir($foto_formulario);
 
 if ($sub === '/catalogo') {
-  $html = $aviso_pub() . '<p><a href=/admin/obra>+ Nueva obra</a> · <a href=/admin/soportes>Soportes</a> · <a href=/admin/rutas>Rutas</a> · <a href=/admin/artistas>Artistas</a></p>
+  $html = $aviso_pub() . '<p><a href=/admin/obra>+ Nueva obra</a> · <a href=/admin/soportes>Soportes</a> · <a href=/admin/funciones>Funciones</a> · <a href=/admin/eventos>Eventos</a> · <a href=/admin/rutas>Rutas</a> · <a href=/admin/artistas>Artistas</a></p>
     <form method=post action=/admin/publicar><input type=hidden name=csrf value=' . $csrf . '><button>Publicar ahora en canarias.africa</button>
     <span class=meta>Al guardar se publica solo; este botón fuerza una copia nueva.</span></form>
     <p class=meta>La fuente es este servidor (<a href=/datos/obras.geojson>/datos/obras.geojson</a>); canarias.africa sirve una copia en /datos/, que leen la web y uMap.</p>
@@ -245,6 +245,8 @@ if ($sub === '/obra') {
     . '<p class=meta>Sensibilidad: <b>abierta</b> si está en un espacio público y no corre peligro; <b>difusa</b> si conviene no dar el punto exacto (terreno privado, obra frágil); <b>reservada</b> para patrimonio delicado, como los grabados aborígenes: no se publica el municipio y no lleva QR.</p>'
     . '</details>'
     . '<details class=seccion' . ($id ? ' open' : '') . '><summary>Qué es y cuándo se hizo</summary>'
+    . $lista('ambito', 'Ámbito', AMBITOS, (string) $v('ambito'))
+    . '<p class=meta>Una obra <b>de referencia</b> es de fuera (la novela que adapta un montaje, el disco preferido de un artista): no lleva lugar ni va en el mapa; se publica en <a href=/datos/referencias.geojson>/datos/referencias.geojson</a>.</p>'
     . '<div class=par>' . $lista('disciplina', 'Disciplina', DISCIPLINAS, (string) $v('disciplina')) . $lista('permanencia', 'Permanencia', PERMANENCIAS, (string) $v('permanencia')) . '</div>'
     . $campo('tipo', 'Tipo', $v('tipo'), 'text', 'Mural, grafiti, grabado, canción, disco, montaje teatral, coreografía, isa, romería, luchada, novela, película, obra web…')
     // El campo de autoría en texto libre es el antiguo: solo aparece si la obra ya lo tiene relleno.
@@ -264,7 +266,9 @@ if ($sub === '/obra') {
         [['modo', 'select', 'Relación', MODOS_RELACION], ['obra', 'select', 'Obra', $obras_ops], ['nota', 'text', 'Nota (opcional)', '']], (string) $v('relaciones'), '+ Añadir relación')
     . ($id ? '<h3>Soportes</h3>' . (implode('', array_map(fn($x) => "<p><a href='/admin/soporte?id={$h($x['soporte'])}'>{$h($x['nombre'] ?: 'Soporte')}</a> <span class=meta>" . ($x['tipo'] ? '· ' . $h(TIPOS_SOPORTE[$x['tipo']] ?? '') : '') . "" . ($x['desde'] ? " · desde {$h($x['desde'])}" : '') . ($x['hasta'] ? " · hasta {$h($x['hasta'])}" : ' · ahora') . '</span></p>',
         (function () use ($db, $id) { $st = $db->prepare('SELECT os.*, s.nombre, s.tipo FROM obra_soporte os JOIN soportes s ON s.uuid = os.soporte WHERE os.obra = ? ORDER BY os.hasta != \'\', os.id DESC'); $st->execute([$id]); return $st->fetchAll(); })()))
-        ?: '<p class=meta>Sin soporte. Sin punto propio, la obra toma el de su soporte actual.</p>') . "<p><a href='/admin/soporte?obra={$h($id)}'>+ Nuevo soporte para esta obra</a> <span class=meta>(o añádela a uno que ya existe desde <a href=/admin/soportes>Soportes</a>)</span></p>" : '')
+        ?: '<p class=meta>Sin soporte. Sin punto propio, la obra toma el de su soporte actual.</p>') . "<p><a href='/admin/soporte?obra={$h($id)}'>+ Nuevo soporte para esta obra</a> <span class=meta>(o añádela a uno que ya existe desde <a href=/admin/soportes>Soportes</a>)</span></p>"
+      . '<h3>Funciones</h3>' . (implode('', array_map(fn($f) => "<p><a href='/admin/funcion?id={$h($f['uuid'])}'>{$h($f['inicio'])} · {$h($f['titulo'] ?: ($f['lugar'] ?: $f['municipio']) ?: 'Función')}</a> <span class=meta>· {$h(ESTADOS_FUNCION[$f['estado']] ?? '')}" . ($f['publicada'] ? '' : ' · sin publicar') . '</span></p>', funciones_de_obra($id)))
+        ?: '<p class=meta>Sin funciones. Una obra de repertorio o efímera (concierto, montaje, romería, acción) tiene una por cada vez que ocurrió.</p>') . "<p><a href='/admin/funcion?obra={$h($id)}'>+ Nueva función de esta obra</a></p>" : '')
     . '</details>'
     . '<details class=seccion><summary>Lo que no se sabe y las fuentes</summary>'
     . '<fieldset class=nodos><legend>Datos desconocidos</legend><p class=meta>Marca lo que no se sabe. La ficha pública lo muestra como desconocido e invita a completarlo a quien la mira o escanea su QR. Al rellenar un campo, deja de ser desconocido.</p>'
@@ -426,13 +430,18 @@ if ($sub === '/artista') {
     . $campo('foto', 'O enlace a la foto', $v('foto'), 'url')
     . $campo('foto_credito', 'Crédito de la foto', $v('foto_credito'))
     . $campo('obras', 'Obras del archivo', $v('obras'), 'text', 'Ids de obras separados por comas.')
+    . $nodos('preferidas', 'Obras preferidas e influencias', 'Las que elige: un disco, un libro, una película, un mural… Elige la obra si ya tiene ficha (también de referencia); si no, escribe el título. Se publican con su perfil.',
+        [['obra', 'select', 'Obra', ['' => 'Sin ficha (escribe el título)'] + (function () use ($db) { $r = []; foreach ($db->query("SELECT uuid, titulo, ambito FROM obras ORDER BY titulo") as $x) $r[$x['uuid']] = $x['titulo'] . ($x['ambito'] === 'referencia' ? ' (referencia)' : ''); return $r; })()],
+         ['titulo', 'text', 'Título (si no tiene ficha)', ''], ['tipo', 'select', 'Tipo', TIPOS_PREFERIDA], ['nota', 'text', 'Por qué (opcional)', '']], (string) ($v('preferidas') ?: '[]'), '+ Añadir obra')
+    . $nodos('referentes', 'Referentes', 'Personas que le influyen. «Público» solo si es una figura pública o ha aceptado figurar; si no, se guarda pero no se publica.',
+        [['nombre', 'text', 'Nombre', ''], ['enlace', 'text', 'Enlace https:// (opcional)', ''], ['nota', 'text', 'Nota (opcional)', ''], ['publico', 'check', 'Público', 'no']], (string) ($v('referentes') ?: '[]'), '+ Añadir referente')
     . '<h2>Punto en el mapa (opcional)</h2><p class=meta>Solo para un espacio que la persona quiera mostrar: taller abierto, galería, tienda. Nunca su domicilio. Sin punto, sale solo el municipio.</p>'
     . $campo('espacio', 'Qué espacio es', $v('espacio'))
     . '<div class=par>' . $campo('lat', 'Latitud', $v('lat'), 'number', 'Entre 27,4 y 29,6 (norte). Ej.: 28.4682', ['step' => 'any', 'min' => '27.4', 'max' => '29.6', 'inputmode' => 'decimal']) . $campo('lon', 'Longitud', $v('lon'), 'number', 'Entre −18,4 y −13,2 (oeste, en negativo). Ej.: -16.2546', ['step' => 'any', 'min' => '-18.4', 'max' => '-13.2', 'inputmode' => 'decimal']) . '</div>'
     . $mapa()
     . $campo('consentimiento', 'Consentimiento', $v('consentimiento'), 'text', 'Obligatorio para publicar: fecha y cómo lo dio («2026-11-02, por correo»).')
     . $campo('publicada', 'Publicado', $v('publicada'), 'checkbox')
-    . '<p><button class=aprobada>Guardar</button> <a href=/admin/artistas>Volver</a></p></form>';
+    . '<p><button class=aprobada>Guardar</button> <a href=/admin/artistas>Volver</a></p></form>' . $js_nodos;
   pagina($id ? 'Editar artista' : 'Nuevo perfil de artista', $html);
 }
 
@@ -503,4 +512,119 @@ if ($sub === '/soporte') {
     . $campo('etiqueta_nueva', 'Dar de alta una etiqueta libre en este soporte', '', 'text', 'Lo normal es colocarlas con la app: guardan su punto GPS y se verifican, también las de una web (en un cartel, un local…). Aquí, un código del pool (/admin/qr) para una etiqueta que solo se muestra en pantalla (queda confirmada, sin GPS) o que se colocó sin la app.')
     . '<p><button class=aprobada>Guardar</button> <a href=/admin/soportes>Volver</a></p></form>' . $js_nodos;
   pagina($id ? 'Editar soporte' : 'Nuevo soporte', $html);
+}
+
+// ---------------- Funciones y eventos ----------------
+// Cada vez que una obra de repertorio o efímera ocurre (concierto, representación, romería de un año, acción) es una función.
+// Los eventos (festival, gira, ciclo, temporada, fiesta) las agrupan. Ver funciones.php.
+$ops_obras = function () use ($db): array {
+  $r = ['' => 'Elige la obra…'];
+  foreach ($db->query('SELECT uuid, titulo, municipio, ambito FROM obras ORDER BY titulo') as $x) $r[$x['uuid']] = $x['titulo'] . ($x['ambito'] === 'referencia' ? ' (referencia)' : ($x['municipio'] ? ' · ' . $x['municipio'] : ''));
+  return $r;
+};
+$ops_eventos = function (string $salvo = '') use ($db): array {
+  $r = ['' => 'Ninguno'];
+  foreach ($db->query('SELECT uuid, nombre, inicio FROM eventos ORDER BY inicio DESC, nombre') as $x) if ($x['uuid'] !== $salvo) $r[$x['uuid']] = $x['nombre'] . ($x['inicio'] ? ' · ' . $x['inicio'] : '');
+  return $r;
+};
+
+if ($sub === '/funciones') {
+  $html = $aviso_pub() . '<p><a href=/admin/funcion>+ Nueva función</a> · <a href=/admin/eventos>Eventos</a> · <a href=/admin/catalogo>Obras</a></p>
+    <p class=meta>Cada vez que una obra ocurre: un concierto, una representación, la romería de un año, una acción. Se publican en <a href=/datos/funciones.geojson>/datos/funciones.geojson</a> si alguna de sus obras está publicada.</p>
+    <table class=filtrable><tr><th>Fecha</th><th>Función</th><th>Lugar</th><th>Estado</th><th>Publicada</th></tr>';
+  foreach ($db->query('SELECT f.*, s.nombre AS soporte_nombre FROM funciones f LEFT JOIN soportes s ON s.uuid = f.soporte ORDER BY f.inicio DESC') as $f) {
+    $titulo = $f['titulo'] ?: (obra(json_decode($f['obras'], true)[0] ?? '')['titulo'] ?? 'Función');
+    $html .= "<tr><td>{$h($f['inicio'])}</td><td><a href='/admin/funcion?id={$h($f['uuid'])}'>{$h($titulo)}</a></td><td>{$h($f['soporte_nombre'] ?: ($f['lugar'] ?: $f['municipio']))}</td><td>{$h(ESTADOS_FUNCION[$f['estado']] ?? '')}</td><td>" . ($f['publicada'] ? 'sí' : 'no') . '</td></tr>';
+  }
+  pagina('Funciones', tabla_o_vacio($html, 'No hay funciones. <a class=boton href=/admin/funcion>+ Añadir la primera</a><br><span class=meta>También desde la ficha de una obra: «+ Nueva función de esta obra».</span>'));
+}
+
+if ($sub === '/funcion') {
+  $error = '';
+  $id = (string) ($_REQUEST['id'] ?? '');
+  if ($metodo === 'POST') {
+    $d = $_POST;
+    try {
+      $id = funcion_guardar($d, $id ?: null);
+      $_SESSION['publicacion'] = publicar_web();
+      header('Location: /admin/funcion?ok=1&id=' . urlencode($id), true, 303);
+      exit;
+    } catch (InvalidArgumentException $e) { $error = $e->getMessage(); $f = $d; }
+  }
+  if (!isset($f) && $id) $f = funcion($id);
+  $f ??= ['obras' => json_encode(array_filter([strtolower((string) ($_GET['obra'] ?? ''))])), 'estado' => 'celebrada', 'publicada' => 0, 'evento' => (string) ($_GET['evento'] ?? '')];
+  $v = fn($k) => $f[$k] ?? '';
+  $lista_obras = json_decode((string) $v('obras'), true) ?: [];
+  $obras_filas = json_encode(array_map(fn($x) => ['obra' => is_array($x) ? (string) ($x['obra'] ?? '') : (string) $x], array_values((array) $lista_obras)));
+  $soportes = ['' => 'Sin soporte (usa municipio o lugar)'];
+  foreach ($db->query('SELECT uuid, nombre, tipo, municipio FROM soportes ORDER BY nombre') as $s) $soportes[$s['uuid']] = ($s['nombre'] ?: 'Soporte') . ($s['tipo'] ? ' · ' . (TIPOS_SOPORTE[$s['tipo']] ?? '') : '') . ($s['municipio'] ? ' · ' . $s['municipio'] : '');
+  $html = $estilo_form . ($error ? "<p class=error>{$h($error)}</p>" : '') . (!empty($_GET['ok']) ? '<p class=hecho>Guardada.</p>' . $aviso_pub() : '')
+    . "<form method=post action=/admin/funcion><input type=hidden name=csrf value=$csrf><input type=hidden name=id value=\"{$h($id)}\">"
+    . ($id ? "<p class=meta>Id: <code>{$h($id)}</code></p>" : '')
+    . $nodos('obras', 'Obras que se hicieron', 'La obra que se representó o se tocó. Un concierto puede tener varias canciones: añade una fila por obra.',
+        [['obra', 'select', 'Obra', $ops_obras()]], $obras_filas, '+ Añadir obra')
+    . $campo('titulo', 'Título de la función (opcional)', $v('titulo'), 'text', 'Vacío: el de la primera obra. Ej.: «Mararía en el Teatro Leal».')
+    . '<div class=par>' . $campo('inicio', 'Cuándo empezó', $v('inicio'), 'text', 'AAAA, AAAA-MM, AAAA-MM-DD o AAAA-MM-DDTHH:MM. Obligatorio: al menos el año.', ['required' => 'required'])
+      . $campo('fin', 'Cuándo acabó (opcional)', $v('fin'), 'text', 'Para funciones de varios días.') . '</div>'
+    . '<div class=par>' . $lista('fecha_precision', 'Precisión de la fecha', PRECISIONES_FECHA, (string) $v('fecha_precision')) . $lista('estado', 'Estado', ESTADOS_FUNCION, (string) $v('estado')) . '</div>'
+    . $lista('evento', 'Evento (festival, gira, ciclo…)', $ops_eventos(), (string) $v('evento'))
+    . '<h2>Dónde</h2><p class=meta>Opcional. Lo mejor es un soporte (sala, plaza, emisión): el QR del sitio mostrará su cartelera. Si no, el municipio, o un lugar escrito a mano (también fuera de Canarias: «Teatro Español, Madrid»). Una función en la red va con un soporte de tipo emisión o web.</p>'
+    . $lista('soporte', 'Soporte', $soportes, (string) $v('soporte'))
+    . '<div class=par>' . $lista('isla', 'Isla', ['' => 'La del soporte (o ninguna)'] + ISLAS_CODIGO, (string) $v('isla')) . $campo('municipio', 'Municipio', $v('municipio')) . '</div>'
+    . $campo('lugar', 'Lugar (texto)', $v('lugar'), 'text', 'Sala, plaza o ciudad. Solo se publica si sus obras y su soporte son abiertos.')
+    . '<h2>Quién y qué queda</h2>'
+    . $nodos('interpretes', 'Intérpretes y equipo de esta función', 'Quién actuó, tocó, dirigió o hizo la luz ese día. «Visible» solo si ha aceptado figurar o es una figura pública.',
+        [['nombre', 'text', 'Nombre o colectivo', ''], ['rol', 'select', 'Rol', ROLES_AGENTE], ['certeza', 'select', 'Certeza', CERTEZAS], ['visible', 'check', 'Visible', 'no']], (string) ($v('interpretes') ?: '[]'), '+ Añadir persona o grupo')
+    . $nodos('registros', 'Registros', 'Lo que queda: cartel, programa, entrada, fotos, vídeo, grabación, crónica. Grabaciones y partituras completas solo con permiso de quien tiene los derechos; si no, enlaza o pon un fragmento.',
+        [['tipo', 'select', 'Tipo', TIPOS_REGISTRO], ['url', 'text', 'Enlace https://', ''], ['credito', 'text', 'Crédito y licencia', ''], ['nota', 'text', 'Nota', '']], (string) ($v('registros') ?: '[]'), '+ Añadir registro')
+    . $campo('descripcion', 'Descripción', $v('descripcion'), 'textarea')
+    . $campo('fuentes', 'Fuentes', $v('fuentes'), 'textarea', 'Cómo se sabe: testimonios, prensa, programas. No se publica.')
+    . '<div class=guardar>' . $campo('publicada', 'Publicada', $v('publicada'), 'checkbox')
+    . '<p><button class=aprobada>Guardar</button> <a href=/admin/funciones>Volver</a></p></div></form>' . $js_nodos;
+  pagina($id ? 'Editar función' : 'Nueva función', $html);
+}
+
+if ($sub === '/eventos') {
+  $html = $aviso_pub() . '<p><a href=/admin/evento>+ Nuevo evento</a> · <a href=/admin/funciones>Funciones</a></p>
+    <p class=meta>Festivales, giras, ciclos, temporadas y fiestas. Pueden ir unos dentro de otros (el festival → su edición de 2025). Se publican en <a href=/datos/eventos.geojson>/datos/eventos.geojson</a>.</p>
+    <table class=filtrable><tr><th>Evento</th><th>Tipo</th><th>Fechas</th><th>Dentro de</th><th>Funciones</th><th>Publicado</th></tr>';
+  foreach ($db->query('SELECT e.*, p.nombre AS padre_nombre, (SELECT COUNT(*) FROM funciones f WHERE f.evento = e.uuid) AS n FROM eventos e LEFT JOIN eventos p ON p.uuid = e.padre ORDER BY e.inicio DESC, e.nombre') as $e) {
+    $html .= "<tr><td><a href='/admin/evento?id={$h($e['uuid'])}'>{$h($e['nombre'])}</a></td><td>{$h(TIPOS_EVENTO[$e['tipo']] ?? '')}</td><td>{$h(trim($e['inicio'] . ' – ' . $e['fin'], ' –'))}</td><td>{$h($e['padre_nombre'] ?? '')}</td><td>{$e['n']}</td><td>" . ($e['publicada'] ? 'sí' : 'no') . '</td></tr>';
+  }
+  pagina('Eventos', tabla_o_vacio($html, 'No hay eventos. <a class=boton href=/admin/evento>+ Añadir el primero</a>'));
+}
+
+if ($sub === '/evento') {
+  $error = '';
+  $id = (string) ($_REQUEST['id'] ?? '');
+  if ($metodo === 'POST') {
+    $d = $_POST;
+    try {
+      $id = evento_guardar($d, $id ?: null);
+      $_SESSION['publicacion'] = publicar_web();
+      header('Location: /admin/evento?ok=1&id=' . urlencode($id), true, 303);
+      exit;
+    } catch (InvalidArgumentException $e) { $error = $e->getMessage(); $ev = $d; }
+  }
+  if (!isset($ev) && $id) $ev = evento($id);
+  $ev ??= ['nombre' => '', 'publicada' => 0];
+  $v = fn($k) => $ev[$k] ?? '';
+  $funcs = '';
+  if ($id) {
+    $st = $db->prepare('SELECT * FROM funciones WHERE evento = ? ORDER BY inicio');
+    $st->execute([$id]);
+    foreach ($st->fetchAll() as $f) $funcs .= "<li><a href='/admin/funcion?id={$h($f['uuid'])}'>{$h($f['inicio'])} · {$h($f['titulo'] ?: (obra(json_decode($f['obras'], true)[0] ?? '')['titulo'] ?? 'Función'))}</a></li>";
+  }
+  $html = $estilo_form . ($error ? "<p class=error>{$h($error)}</p>" : '') . (!empty($_GET['ok']) ? '<p class=hecho>Guardado.</p>' . $aviso_pub() : '')
+    . "<form method=post action=/admin/evento><input type=hidden name=csrf value=$csrf><input type=hidden name=id value=\"{$h($id)}\">"
+    . $campo('nombre', 'Nombre', $v('nombre'), 'text', 'Ej.: «Festival de Música de Canarias 2025», «Gira de Mararía 1998».', ['required' => 'required'])
+    . '<div class=par>' . $lista('tipo', 'Tipo', TIPOS_EVENTO, (string) $v('tipo')) . $lista('escala', 'Escala', ['' => 'Sin indicar'] + escalas_ids(), (string) $v('escala')) . '</div>'
+    . $lista('padre', 'Dentro de (opcional)', $ops_eventos($id), (string) $v('padre'))
+    . '<div class=par>' . $campo('inicio', 'Inicio', $v('inicio'), 'text', 'AAAA, AAAA-MM o AAAA-MM-DD.') . $campo('fin', 'Fin', $v('fin'), 'text') . '</div>'
+    . $campo('descripcion', 'Descripción', $v('descripcion'), 'textarea')
+    . $campo('web', 'Web', $v('web'), 'url')
+    . ($id ? '<h2>Funciones</h2>' . ($funcs ? "<ul>$funcs</ul>" : '<p class=meta>Ninguna todavía.</p>') . "<p><a href='/admin/funcion?evento={$h($id)}'>+ Nueva función en este evento</a></p>" : '')
+    . $campo('publicada', 'Publicado', $v('publicada'), 'checkbox')
+    . '<p><button class=aprobada>Guardar</button> <a href=/admin/eventos>Volver</a></p></form>';
+  pagina($id ? 'Editar evento' : 'Nuevo evento', $html);
 }

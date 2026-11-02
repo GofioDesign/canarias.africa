@@ -12,7 +12,9 @@ import urllib.request
 from pathlib import Path
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "https://api.canarias.africa").rstrip("/")
-CAPAS = ["obras", "soportes", "rutas", "artistas"]
+CAPAS = ["obras", "soportes", "rutas", "artistas", "funciones", "eventos", "referencias"]
+# Capas que un servidor sin actualizar aún no tiene: si dan 404, no es un fallo.
+NUEVAS = {"funciones", "eventos", "referencias"}
 # Los soportes (lo que identifica cada etiqueta QR) se llamaban «qr»: se copia también con ese nombre para las capas
 # de uMap que aún lo usen, y se pide con el nombre antiguo si el servidor no se ha actualizado.
 ALIAS = {"soportes": "qr"}
@@ -36,6 +38,13 @@ for capa in CAPAS:
                     raise
         if datos.get("type") != "FeatureCollection" or not isinstance(datos.get("features"), list):
             raise ValueError("no es un FeatureCollection")
+    except urllib.error.HTTPError as e:
+        if e.code == 404 and capa in NUEVAS:
+            print(f"{capa}: el servidor aún no tiene esta capa")
+            continue
+        print(f"::warning::{capa}: no se pudo copiar {url} ({e})")
+        fallos += 1
+        continue
     except Exception as e:  # noqa: BLE001
         # Sin copia, la web lee esa capa directamente del servidor (respaldo en el HTML).
         print(f"::warning::{capa}: no se pudo copiar {url} ({e})")

@@ -1124,6 +1124,11 @@ const ROLES = {autoria:"Autoría",coautoria:"Coautoría",ejecucion:"Ejecución",
 const DISCIPLINAS = {"":"Disciplina (si se sabe)",visuales:"Artes visuales",musica:"Música",teatro:"Teatro",danza:"Danza",performance:"Performance o acción",circo:"Circo y artes de calle",oralidad:"Oralidad y narración",literatura:"Literatura",audiovisual:"Audiovisual y cine",tradicion:"Tradición popular",web:"Obra web o digital"};
 const NATUR = {publica:"Entidad pública",privada:"Entidad privada",particular:"Particular (su nombre no se publica)"};
 const MODAL = {"":"Modalidad (si se sabe)",encargo:"Encargo",subvencion:"Subvención",patrocinio:"Patrocinio",donacion:"Donación",autofinanciada:"Autofinanciada"};
+const PERMANENCIAS = {permanente:"permanente",efimera:"efímera",repertorio:"de repertorio"};
+/* Funciones (cada vez que una obra ocurre), eventos que las agrupan y obras de referencia (de fuera, sin lugar): /datos/*.geojson */
+let FUNCIONES=[], EVENTOS={}, REFERENCIAS={};
+const ESTADO_FUN = {anunciada:"anunciada",celebrada:"celebrada",cancelada:"cancelada",desconocido:"no se sabe si se celebró"};
+const REGISTRO_N = {cartel:"Cartel",programa:"Programa de mano",entrada:"Entrada",foto:"Foto",video:"Vídeo",grabacion:"Grabación",partitura:"Partitura",libreto:"Libreto",cronica:"Crónica",otro:"Registro"};
 const MODOS = {continua:"continúa",responde:"responde a",superpone:"se superpone a",serie:"forma serie con",adapta:"adapta",versiona:"versiona",inspira:"se inspira en",cita:"cita o samplea"};
 const PREC_FECHA = {"":"sin precisar",exacta:"exacta",aproximada:"aprox.",decada:"década",epoca:"época"};
 const MUNIS = {
@@ -1554,6 +1559,8 @@ function obraDeCatalogo(f){
     aut:[{n:"Desconocida",rol:"",c:"desconocida",f:""}],fin:{t:"desconocida",e:""},fase:"plenitud",fen:[],qr:{st:"pendiente",inst:"",rev:""},obs:[]}; }
   if(p.name) o.t=String(p.name);
   if(p.tipo) o.tipo=String(p.tipo);
+  if(DISCIPLINAS[p.disciplina]&&p.disciplina) o.disc=p.disciplina;
+  if(PERMANENCIAS[p.permanencia]) o.perm=p.permanencia;
   if(FASES[p.fase]) o.fase=p.fase;
   if(SENS[p.sensibilidad]) o.sens={...(o.sens||{}),n:p.sensibilidad};
   if(p.descripcion) o.desc=String(p.descripcion);
@@ -1807,8 +1814,34 @@ async function cargarCapas(){
     RUTAS.push({id:String(p.id).replace(/^RU-/i,"").toLowerCase(),n:String(p.name||p.id),cur:String(p.curaduria||"canarias.africa"),
       ms:[...new Set(ids.map(x=>byId(x).m))],km:kmRuta(ids),h:"—",dif:"Sin indicar",tesis:String(p.description||""),notas:p.notas&&typeof p.notas==="object"?p.notas:{},stops:ids,sal:[]});
     cambio=red=true; }); }catch(e){}
+  /* Funciones, eventos y obras de referencia: capas nuevas; si el servidor aún no las tiene, no pasa nada. */
+  const [fun,evs,refs]=await Promise.all(["funciones","eventos","referencias"].map(c=>capa(c).catch(()=>[])));
+  if(fun.length||evs.length||refs.length){
+    FUNCIONES=fun.map(f=>({...(f.properties||{}),pt:f.geometry&&f.geometry.type==="Point"?f.geometry.coordinates:null})).filter(f=>f.id&&Array.isArray(f.obras));
+    EVENTOS=Object.fromEntries(evs.map(f=>f.properties||{}).filter(e=>e.id).map(e=>[e.id,e]));
+    REFERENCIAS=Object.fromEntries(refs.map(f=>f.properties||{}).filter(r=>r.id).map(r=>[r.id,r]));
+    cambio=true;
+  }
   if(red){ G.byKey.clear(); G.byId.clear(); G.edges.length=0; buildGraph(); }
   if(cambio) route();
+}
+/* Funciones de una obra: cada vez que ocurrió (concierto, representación, romería de un año), de la más reciente a la más antigua.
+   Y sus obras de referencia (la novela que adapta, el disco que cita). */
+function funcionesObra(o){
+  const id=String(o.id).toLowerCase();
+  const fs=FUNCIONES.filter(f=>f.obras.map(x=>String(x).toLowerCase()).includes(id)).sort((a,b)=>String(b.inicio).localeCompare(String(a.inicio)));
+  const refs=(o.rels||[]).filter(r=>r&&REFERENCIAS[r.obra]).map(r=>[MODOS[r.modo]||r.modo,REFERENCIAS[r.obra]]);
+  if(!fs.length&&!refs.length&&o.perm!=="repertorio"&&o.perm!=="efimera") return "";
+  const fecha=f=>esc(String(f.inicio||"").replace("T"," "))+(f.fin?" – "+esc(String(f.fin).replace("T"," ")):"");
+  const donde=f=>esc(f.lugar||f.municipio||(f.isla&&ISLAS[f.isla])||(f.url?"en la red":"lugar sin publicar"));
+  const item=f=>`<li><span class="mono">${fecha(f)}</span> · ${donde(f)}${f.evento_nombre?` · <span class="muted">${esc(f.evento_nombre)}</span>`:""}${f.estado&&f.estado!=="celebrada"?` · <span class="muted">${esc(ESTADO_FUN[f.estado]||f.estado)}</span>`:""}
+    ${f.interpretes_texto?`<br><span class="muted" style="font-size:.9rem">${esc(f.interpretes_texto)}</span>`:""}
+    ${(f.registros||[]).filter(r=>r.url).map(r=>` <a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(REGISTRO_N[r.tipo]||"Registro")}</a>`).join("")}</li>`;
+  return `<section class="stack"><h2>Funciones <span class="count">(${fs.length})</span></h2>
+    <p class="muted" style="font-size:.9rem">${o.disc?esc(DISCIPLINAS[o.disc])+(o.perm?" · "+esc(PERMANENCIAS[o.perm]):"")+". ":""}Cada vez que esta obra ocurrió: dónde, cuándo y con quién.</p>
+    ${fs.length?`<ul class="stack" style="gap:6px;padding-left:18px">${fs.map(item).join("")}</ul>`:`<p class="muted">Todavía no hay funciones registradas. ¿Estuviste en alguna? <a href="#colabora">Colabora</a>.</p>`}
+    ${refs.length?`<h3>Obras de referencia</h3><ul style="padding-left:18px">${refs.map(([m,r])=>`<li>${esc(m)} <b>${esc(r.name)}</b>${r.autoria?` · ${esc(r.autoria)}`:""}${r.fecha_obra?` · ${esc(r.fecha_obra)}`:""}</li>`).join("")}</ul>`:""}
+  </section>`;
 }
 let MAPSEQ=0, MAPQ=[];
 function mapIsland(isla,obras,opt){
@@ -2207,6 +2240,7 @@ function vObra(o){
   </section>
 
   ${presenciaHueco(o)}
+  ${funcionesObra(o)}
   ${genealogiaObra(o)}
   ${estratosObra(o)}
 

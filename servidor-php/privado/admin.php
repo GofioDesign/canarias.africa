@@ -228,7 +228,7 @@ function pagina(string $titulo, string $cuerpo): never {
     $n = db()->query("SELECT (SELECT COUNT(*) FROM envios WHERE estado = 'pendiente'), (SELECT COUNT(*) FROM obras WHERE publicada = 1), (SELECT COUNT(*) FROM obras),
       (SELECT COUNT(*) FROM soportes), (SELECT COUNT(*) FROM qr_codigos WHERE estado = 'libre'), (SELECT COUNT(*) FROM obras_propuestas WHERE estado = 'pendiente')")->fetch(PDO::FETCH_NUM);
     $c = fn($v, $t = '') => " <span class=cuenta" . ($t ? " title='$t'" : '') . ">$v</span>";
-    $menu = "<nav class=menu><a href=/admin>Envíos{$c($n[0], 'pendientes de revisar')}</a> <a href=/admin/catalogo>Obras{$c("$n[1]/$n[2]", 'publicadas / total')}</a> <a href=/admin/campo><strong>En campo</strong></a> <a href=/admin/soportes>Soportes{$c($n[3])}</a> <a href=/admin/qr>Etiquetas QR{$c($n[4], 'libres en el pool')}</a>"
+    $menu = "<nav class=menu><a href=/admin>Envíos{$c($n[0], 'pendientes de revisar')}</a> <a href=/admin/catalogo>Obras{$c("$n[1]/$n[2]", 'publicadas / total')}</a> <a href=/admin/campo><strong>En campo</strong></a> <a href=/admin/soportes>Soportes{$c($n[3])}</a> <a href=/admin/funciones>Funciones</a> <a href=/admin/eventos>Eventos</a> <a href=/admin/qr>Etiquetas QR{$c($n[4], 'libres en el pool')}</a>"
       . " <a href=/admin/rutas>Rutas</a> <a href=/admin/artistas>Artistas</a> <a href=/admin/personas>Personas</a> <a href=/admin/obras>Obras propuestas{$c($n[5], 'pendientes')}</a> <a href=/admin/participa>Lista y votos</a> <a href=/admin/copia>Copia de la base de datos</a>"
       . "<form method=post action=/admin/salir class=inline><input type=hidden name=csrf value={$_SESSION['csrf']}><button class=enlace>Salir</button></form></nav>";
   }

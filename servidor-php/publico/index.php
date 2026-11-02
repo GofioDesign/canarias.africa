@@ -27,8 +27,9 @@ try {
   if ($metodo === 'GET' && preg_match('#^/teselas/osm/(\d{1,2})/(\d+)/(\d+)\.png$#', $ruta, $m)) teselas((int) $m[1], (int) $m[2], (int) $m[3]);
   // Datos públicos en GeoJSON: los leen la web y las capas de uMap («datos remotos»). /datos/umap/ es el nombre antiguo.
   // qr.geojson es el nombre anterior de soportes.geojson: la etiqueta identifica un soporte, no una obra.
-  if ($metodo === 'GET' && preg_match('#^/datos/(?:umap/)?(obras|soportes|qr|rutas|artistas)\.geojson$#', $ruta, $m)) {
-    match ($m[1]) { 'obras' => catalogo_geojson(), 'soportes', 'qr' => qr_mapa(), 'rutas' => rutas_geojson(), 'artistas' => artistas_geojson() };
+  if ($metodo === 'GET' && preg_match('#^/datos/(?:umap/)?(obras|soportes|qr|rutas|artistas|funciones|eventos|referencias)\.geojson$#', $ruta, $m)) {
+    match ($m[1]) { 'obras' => catalogo_geojson(), 'soportes', 'qr' => qr_mapa(), 'rutas' => rutas_geojson(), 'artistas' => artistas_geojson(),
+      'funciones' => funciones_geojson(), 'eventos' => eventos_geojson(), 'referencias' => referencias_geojson() };
   }
   if ($metodo === 'GET' && preg_match('#^/datos/fotos/(\d{4}-\d{2}/[0-9a-f]{24}\.jpg)$#', $ruta, $m)) foto_publica($m[1]);
   if ($metodo === 'GET' && preg_match('#^/api/publico/obras/([\w-]+)$#', $ruta, $m)) observaciones_publicas($m[1]);

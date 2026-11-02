@@ -10,6 +10,7 @@ require __DIR__ . '/versiones.php';
 require __DIR__ . '/participa.php';
 require __DIR__ . '/catalogo.php';
 require __DIR__ . '/soportes.php';
+require __DIR__ . '/funciones.php';
 
 function config(): array {
   static $c = null;

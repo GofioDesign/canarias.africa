@@ -465,7 +465,7 @@ if ($sub === '/azulejos') {
 }
 
 if ($sub === '/soportes') {
-  $html = $aviso_pub() . '<p><a href=/admin/soporte>+ Nuevo soporte</a> · <a href=/admin/azulejos>Imprimir azulejos (PDF)</a> · <a href=/admin/catalogo>Obras</a></p>
+  $html = (!empty($_GET['eliminado']) ? '<p class=hecho>Soporte «' . $h($_GET['eliminado']) . '» eliminado.</p>' : '') . $aviso_pub() . '<p><a href=/admin/soporte>+ Nuevo soporte</a> · <a href=/admin/azulejos>Imprimir azulejos (PDF)</a> · <a href=/admin/catalogo>Obras</a></p>
     <p class=meta>La etiqueta QR identifica el soporte, no una obra: en un mismo muro puede haber varias obras, o unas encima de otras con el tiempo. Se publica en <a href=/datos/soportes.geojson>/datos/soportes.geojson</a> (los soportes con punto y alguna obra publicada).</p>
     <table class=filtrable><tr><th>Soporte</th><th>Tipo</th><th>Municipio</th><th>Obras ahora</th><th>Etiquetas</th></tr>';
   foreach ($db->query('SELECT * FROM soportes ORDER BY actualizado DESC') as $s) {
@@ -481,7 +481,15 @@ if ($sub === '/soportes') {
 if ($sub === '/soporte') {
   $error = '';
   $id = (string) ($_REQUEST['id'] ?? '');
-  if ($metodo === 'POST') {
+  if ($metodo === 'POST' && !empty($_POST['eliminar'])) {
+    try {
+      if (empty($_POST['confirmo'])) throw new InvalidArgumentException('Marca la casilla para confirmar que quieres eliminarlo.');
+      $nombre = soporte_eliminar($id);
+      $_SESSION['publicacion'] = publicar_web();
+      header('Location: /admin/soportes?eliminado=' . urlencode($nombre), true, 303);
+      exit;
+    } catch (InvalidArgumentException $e) { $error = $e->getMessage(); }
+  } elseif ($metodo === 'POST') {
     $d = $_POST;
     try {
       $id = soporte_guardar($d, $id ?: null);
@@ -527,6 +535,11 @@ if ($sub === '/soporte') {
         [['obra', 'select', 'Obra', $obras_ops], ['desde', 'text', 'Desde (año o fecha)', ''], ['hasta', 'text', 'Hasta (vacío: sigue)', ''], ['nota', 'text', 'Nota (opcional)', '']], (string) $v('obras'), '+ Añadir obra')
     . '<h2>Etiquetas QR</h2>' . ($etiquetas ? "<ul>$etiquetas</ul>" : '<p class=meta>Sin etiquetas todavía.</p>')
     . $campo('etiqueta_nueva', 'Dar de alta una etiqueta libre en este soporte', '', 'text', 'Lo normal es colocarlas con la app: guardan su punto GPS y se verifican, también las de una web (en un cartel, un local…). Aquí, un código del pool (/admin/qr) para una etiqueta que solo se muestra en pantalla (queda confirmada, sin GPS) o que se colocó sin la app.')
-    . '<p><button class=aprobada>Guardar</button> <a href=/admin/soportes>Volver</a></p></form>' . $js_nodos;
+    . '<p><button class=aprobada>Guardar</button> <a href=/admin/soportes>Volver</a></p></form>' . $js_nodos
+    . ($id ? "<details style='margin-top:32px'><summary>Eliminar este soporte</summary>
+      <form method=post action=/admin/soporte><input type=hidden name=csrf value=$csrf><input type=hidden name=id value=\"{$h($id)}\"><input type=hidden name=eliminar value=1>
+      <p class=meta>Se borran el soporte y sus vínculos con obras; las obras no se tocan. Si ya hay un azulejo impreso o colocado con este UUID, su QR dejará de abrir nada. No se puede eliminar si tiene etiquetas QR colocadas.</p>
+      <p><label><input type=checkbox name=confirmo value=1> Sí, quiero eliminar «{$h($v('nombre') ?: 'este soporte')}».</label></p>
+      <p><button class=rechazada>Eliminar soporte</button></p></form></details>" : '');
   pagina($id ? 'Editar soporte' : 'Nuevo soporte', $html);
 }

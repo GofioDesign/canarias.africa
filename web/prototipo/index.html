@@ -1690,6 +1690,7 @@ function estratosObra(o){
   return `<section class="stack">
     <h2>Estratos en archive.org <span class="count">(${caps.length})</span></h2>
     <p class="muted" style="font-size:.95rem">Cada versión de esta ficha se inscribe en la Wayback Machine a medida que cambia. <a href="/estratos/">Todos los estratos</a></p>
+    <p>Esta ficha en archive.org: <a href="https://web.archive.org/web/https://canarias.africa/obra/${esc(id)}/" target="_blank" rel="noopener">la captura más reciente</a> · <a href="https://web.archive.org/web/*/https://canarias.africa/obra/${esc(id)}/" target="_blank" rel="noopener">todas sus capturas</a></p>
     ${it.item?`<p>Capas en Internet Archive: <a href="${esc(it.item)}" target="_blank" rel="noopener">${esc(it.item.replace("https://",""))}</a></p>`:""}
     ${caps.length?`<ul>${caps.map(c=>`<li><span class="mono">${esc(c.fecha.slice(0,10))}</span> · <a href="${esc(c.wayback)}" target="_blank" rel="noopener">${esc(c.motivo)}</a>${c.pantalla?` · <a href="${esc(c.pantalla)}" target="_blank" rel="noopener">captura de pantalla</a>`:""}</li>`).join("")}</ul>`
       :`<p class="muted">Aún sin estratos: se depositará el primero tras la próxima publicación.</p>`}

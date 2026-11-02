@@ -1,0 +1,140 @@
+
+name: Desplegar Jornada en Hetzner (sin activar)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jornada-hetzner-staging
+  cancel-in-progress: false
+
+jobs:
+  preparar-y-transferir:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Obtener repositorio
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Probar y preparar app
+        run: bash scripts/publicar.sh
+
+      - name: Crear manifiesto y comprobar límites
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path("app")
+          files = list(root.rglob("*"))
+
+          if not (root / "index.html").is_file():
+              raise SystemExit("Falta app/index.html")
+
+          regular = []
+          total = 0
+
+          for p in files:
+              if p.is_symlink():
+                  raise SystemExit(f"Enlace no permitido: {p}")
+              if p.is_dir():
+                  continue
+              if not p.is_file():
+                  raise SystemExit(f"Archivo especial: {p}")
+
+              relative = p.as_posix()
+              parts = relative.split("/")
+
+              if any(
+                  not part or part in (".", "..") or
+                  not all(c.isascii() and
+                          (c.isalnum() or c in "_.-")
+                          for c in part)
+                  for part in parts
+              ):
+                  raise SystemExit(f"Ruta incompatible: {relative}")
+
+              size = p.stat().st_size
+              if size > 20 * 1024 * 1024:
+                  raise SystemExit(f"Archivo grande: {relative}")
+
+              total += size
+              regular.append(p)
+
+          if len(regular) > 2000:
+              raise SystemExit("Más de 2000 archivos")
+
+          if total > 100 * 1024 * 1024:
+              raise SystemExit("Paquete mayor de 100 MiB")
+
+          import hashlib
+
+          with open("SHA256SUMS", "w", encoding="utf-8") as f:
+              for p in sorted(regular):
+                  digest = hashlib.sha256(p.read_bytes()).hexdigest()
+                  f.write(f"{digest}  {p.as_posix()}\n")
+
+          Path("READY").write_text("complete\n")
+          print(f"Paquete preparado: {len(regular)} archivos")
+          PY
+
+          sha256sum --check SHA256SUMS
+
+      - name: Configurar acceso SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.HETZNER_DEPLOY_SSH_KEY }}
+          SSH_HOST_KEY: ${{ secrets.HETZNER_SSH_HOST_KEY }}
+          HETZNER_HOST: ${{ vars.HETZNER_HOST }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$HETZNER_HOST $SSH_HOST_KEY" \
+            > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Transferir versión por SFTP
+        env:
+          HETZNER_HOST: ${{ vars.HETZNER_HOST }}
+          HETZNER_USER: ${{ vars.HETZNER_USER }}
+          HETZNER_DEPLOY_PATH: ${{ vars.HETZNER_DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+
+          VERSION="$GITHUB_SHA"
+
+          cat > /tmp/enviar.sftp <<EOF
+          cd $HETZNER_DEPLOY_PATH
+          mkdir $VERSION
+          cd $VERSION
+          put -r app
+          put SHA256SUMS
+          put READY
+          bye
+          EOF
+
+          sftp -b /tmp/enviar.sftp \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=15 \
+            -i "$HOME/.ssh/id_ed25519" \
+            "${HETZNER_USER}@${HETZNER_HOST}"
+
+          echo "Versión transferida: $VERSION"
+          echo "No se ha activado ni publicado en Caddy."

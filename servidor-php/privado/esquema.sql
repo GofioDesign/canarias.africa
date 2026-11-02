@@ -72,6 +72,8 @@ CREATE TABLE IF NOT EXISTS artistas (
   lat             REAL,
   lon             REAL,
   obras           TEXT NOT NULL DEFAULT '',
+  preferidas      TEXT NOT NULL DEFAULT '[]',            -- obras que elige: [{obra, titulo, tipo: preferida|influencia, nota}]
+  referentes      TEXT NOT NULL DEFAULT '[]',            -- personas que le influyen: [{nombre, publico, enlace, nota}]
   consentimiento  TEXT NOT NULL DEFAULT '',
   publicada       INTEGER NOT NULL DEFAULT 0,
   actualizado     TEXT NOT NULL DEFAULT (datetime('now'))
@@ -85,6 +87,50 @@ CREATE TABLE IF NOT EXISTS obras_propuestas (
   estado       TEXT NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente','aceptada','rechazada')),
   creado       TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Eventos (01-11-2026): festival, gira, ciclo, temporada, fiesta… Agrupan funciones y pueden ir unos dentro de otros
+-- (el festival → su edición de 2025). Es el patrón «evento global → x muestras locales trazables».
+CREATE TABLE IF NOT EXISTS eventos (
+  uuid         TEXT PRIMARY KEY,
+  nombre       TEXT NOT NULL,
+  tipo         TEXT NOT NULL DEFAULT '',
+  padre        TEXT,                                 -- evento que lo contiene (opcional)
+  inicio       TEXT NOT NULL DEFAULT '',
+  fin          TEXT NOT NULL DEFAULT '',
+  escala       TEXT NOT NULL DEFAULT '',             -- id de datos/escalas.json
+  descripcion  TEXT NOT NULL DEFAULT '',
+  web          TEXT NOT NULL DEFAULT '',
+  publicada    INTEGER NOT NULL DEFAULT 0,
+  creado       TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Funciones (01-11-2026): cada vez que una obra efímera o de repertorio ocurre (concierto, representación, romería de un
+-- año, acción). Tiempo siempre; espacio opcional: un soporte (sala, plaza, emisión), o solo municipio, o un lugar de fuera
+-- escrito a mano (Madrid), o ninguno. Los intérpretes de esa vez van aquí; la autoría, en la obra.
+CREATE TABLE IF NOT EXISTS funciones (
+  uuid            TEXT PRIMARY KEY,
+  titulo          TEXT NOT NULL DEFAULT '',          -- vacío: el de su primera obra
+  obras           TEXT NOT NULL DEFAULT '[]',        -- uuid de las obras que se hicieron (un concierto puede tener varias)
+  evento          TEXT,
+  inicio          TEXT NOT NULL DEFAULT '',          -- AAAA, AAAA-MM, AAAA-MM-DD o AAAA-MM-DDTHH:MM
+  fin             TEXT NOT NULL DEFAULT '',
+  fecha_precision TEXT NOT NULL DEFAULT '',
+  estado          TEXT NOT NULL DEFAULT 'celebrada',
+  soporte         TEXT,
+  isla            TEXT NOT NULL DEFAULT '',
+  municipio       TEXT NOT NULL DEFAULT '',
+  lugar           TEXT NOT NULL DEFAULT '',          -- texto libre: sala o ciudad, también fuera de Canarias
+  interpretes     TEXT NOT NULL DEFAULT '[]',        -- [{nombre, rol, certeza, visible}] como los agentes de una obra
+  registros       TEXT NOT NULL DEFAULT '[]',        -- [{tipo, url, credito, nota}]: cartel, programa, grabación…
+  descripcion     TEXT NOT NULL DEFAULT '',
+  fuentes         TEXT NOT NULL DEFAULT '',          -- no se publica
+  publicada       INTEGER NOT NULL DEFAULT 0,
+  creado          TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS funciones_evento ON funciones(evento);
+CREATE INDEX IF NOT EXISTS funciones_soporte ON funciones(soporte);
 
 -- Soportes: lo que identifica una etiqueta QR (una pared, una roca, un banco… o una web). Un soporte puede tener
 -- varias obras a la vez o unas encima de otras con el tiempo; obra_soporte guarda desde y hasta cuándo.

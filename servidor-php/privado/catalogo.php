@@ -5,7 +5,7 @@
 
 const FASES = ['gestacion', 'creacion', 'plenitud', 'desgaste', 'intervencion', 'transformacion', 'desaparicion', 'memoria'];
 const SENSIBILIDADES = ['abierta', 'difusa', 'reservada'];
-const CAMPOS_OBRA = ['titulo', 'sensibilidad', 'lat', 'lon', 'fase', 'isla', 'municipio', 'lugar', 'disciplina', 'permanencia', 'tipo', 'descripcion', 'autoria',
+const CAMPOS_OBRA = ['titulo', 'sensibilidad', 'lat', 'lon', 'fase', 'isla', 'municipio', 'lugar', 'disciplina', 'permanencia', 'ambito', 'tipo', 'descripcion', 'autoria',
   'fecha_obra', 'fecha_precision', 'agentes', 'pagadores', 'relaciones', 'fuentes', 'foto', 'foto_credito', 'ficha', 'publicada', 'desconocidos'];
 // Campos que se pueden marcar como «desconocido»: el archivo es colaborativo y no siempre se sabe todo. La ficha pública
 // los muestra como desconocidos e invita a quien la mira (o escanea su QR) a completarlos.
@@ -19,6 +19,9 @@ const DISCIPLINAS = ['' => 'Sin indicar', 'visuales' => 'Artes visuales', 'music
 // Permanencia: una obra que está (un mural), una que ocurrió una vez (una acción) o una que se repite (un montaje, una
 // canción, una romería). Cada vez que una obra efímera o de repertorio ocurre será una «función» (fecha y lugar propios).
 const PERMANENCIAS = ['' => 'Sin indicar', 'permanente' => 'Permanente', 'efimera' => 'Efímera (ocurrió una vez)', 'repertorio' => 'De repertorio (se repite)'];
+// Ámbito: '' = obra del catálogo (en Canarias o en su red, con municipio o punto). 'referencia' = obra de fuera que se cita
+// (la novela que adapta un montaje, el disco preferido de un artista): ficha mínima, sin espacio, no va en el mapa.
+const AMBITOS = ['' => 'Del catálogo (en Canarias)', 'referencia' => 'De referencia (de fuera: libro, disco, película… sin lugar)'];
 // Vocabularios de los nodos de una obra. Son los mismos en /admin y en el formulario público de la web.
 const ROLES_AGENTE = ['autoria' => 'Autoría', 'coautoria' => 'Coautoría', 'ejecucion' => 'Ejecución', 'encargo' => 'Encargo',
   'restauracion' => 'Restauración', 'colaboracion' => 'Colaboración', 'cuidado' => 'Cuidado',
@@ -75,13 +78,15 @@ function migrar_catalogo(PDO $db): void {
     'version' => 'INTEGER NOT NULL DEFAULT 0', 'creado' => 'TEXT', 'actualizado' => 'TEXT', 'fecha_precision' => "TEXT NOT NULL DEFAULT ''",
     'agentes' => "TEXT NOT NULL DEFAULT '[]'", 'pagadores' => "TEXT NOT NULL DEFAULT '[]'", 'relaciones' => "TEXT NOT NULL DEFAULT '[]'",
     'fuentes' => "TEXT NOT NULL DEFAULT ''", 'isla' => "TEXT NOT NULL DEFAULT ''",
-    'desconocidos' => "TEXT NOT NULL DEFAULT ''", 'disciplina' => "TEXT NOT NULL DEFAULT ''", 'permanencia' => "TEXT NOT NULL DEFAULT ''"];
+    'desconocidos' => "TEXT NOT NULL DEFAULT ''", 'disciplina' => "TEXT NOT NULL DEFAULT ''", 'permanencia' => "TEXT NOT NULL DEFAULT ''", 'ambito' => "TEXT NOT NULL DEFAULT ''"];
   foreach ($nuevas as $col => $tipo) if (!in_array($col, $hay, true)) $db->exec("ALTER TABLE obras ADD COLUMN $col $tipo");
   // Envíos hechos con cuenta: quedan a nombre de su autor/a y suman méritos al aprobarse.
   $hay = array_column($db->query('PRAGMA table_info(envios)')->fetchAll(), 'name');
   if (!in_array('colaborador', $hay, true)) $db->exec('ALTER TABLE envios ADD COLUMN colaborador INTEGER REFERENCES colaboradores(id)');
   $hay = array_column($db->query('PRAGMA table_info(rutas)')->fetchAll(), 'name');
   if (!in_array('notas', $hay, true)) $db->exec("ALTER TABLE rutas ADD COLUMN notas TEXT NOT NULL DEFAULT '{}'");
+  $hay = array_column($db->query('PRAGMA table_info(artistas)')->fetchAll(), 'name');
+  foreach (['preferidas', 'referentes'] as $col) if (!in_array($col, $hay, true)) $db->exec("ALTER TABLE artistas ADD COLUMN $col TEXT NOT NULL DEFAULT '[]'");
 }
 
 // Listas de nodos de una obra (personas y colectivos, quién pagó, relaciones con otras obras), guardadas en JSON.
@@ -145,13 +150,19 @@ function obra_guardar(array $d, ?string $uuid, string $autor = 'admin'): string 
   if (!in_array($o['fase'], FASES, true)) throw new InvalidArgumentException('Fase no válida.');
   if (!isset(DISCIPLINAS[$o['disciplina']])) $o['disciplina'] = '';
   if (!isset(PERMANENCIAS[$o['permanencia']])) $o['permanencia'] = '';
+  if (!isset(AMBITOS[$o['ambito']])) $o['ambito'] = '';
+  // Una obra de referencia no tiene lugar: ni punto ni municipio, y nada que proteger.
+  if ($o['ambito'] === 'referencia') {
+    $o['lat'] = $o['lon'] = ''; $o['municipio'] = $o['lugar'] = $o['isla'] = '';
+    $o['sensibilidad'] = 'abierta';
+  }
   foreach (['lat' => [27.4, 29.6], 'lon' => [-18.4, -13.2]] as $k => [$min, $max]) {
     $o[$k] = $o[$k] === '' ? null : (float) str_replace(',', '.', (string) $o[$k]);
     if ($o[$k] !== null && ($o[$k] < $min || $o[$k] > $max)) throw new InvalidArgumentException('Las coordenadas no caen en Canarias.');
   }
   if (($o['lat'] === null) !== ($o['lon'] === null)) throw new InvalidArgumentException('Faltan la latitud o la longitud.');
-  if ($o['lat'] === null && $o['municipio'] === '') throw new InvalidArgumentException('Una obra sin punto necesita al menos el municipio.');
-  if (!isset(ISLAS_CODIGO[$o['isla']])) $o['isla'] = isla_de($o['lat'], $o['lon']);
+  if ($o['lat'] === null && $o['municipio'] === '' && $o['ambito'] !== 'referencia') throw new InvalidArgumentException('Una obra sin punto necesita al menos el municipio.');
+  if (!isset(ISLAS_CODIGO[$o['isla']]) && $o['ambito'] !== 'referencia') $o['isla'] = isla_de($o['lat'], $o['lon']);
   // Una reservada sin isla ni punto se dibuja alrededor del centro del archipiélago.
   if ($o['sensibilidad'] === 'reservada' && $o['isla'] === '') $o['isla'] = 'CAN';
   foreach (['foto', 'ficha'] as $k) {
@@ -209,8 +220,9 @@ function catalogo_geojson(): never { enviar_geojson(catalogo_geojson_features())
 function catalogo_geojson_features(): array {
   $features = [];
   $obras = db()->query('SELECT * FROM obras WHERE publicada = 1 ORDER BY titulo')->fetchAll();
-  $publicadas = array_flip(array_column($obras, 'uuid'));
+  $publicadas = array_flip(array_column($obras, 'uuid'));  // también las de referencia: una relación con ellas se publica
   foreach ($obras as $o) {
+    if ($o['ambito'] === 'referencia') continue;  // van en /datos/referencias.geojson
     // Sin punto propio, la obra toma el de su soporte actual (y su municipio e isla), con la protección de la obra.
     $sop = soporte_de_obra($o['uuid']);
     if ($sop && $o['lat'] === null && $sop['lat'] !== null) {
@@ -312,11 +324,39 @@ function ruta_guardar(array $d, ?string $id): string {
 
 // ---------- Artistas ----------
 const CAMPOS_ARTISTA = ['nombre', 'disciplina', 'municipio', 'bio', 'web', 'tienda', 'mecenazgo', 'redes', 'foto', 'foto_credito',
-  'espacio', 'lat', 'lon', 'obras', 'consentimiento', 'publicada'];
+  'espacio', 'lat', 'lon', 'obras', 'preferidas', 'referentes', 'consentimiento', 'publicada'];
+// Obras que un artista elige (01-11-2026): «preferida» le gusta; «influencia» ha marcado su trabajo. Pueden ser obras del
+// catálogo, de referencia (un disco, un libro, una película de fuera) o solo un título si aún no tienen ficha.
+const TIPOS_PREFERIDA = ['preferida' => 'Preferida', 'influencia' => 'Influencia'];
+
+// Preferidas y referentes de un artista, en JSON. Referentes: personas que le influyen. Solo se publican las marcadas
+// como públicas (figura pública o han aceptado figurar); las demás se guardan pero no salen (regla de privacidad).
+function normalizar_artista_nodos(string $tipo, $v): string {
+  $filas = is_array($v) ? $v : json_decode(trim((string) $v) ?: '[]', true);
+  if (!is_array($filas)) throw new InvalidArgumentException("La lista de $tipo no es válida.");
+  $out = [];
+  foreach (array_slice($filas, 0, 40) as $f) {
+    if (!is_array($f)) continue;
+    $t = fn($k) => trim(mb_substr((string) ($f[$k] ?? ''), 0, 300));
+    if ($tipo === 'preferidas') {
+      $u = strtolower($t('obra'));
+      if (!preg_match('/^' . RE_UUID . '$/', $u)) $u = '';
+      if ($u === '' && $t('titulo') === '') continue;
+      $out[] = ['obra' => $u, 'titulo' => $t('titulo'), 'tipo' => isset(TIPOS_PREFERIDA[$t('tipo')]) ? $t('tipo') : 'preferida', 'nota' => $t('nota')];
+    } else {
+      if ($t('nombre') === '') continue;
+      $enlace = $t('enlace');
+      if ($enlace !== '' && !str_starts_with($enlace, 'https://')) throw new InvalidArgumentException('El enlace de un referente tiene que empezar por https://');
+      $out[] = ['nombre' => $t('nombre'), 'publico' => !empty($f['publico']), 'enlace' => $enlace, 'nota' => $t('nota')];
+    }
+  }
+  return json_encode($out, JSON_UNESCAPED_UNICODE);
+}
 
 function artista_guardar(array $d, ?string $id): string {
   $a = [];
   foreach (CAMPOS_ARTISTA as $k) $a[$k] = trim(mb_substr((string) ($d[$k] ?? ''), 0, 8000));
+  foreach (['preferidas', 'referentes'] as $k) $a[$k] = normalizar_artista_nodos($k, $d[$k] ?? '[]');
   if ($a['nombre'] === '') throw new InvalidArgumentException('Falta el nombre.');
   if ($a['publicada'] && $a['consentimiento'] === '') throw new InvalidArgumentException('Para publicar un perfil hace falta anotar su consentimiento (fecha y cómo lo dio).');
   foreach (['web', 'tienda', 'mecenazgo', 'foto'] as $k) {
@@ -348,6 +388,22 @@ function artistas_geojson_features(): array {
     $claves = ['disciplina' => 'disciplinas', 'municipio' => 'municipio', 'bio' => 'bio', 'web' => 'enlace_web', 'tienda' => 'enlace_tienda',
       'mecenazgo' => 'enlace_mecenazgo', 'redes' => 'enlace_redes', 'foto' => 'foto', 'foto_credito' => 'foto_credito', 'espacio' => 'espacio', 'obras' => 'obras'];
     foreach ($claves as $k => $clave) if ($a[$k] !== '') $props[$clave] = $a[$k];
+    // Preferidas: las del catálogo o de referencia solo si están publicadas; si no, se queda el título.
+    $pref = [];
+    foreach (json_decode($a['preferidas'] ?: '[]', true) ?: [] as $p) {
+      $o = $p['obra'] ? obra($p['obra']) : null;
+      $pub = $o && $o['publicada'];
+      $titulo = $pub ? $o['titulo'] : ($p['titulo'] ?: '');
+      if ($titulo === '') continue;
+      $pref[] = array_filter(['obra' => $pub ? $o['uuid'] : '', 'titulo' => $titulo, 'tipo' => $p['tipo'], 'nota' => $p['nota']], fn($v) => $v !== '');
+    }
+    $refs = array_values(array_map(fn($r) => array_filter(['nombre' => $r['nombre'], 'enlace' => $r['enlace'], 'nota' => $r['nota']], fn($v) => $v !== ''),
+      array_filter(json_decode($a['referentes'] ?: '[]', true) ?: [], fn($r) => !empty($r['publico']))));
+    if ($pref) {
+      $props['preferidas'] = $pref;
+      $props['preferidas_texto'] = implode(' · ', array_map(fn($p) => $p['titulo'] . ($p['tipo'] === 'influencia' ? ' (influencia)' : ''), $pref));  // para uMap
+    }
+    if ($refs) { $props['referentes'] = $refs; $props['referentes_texto'] = implode(' · ', array_column($refs, 'nombre')); }
     $geo = $a['lat'] !== null ? ['type' => 'Point', 'coordinates' => [round((float) $a['lon'], 6), round((float) $a['lat'], 6)]] : null;
     $features[] = ['type' => 'Feature', 'geometry' => $geo, 'properties' => $props];
   }
@@ -359,7 +415,8 @@ function artistas_geojson_features(): array {
 // (al guardar en /admin, o por el cron si cambian las etiquetas QR), se pide a GitHub que vuelva a publicar la web,
 // que copia los datos nuevos. Hace falta 'github_token' en config.php; sin él, la copia se refresca cada 6 horas.
 function huella_catalogo(): string {
-  return hash('sha256', json_encode([catalogo_geojson_features(), soportes_features(), rutas_geojson_features(), artistas_geojson_features()]));
+  return hash('sha256', json_encode([catalogo_geojson_features(), soportes_features(), rutas_geojson_features(), artistas_geojson_features(),
+    referencias_geojson_features(), funciones_geojson_features(), eventos_geojson_features()]));
 }
 
 // Devuelve un texto para mostrar en /admin. $forzar: botón «Publicar ahora» (publica aunque no haya cambios).

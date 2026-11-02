@@ -113,7 +113,33 @@ function perfil(int $id): array {
   $cupo = config()['qr']['cupos'][$nivel];
   return ['alias' => $c['alias'], 'nivel' => $nivel, 'meritos' => (int) $c['meritos'], 'cupo' => $cupo,
           'disponibles' => max(0, $cupo - count(array_filter($abiertas, fn($a) => $a['estado'] === 'asignado'))),
-          'etiquetas' => $abiertas];
+          'etiquetas' => $abiertas, 'envios' => envios_de($id)];
+}
+
+// Méritos por aportación aprobada, cuando quien la envía ha entrado con su cuenta. Catalogar una obra nueva pesa más.
+const MERITOS_ENVIO = ['obra_nueva' => 3, 'ruta' => 2, 'completar' => 1, 'contexto' => 1, 'observacion' => 1];
+
+// Marca un envío como aprobado, apunta la obra del catálogo que salió de él y suma los méritos a su autor/a (una sola vez).
+function aprobar_envio(int $id, ?string $obra = null): void {
+  $db = db();
+  $db->prepare("UPDATE envios SET estado = 'aprobada'" . ($obra ? ', obra = COALESCE(obra, ?)' : '') . ' WHERE id = ?')->execute($obra ? [$obra, $id] : [$id]);
+  $st = $db->prepare('SELECT formulario, colaborador FROM envios WHERE id = ?');
+  $st->execute([$id]);
+  $e = $st->fetch();
+  if ($e && $e['colaborador'] && isset(MERITOS_ENVIO[$e['formulario']])) sumar_meritos((int) $e['colaborador'], 'envio_' . $e['formulario'], MERITOS_ENVIO[$e['formulario']], (string) $id);
+}
+
+// Lo que ha aportado una persona con su cuenta, para verlo en «Colabora».
+function envios_de(int $colaborador): array {
+  $st = db()->prepare("SELECT e.id, e.formulario, e.obra, e.estado, e.creado, e.datos, o.titulo AS titulo_obra, o.publicada FROM envios e
+                       LEFT JOIN obras o ON o.uuid = e.obra WHERE e.colaborador = ? AND e.formulario <> 'inscripcion' ORDER BY e.id DESC LIMIT 100");
+  $st->execute([$colaborador]);
+  return array_map(function ($e) {
+    $d = json_decode($e['datos'], true) ?: [];
+    return ['id' => (int) $e['id'], 'tipo' => $e['formulario'], 'estado' => $e['estado'], 'creado' => $e['creado'],
+      'titulo' => $e['titulo_obra'] ?: ($d['titulo'] ?? ''), 'obra' => $e['publicada'] ? $e['obra'] : null,
+      'meritos' => $e['estado'] === 'aprobada' ? (MERITOS_ENVIO[$e['formulario']] ?? 0) : 0];
+  }, $st->fetchAll());
 }
 
 function sumar_meritos(int $colaborador, string $tipo, int $puntos, string $referencia): void {

@@ -38,9 +38,8 @@ if ($sub === '/salir' && $metodo === 'POST') { session_destroy(); header('Locati
 
 if ($sub === '/estado' && $metodo === 'POST') {
   $estado = (string) $_POST['estado'];
-  if (in_array($estado, ['aprobada', 'rechazada', 'pendiente'], true)) {
-    $db->prepare('UPDATE envios SET estado = ? WHERE id = ?')->execute([$estado, (int) $_POST['id']]);
-  }
+  if ($estado === 'aprobada') aprobar_envio((int) $_POST['id']);
+  elseif (in_array($estado, ['rechazada', 'pendiente'], true)) $db->prepare('UPDATE envios SET estado = ? WHERE id = ?')->execute([$estado, (int) $_POST['id']]);
   header('Location: /admin?estado=' . urlencode($_POST['volver'] ?? 'pendiente'), true, 303);
   exit;
 }
@@ -196,13 +195,13 @@ if ($sub === '/obras') {
 
 $nombres = ['observacion' => 'Observación (QR)', 'contexto' => 'Contexto', 'obra_nueva' => 'Obra nueva', 'ruta' => 'Ruta propuesta', 'inscripcion' => 'Inscripción a salida', 'completar' => 'Completar ficha (datos desconocidos)'];
 $estado = in_array($_GET['estado'] ?? '', ['aprobada', 'rechazada'], true) ? $_GET['estado'] : 'pendiente';
-$st = $db->prepare('SELECT * FROM envios WHERE estado = ? ORDER BY creado DESC LIMIT 200');
+$st = $db->prepare('SELECT e.*, c.alias AS cuenta FROM envios e LEFT JOIN colaboradores c ON c.id = e.colaborador WHERE e.estado = ? ORDER BY e.creado DESC LIMIT 200');
 $st->execute([$estado]);
 $html = "<nav><a href='/admin'>Pendientes</a> · <a href='/admin?estado=aprobada'>Aprobados</a> · <a href='/admin?estado=rechazada'>Rechazados</a></nav>";
 $envios = $st->fetchAll();
 if (!$envios) $html .= '<div class=vacio>No hay envíos en este estado. Aquí llegan las propuestas de obras y rutas, las observaciones hechas con el QR, las aportaciones de contexto y los datos que completa el público.</div>';
 foreach ($envios as $e) {
-  $html .= "<article><strong>{$h($nombres[$e['formulario']] ?? $e['formulario'])}</strong> <span class=meta>{$h($e['obra'])} · {$h($e['creado'])}</span><dl>";
+  $html .= "<article><strong>{$h($nombres[$e['formulario']] ?? $e['formulario'])}</strong> <span class=meta>{$h($e['obra'])} · {$h($e['creado'])}" . ($e['cuenta'] ? " · con cuenta: <a href='/admin/personas'>{$h($e['cuenta'])}</a>" : ' · sin cuenta') . "</span><dl>";
   foreach (json_decode($e['datos'], true) as $k => $v) $html .= "<dt>{$h($k)}</dt><dd>{$h($v)}</dd>";
   $html .= '</dl>';
   foreach (json_decode($e['fotos'], true) as $f) $html .= "<a href='/admin/foto/{$h($f)}'><img src='/admin/foto/{$h($f)}' alt='Foto enviada'></a>";

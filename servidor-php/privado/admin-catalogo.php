@@ -150,7 +150,7 @@ if ($sub === '/obra') {
       }
       $id = obra_guardar($d, $id ?: null);
       if (!empty($_POST['desde_propuesta'])) $db->prepare("UPDATE obras_propuestas SET estado = 'aceptada' WHERE uuid = ?")->execute([$id]);
-      if (!empty($_POST['desde_envio'])) $db->prepare("UPDATE envios SET estado = 'aprobada' WHERE id = ?")->execute([(int) $_POST['desde_envio']]);
+      if (!empty($_POST['desde_envio'])) aprobar_envio((int) $_POST['desde_envio'], $id);
       $_SESSION['publicacion'] = publicar_web();
       header('Location: /admin/obra?ok=1&id=' . urlencode($id), true, 303);
       exit;
@@ -317,7 +317,7 @@ if ($sub === '/ruta') {
   if ($metodo === 'POST') {
     try {
       $id = ruta_guardar($_POST, $id ?: null);
-      if (!empty($_POST['desde_envio'])) $db->prepare("UPDATE envios SET estado = 'aprobada' WHERE id = ?")->execute([(int) $_POST['desde_envio']]);
+      if (!empty($_POST['desde_envio'])) aprobar_envio((int) $_POST['desde_envio']);
       $_SESSION['publicacion'] = publicar_web();
       header('Location: /admin/ruta?ok=1&id=' . urlencode($id), true, 303);
       exit;

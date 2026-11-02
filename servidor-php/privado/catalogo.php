@@ -77,6 +77,9 @@ function migrar_catalogo(PDO $db): void {
     'fuentes' => "TEXT NOT NULL DEFAULT ''", 'isla' => "TEXT NOT NULL DEFAULT ''",
     'desconocidos' => "TEXT NOT NULL DEFAULT ''", 'disciplina' => "TEXT NOT NULL DEFAULT ''", 'permanencia' => "TEXT NOT NULL DEFAULT ''"];
   foreach ($nuevas as $col => $tipo) if (!in_array($col, $hay, true)) $db->exec("ALTER TABLE obras ADD COLUMN $col $tipo");
+  // Envíos hechos con cuenta: quedan a nombre de su autor/a y suman méritos al aprobarse.
+  $hay = array_column($db->query('PRAGMA table_info(envios)')->fetchAll(), 'name');
+  if (!in_array('colaborador', $hay, true)) $db->exec('ALTER TABLE envios ADD COLUMN colaborador INTEGER REFERENCES colaboradores(id)');
   $hay = array_column($db->query('PRAGMA table_info(rutas)')->fetchAll(), 'name');
   if (!in_array('notas', $hay, true)) $db->exec("ALTER TABLE rutas ADD COLUMN notas TEXT NOT NULL DEFAULT '{}'");
 }

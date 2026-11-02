@@ -200,7 +200,8 @@ CREATE TABLE IF NOT EXISTS envios (
   fotos       TEXT NOT NULL DEFAULT '[]',
   estado      TEXT NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente','aprobada','rechazada')),
   ip_hash     TEXT,
-  creado      TEXT NOT NULL DEFAULT (datetime('now'))
+  creado      TEXT NOT NULL DEFAULT (datetime('now')),
+  colaborador INTEGER REFERENCES colaboradores(id)   -- si se envió con la cuenta iniciada
 );
 CREATE INDEX IF NOT EXISTS envios_estado ON envios(formulario, estado);
 CREATE INDEX IF NOT EXISTS envios_obra ON envios(obra, estado);

@@ -66,14 +66,27 @@ def huella(obj):
     return hashlib.sha256(json.dumps(obj, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:16]
 
 
-def peticion(url, datos=None, metodo=None, cabeceras=None, tiempo=60):
+ESPERA = float(os.environ.get("IA_ESPERA", "15"))  # segundos antes del primer reintento (las pruebas lo bajan)
+
+
+def peticion(url, datos=None, metodo=None, cabeceras=None, tiempo=60, intentos=4):
+    """archive.org corta conexiones cuando recibe muchas seguidas (Connection refused, 429, 5xx): se espera y se reintenta."""
     cab = {"User-Agent": UA, **(cabeceras or {})}
     if isinstance(datos, dict):
         datos = urllib.parse.urlencode(datos).encode()
         cab.setdefault("Content-Type", "application/x-www-form-urlencoded")
-    req = urllib.request.Request(url, data=datos, method=metodo, headers=cab)
-    with urllib.request.urlopen(req, timeout=tiempo) as r:
-        return r.status, dict(r.headers), r.read()
+    for k in range(intentos):
+        req = urllib.request.Request(url, data=datos, method=metodo, headers=cab)
+        try:
+            with urllib.request.urlopen(req, timeout=tiempo) as r:
+                return r.status, dict(r.headers), r.read()
+        except urllib.error.HTTPError as err:
+            if err.code not in (429, 500, 502, 503, 504) or k + 1 == intentos:
+                raise
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
+            if k + 1 == intentos:
+                raise
+        time.sleep(ESPERA * 2 ** k)
 
 
 def auth():
@@ -274,7 +287,7 @@ def main():
     nuevas_ok = 0
     for i, t in enumerate(hechas):
         if i:
-            time.sleep(5 if CON_CLAVES else 20)
+            time.sleep(10 if CON_CLAVES else 20)
         entrada = {k: v for k, v in t.items() if k in ("url", "motivo", "obra", "commit")}
         entrada["fecha"] = ahora().isoformat()
         try:

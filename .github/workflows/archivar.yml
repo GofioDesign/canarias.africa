@@ -47,14 +47,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if git diff --quiet -- datos/archivo; then
+          mkdir -p datos/archivo
+          git add datos/archivo
+          # --cached: la primera vez el registro es un fichero nuevo, que git diff a secas no ve.
+          if git diff --cached --quiet -- datos/archivo; then
             echo "Sin estratos nuevos."
             exit 0
           fi
           git config user.name "canarias.africa archivo"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add datos/archivo
           git commit -m "Archivo: nuevos estratos en archive.org"
+          git pull --rebase origin main  # main puede haber avanzado mientras se archivaba
           git push origin HEAD:main
           # Los push con GITHUB_TOKEN no lanzan otras acciones: se pide la publicación expresamente.
           # El commit solo toca datos/archivo/, así que la siguiente pasada no lo vuelve a archivar.

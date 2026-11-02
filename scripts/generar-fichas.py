@@ -79,6 +79,7 @@ ul.cambios{margin:4px 0;padding-left:18px;list-style:disc;font-size:.95rem} del{
 .tree ul{list-style:none;padding-left:16px;margin:2px 0;border-left:1px dashed var(--linea)}
 .tree>ul{border-left:0;padding-left:0}
 .mono{font-family:ui-monospace,monospace;font-size:.88rem;word-break:break-all}
+.archivo{margin-top:40px;padding-top:12px;border-top:1px solid var(--linea);font-size:.88rem}
 """
 
 MOTIVOS = {
@@ -133,7 +134,14 @@ def etiquetas(titulo, descripcion, ruta, imagen=None, alt="", tipo="article", in
 <meta name="twitter:image" content="{e(img)}">"""
 
 
-def pagina(titulo, cuerpo, meta="", cabeza=""):
+def en_archivo(ruta):
+    """Enlaces a esta página en archive.org: la captura más reciente y todas (la Wayback redirige a la última)."""
+    url = SITIO + ruta
+    return (f'<footer class="archivo muted">Esta página en archive.org: <a href="https://web.archive.org/web/{e(url)}">la captura más reciente</a>'
+            f' · <a href="https://web.archive.org/web/*/{e(url)}">todas sus capturas</a></footer>')
+
+
+def pagina(titulo, cuerpo, meta="", cabeza="", ruta=None):
     return f"""<!doctype html>
 <html lang="es">
 <head>
@@ -146,6 +154,7 @@ def pagina(titulo, cuerpo, meta="", cabeza=""):
 </head>
 <body><main>
 {cuerpo}
+{en_archivo(ruta) if ruta else ""}
 </main></body>
 </html>
 """
@@ -760,7 +769,10 @@ def main():
             rastro = '<p class="muted">Dato de ejemplo: no se inscribe en archive.org.</p>'
         else:
             item = f'<p>Capas de la ficha en Internet Archive: <a href="{e(info["item"])}">{e(info["item"])}</a> ({len(info.get("capas", []))})</p>' if info.get("item") else ""
-            rastro = item + lista([c for c in capturas if c.get("obra") == uuid])
+            ficha = SITIO + f"/obra/{uuid}/"
+            enlaces = (f'<p>Esta ficha en la Wayback Machine: <a href="https://web.archive.org/web/{e(ficha)}">la captura más reciente</a> · '
+                       f'<a href="https://web.archive.org/web/*/{e(ficha)}">todas sus capturas</a></p>')
+            rastro = enlaces + item + lista([c for c in capturas if c.get("obra") == uuid])
         versiones = hist.get(uuid, [])
         ultima = versiones[-1] if versiones else None
         idlinea = f'<span class="mono" title="Identificador permanente">{e(uuid)}</span>'
@@ -793,7 +805,8 @@ def main():
         if not p.get("ficticio"):
             urls.append(ruta)
         destino.write_text(pagina(f"{titulo} · CANARIAS", cuerpo,
-                                  etiquetas(f"{titulo} · CANARIAS", desc, ruta, img, f"Ficha de la obra {titulo}", indexar=not p.get("ficticio"))), encoding="utf-8")
+                                  etiquetas(f"{titulo} · CANARIAS", desc, ruta, img, f"Ficha de la obra {titulo}", indexar=not p.get("ficticio")),
+                                  ruta=None if p.get("ficticio") else ruta), encoding="utf-8")
 
     cuerpo = f"""<p class="eyebrow"><a href="/">CANARIAS</a> · Arqueología de la red</p>
 <h1>Estratos</h1>
@@ -803,7 +816,7 @@ def main():
     (WEB / "estratos").mkdir(parents=True, exist_ok=True)
     (WEB / "estratos" / "index.html").write_text(pagina("Estratos · CANARIAS", cuerpo, etiquetas(
         "Estratos · CANARIAS", "Arqueología de la red: cada cambio de canarias.africa y cada obra registrada, inscritos en archive.org a medida que suceden.",
-        "/estratos/", tipo="website")), encoding="utf-8")
+        "/estratos/", tipo="website"), ruta="/estratos/"), encoding="utf-8")
     urls.append("/estratos/")
 
     for i, ag in ags.items():
@@ -834,7 +847,7 @@ def main():
         img = imagen_compartir(destino.parent, ruta, titulo=ag["nombre"], antetitulo=f"Trayectoria · {len(ag['obras'])} obras", texto=", ".join(espacios), ident="")
         urls.append(ruta)
         destino.write_text(pagina(f"{ag['nombre']} · CANARIAS", cuerpo,
-                                  etiquetas(f"{ag['nombre']} · CANARIAS", desc, ruta, img, f"Trayectoria de {ag['nombre']}", tipo="profile")), encoding="utf-8")
+                                  etiquetas(f"{ag['nombre']} · CANARIAS", desc, ruta, img, f"Trayectoria de {ag['nombre']}", tipo="profile"), ruta=ruta), encoding="utf-8")
 
     publico = {"actualizado": reg.get("actualizado"), "capturas": capturas,
                "obras": {u: {k: v for k, v in o.items() if k in ("item", "capas")} for u, o in obras_reg.items()}}

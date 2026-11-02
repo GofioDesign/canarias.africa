@@ -143,8 +143,11 @@ function recibir_envio(string $coleccion): never {
     if ($f['error'] !== UPLOAD_ERR_OK || $f['size'] > 15 * 1024 * 1024) error_publico('La foto no ha llegado bien o pasa de 15 MB.');
     $fotos[] = guardar_foto($f['tmp_name'], mime_content_type($f['tmp_name']) ?: '');
   }
-  $db->prepare('INSERT INTO envios (formulario, obra, datos, fotos, ip_hash) VALUES (?, ?, ?, ?, ?)')
-     ->execute([$formulario, $obra, json_encode($datos, JSON_UNESCAPED_UNICODE), json_encode($fotos), $ip]);
+  // Con la cuenta iniciada, el envío queda a su nombre (y el alias es el de la cuenta).
+  $c = colaborador_actual();
+  if ($c) $datos['alias'] = $c['alias'];
+  $db->prepare('INSERT INTO envios (formulario, obra, datos, fotos, ip_hash, colaborador) VALUES (?, ?, ?, ?, ?, ?)')
+     ->execute([$formulario, $obra, json_encode($datos, JSON_UNESCAPED_UNICODE), json_encode($fotos), $ip, $c['id'] ?? null]);
   avisar("canarias.africa: nuevo envío ($formulario)", "Hay un envío pendiente de revisar en " . 'https://' . ($_SERVER['HTTP_HOST'] ?? '') . "/admin\n");
   json_respuesta(['ok' => true, 'estado' => 'pendiente'], 201);
 }

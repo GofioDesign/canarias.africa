@@ -806,6 +806,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 .cuenta form.obsf{background:var(--surface);border:1px solid var(--line);padding:18px;align-content:start}
 .cuenta h2{margin:0;font-size:1.15rem}
 .perfil{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.vias{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0 6px}.via{display:block;background:var(--surface);border:1px solid var(--line);padding:16px;text-decoration:none;color:inherit}.via:hover,.via:focus-visible{border-color:var(--ink)}.via h3{margin:10px 0 6px}.via p{margin:0;color:var(--muted);font-size:.95rem}
 form.obsf .gps,form.obsf .nueva{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
 form.obsf .nueva{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 20px;border-left:3px solid var(--lichen);padding-left:14px}
 form.obsf .nueva[hidden]{display:none}
@@ -2264,7 +2265,8 @@ const qrHash=o=>`/q/${o.qr.cod}`;
 const qrValido=(o,c)=>!!c&&o.qr.st==="activo"&&(!DEMO||c===o.qr.cod);
 const LIC=`<label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-lic" required style="margin-top:4px"> <span>Confirmo que las fotos o documentos son míos o puedo compartirlos. Conservo mis derechos y autorizo, sin exclusividad, a mostrarlos con mi crédito en el archivo (<a href="#derechos">derechos de imagen</a>).</span></label>`;
 const PRIV=`<label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-priv" name="acepta_privacidad" value="1" required style="margin-top:4px"> <span>He leído la <a href="#privacidad">política de privacidad</a> y acepto que canarias.africa guarde estos datos para revisar y publicar mi aportación.</span></label>`;
-const ALIAS=`<label for="o-alias">Tu nombre o alias (opcional)<input id="o-alias" type="text" placeholder="Se mostrará en la ficha" autocomplete="nickname"></label>`;
+const ALIAS=()=>SES&&SES.alias&&!DEMO?`<p class="muted" style="align-self:end">Lo envías como <strong>${esc(SES.alias)}</strong>: quedará a tu nombre en <a href="#colabora">Colabora</a> y sumará méritos cuando se apruebe.</p><input id="o-alias" type="hidden" value="${esc(SES.alias)}">`
+  :`<label for="o-alias">Tu nombre o alias (opcional)<input id="o-alias" type="text" placeholder="Se mostrará en la ficha" autocomplete="nickname"></label>`;
 function cabObra(o,eyebrow){ return `<p class="eyebrow"><a href="#${slug(o.id)}">← Ficha de la obra</a></p>
   <section class="stack" style="margin-top:14px"><div class="idline"><span class="idbadge" title="${o.id}">${corto(o.id)}</span>${chip(o.fase)}</div>
   <p class="eyebrow">${eyebrow}</p><h1>${esc(o.t)}</h1><p class="lede muted">${esc(o.lugar)} · ${MUNIS[o.m].n}</p></section>`; }
@@ -2281,7 +2283,7 @@ function vQR(o,cod,estado,web){
     </div></fieldset>
     <label class="full" for="o-txt">Qué ves<textarea id="o-txt" placeholder="Por ejemplo: la parte baja ha perdido color; hay una pintada nueva a la derecha."></textarea></label>
     <label for="o-foto">Foto de hoy (opcional)<input id="o-foto" type="file" accept="image/*" capture="environment"></label>
-    ${ALIAS}${LIC}${PRIV}
+    ${ALIAS()}${LIC}${PRIV}
     <p class="full muted" id="o-err" style="font-size:.9rem"></p>
     <div class="full btns"><button class="btn" type="submit">Enviar observación</button></div>
   </form>${web?"":bloqueVerificar(cod,estado,o)}`;
@@ -2299,7 +2301,7 @@ function vContexto(o){
     <label class="full" for="o-txt">Tu aportación<textarea id="o-txt" required placeholder="Por ejemplo: mi tío ayudó a pintarlo en el verano de 1987; lo organizó el ayuntamiento."></textarea></label>
     <label for="o-fuente">Fuente o enlace (opcional)<input id="o-fuente" type="text" placeholder="Programa de fiestas de 1987, archivo municipal…"></label>
     <label for="o-doc">Foto antigua o documento (opcional)<input id="o-doc" type="file" accept="image/*,application/pdf"></label>
-    ${ALIAS}${LIC}${PRIV}
+    ${ALIAS()}${LIC}${PRIV}
     <p class="full muted" id="o-err" style="font-size:.9rem"></p>
     <div class="full btns"><button class="btn" type="submit">Enviar contexto</button></div>
   </form>`;
@@ -2331,7 +2333,7 @@ function vAportar(){
     <label class="full" for="o-txt">Lo que sabes de ella (opcional) ${NOLOSE("descripcion")}<textarea id="o-txt" placeholder="Qué representa, técnica, historia, cómo está."></textarea></label>
     <label class="full" for="o-n-fue">Cómo lo sabes (opcional)<textarea id="o-n-fue" placeholder="Testimonio de vecinos, placa, artículo, documento… No se publica: ayuda a verificar."></textarea></label>
     <label for="o-foto">Foto (opcional)<input id="o-foto" type="file" accept="image/*" capture="environment"></label>
-    ${ALIAS}
+    ${ALIAS()}
     <fieldset class="full"><legend>¿Se puede publicar dónde está?</legend><div class="radios" style="flex-direction:column;gap:8px">
       <label><input type="radio" name="o-ubic" value="abierta" checked> Sí, el punto exacto: está en un espacio público y no corre peligro.</label>
       <label><input type="radio" name="o-ubic" value="difusa"> Solo la zona (unos 2 km): obra sin protección o en terreno privado.</label>
@@ -2381,7 +2383,8 @@ document.addEventListener("change",e=>{
 async function enviarAPI(tipo,campos){
   if(DEMO) return true;
   const fd=new FormData(); Object.entries(campos).forEach(([k,v])=>{ if(v!=null&&v!=="") fd.append(k,v); });
-  try{ const r=await fetch(API.envios[tipo],{method:"POST",body:fd}); return r.ok; }catch(e){ return false; }
+  const h=SES&&SES.token?{Authorization:"Bearer "+SES.token}:{}; // con la cuenta iniciada, el envío queda a tu nombre
+  try{ const r=await fetch(API.envios[tipo],{method:"POST",body:fd,headers:h}); return r.ok; }catch(e){ return false; }
 }
 const archivo=sel=>{ const el=$(sel); return el&&el.files&&el.files[0]||null; };
 async function enviar(e){
@@ -3260,12 +3263,20 @@ async function entrarConToken(t){
   if(r.ok&&r.j.token){ guardarSesion(r.j); location.hash="#"+(volver()||"colabora"); return; }
   $("#app").innerHTML=`<div class="view"><h1>No se ha podido entrar</h1><p class="lede muted">${esc(errDe(r,"El enlace ha caducado o ya se ha usado."))}</p><p><a href="#colabora">Pide un enlace nuevo</a></p></div>`;
 }
+/* Las tres formas de colaborar. Catalogar va primero: es lo que hace crecer el archivo. */
+const VIAS=`<div class="vias">
+  <a class="via" href="#aportar" data-obra="nueva"><span class="cinta">1</span><h3>Cataloga obras del espacio público</h3><p>Un mural, una escultura, una inscripción, una fiesta… Foto, punto GPS y lo que sepas. No hace falta saberlo todo.</p></a>
+  <a class="via" href="#archivo"><span class="cinta">2</span><h3>Completa fichas</h3><p>Busca obras con datos desconocidos y cuenta lo que sabes: quién la hizo, cuándo, quién la pagó.</p></a>
+  <a class="via" href="#colabora" onclick="const x=document.getElementById('etiquetas');if(x){event.preventDefault();x.scrollIntoView({behavior:'smooth'})}"><span class="cinta">3</span><h3>Coloca etiquetas QR</h3><p>Pide etiquetas, imprímelas y colócalas junto a las obras. Otras personas las verifican al escanearlas.</p></a>
+</div>`;
+const TIPO_ENVIO={obra_nueva:"Obra catalogada",completar:"Datos de una ficha",contexto:"Contexto",observacion:"Estado (QR)",ruta:"Ruta"};
+const EST_ENVIO={pendiente:"En revisión",aprobada:"Aprobada",rechazada:"No publicada"};
 function vColabora(){
-  const intro=`<p class="eyebrow">Colabora</p><h1>Coloca etiquetas QR</h1>`;
-  if(!SES) return `<section class="stack">${intro}
-    <p class="lede muted">Las etiquetas QR son la cara de CANARIAS.AFRICA en la calle. Funciona como una wiki: cualquiera puede colaborar y los permisos crecen con lo que la comunidad verifica. Empiezas con 3 etiquetas.</p>
-    <p class="muted">No hay contraseñas: te enviamos un enlace al correo cada vez que entras. <a href="#sistema">Cómo funciona el sistema de etiquetas</a></p></section>
-  <div class="cuenta">
+  const intro=`<p class="eyebrow">Colabora</p><h1>Construye el archivo</h1>
+    <p class="lede muted">CANARIAS.AFRICA lo hace la gente que vive junto a las obras. Funciona como una wiki: cualquiera puede aportar y los permisos crecen con lo que la comunidad verifica.</p>`;
+  if(!SES) return `<section class="stack">${intro}${VIAS}
+    <p class="muted">Puedes catalogar y completar fichas sin cuenta. Con cuenta, tus aportaciones quedan a tu nombre, sumas méritos y puedes pedir etiquetas QR (empiezas con 3). No hay contraseñas: te enviamos un enlace al correo cada vez que entras. <a href="#sistema">Cómo funciona</a></p></section>
+  <div class="cuenta" id="etiquetas">
     <form class="obsf" id="altaf" novalidate><h2 class="full">Crear cuenta</h2>
       <label for="u-alias">Alias<input id="u-alias" type="text" required autocomplete="nickname" placeholder="Se muestra en el historial"></label>
       <label for="u-correo">Correo<input id="u-correo" type="email" required autocomplete="email" placeholder="No se publica"></label>
@@ -3280,10 +3291,20 @@ function vColabora(){
     </form>
   </div>
   ${DEMO?`<p class="muted" style="margin-top:14px"><span class="fake">solo en el prototipo</span> No se envía ningún correo: entras directamente con un cupo simulado.</p>`:""}`;
-  const S=SES, ets=S.etiquetas||[], pend=ets.filter(e=>e.estado==="asignado");
+  const S=SES, ets=S.etiquetas||[], pend=ets.filter(e=>e.estado==="asignado"), envs=S.envios||[];
   return `<section class="stack">${intro}
-    <p class="lede muted">Hola, ${esc(S.alias)}. Pide etiquetas, imprímelas y colócalas junto a obras del archivo o junto a obras nuevas. Cada colocación que otras personas verifiquen te da méritos y más cupo.</p>
-    <div class="perfil"><span class="cinta id">${NIVEL[S.nivel]||esc(S.nivel)}</span><span class="cinta">${+S.meritos||0} méritos</span><span class="cinta">Cupo ${+S.cupo||0}</span><span class="cinta">${+S.disponibles||0} disponibles</span></div>
+    <div class="perfil"><span class="muted">Hola, ${esc(S.alias)}.</span><span class="cinta id">${NIVEL[S.nivel]||esc(S.nivel)}</span><span class="cinta">${+S.meritos||0} méritos</span></div>
+    ${VIAS}
+  </section>
+  <section class="stack" style="margin-top:30px"><h2>Tus aportaciones</h2>
+    ${envs.length?`<div class="aytable"><table><thead><tr><th>Qué</th><th>Obra</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>
+    ${envs.map(e=>`<tr><td>${TIPO_ENVIO[e.tipo]||esc(e.tipo)}</td><td>${e.obra?`<a href="#${slug(e.obra)}">${esc(e.titulo||"Ver ficha")}</a>`:esc(e.titulo||"—")}</td><td>${EST_ENVIO[e.estado]||esc(e.estado)}${e.meritos?` · +${e.meritos}`:""}</td><td>${fd(String(e.creado).slice(0,10))}</td></tr>`).join("")}</tbody></table></div>`
+      :`<div class="invite"><p>Todavía no has aportado nada con tu cuenta. ¿Conoces alguna obra en tu barrio o tu pueblo que no esté en el mapa?</p><div class="btns"><a class="btn" href="#aportar" data-obra="nueva">Catalogar una obra</a></div></div>`}
+    <p class="muted" style="font-size:.88rem;max-width:68ch">Cada aportación aprobada suma méritos: 3 por obra catalogada, 2 por ruta y 1 por dato completado, contexto o estado.</p>
+  </section>
+  <section class="stack" id="etiquetas" style="margin-top:30px"><h2>Etiquetas QR</h2>
+    <p class="muted" style="max-width:68ch">Pide etiquetas, imprímelas y colócalas junto a obras del archivo o junto a obras nuevas. Cada colocación que otras personas verifiquen te da méritos y más cupo.</p>
+    <div class="perfil"><span class="cinta">Cupo ${+S.cupo||0}</span><span class="cinta">${+S.disponibles||0} disponibles</span></div>
   </section>
   <div id="okbox" style="margin-top:20px"></div>
   <form class="obsf" id="asigf" novalidate style="margin-top:20px">

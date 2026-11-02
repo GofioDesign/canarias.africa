@@ -160,3 +160,24 @@ function soportes_features(): array {
   }
   return $features;
 }
+
+// Elimina un soporte: sus vínculos con obras desaparecen, las obras no. No se puede si tiene una etiqueta QR en su sitio
+// (colocada, confirmada…): primero hay que retirarla o pasarla a otro soporte. Las etiquetas antiguas quedan sin soporte.
+// Queda constancia en admin_registro. Ojo: un azulejo ya impreso con este UUID dejará de abrir nada.
+function soporte_eliminar(string $uuid): string {
+  $db = db();
+  $s = soporte($uuid) ?? throw new InvalidArgumentException('Ese soporte no existe.');
+  $st = $db->prepare('SELECT codigo FROM qr_codigos WHERE soporte = ? AND estado IN (' . implode(',', array_fill(0, count(ESTADOS_EN_SITIO), '?')) . ')');
+  $st->execute([$s['uuid'], ...ESTADOS_EN_SITIO]);
+  if ($en_sitio = $st->fetchAll(PDO::FETCH_COLUMN)) {
+    throw new InvalidArgumentException('No se puede eliminar: tiene etiquetas QR colocadas (' . implode(', ', $en_sitio) . '). Retíralas o pásalas a otro soporte antes.');
+  }
+  $db->beginTransaction();
+  $db->prepare('UPDATE qr_codigos SET soporte = NULL WHERE soporte = ?')->execute([$s['uuid']]);
+  $db->prepare('DELETE FROM obra_soporte WHERE soporte = ?')->execute([$s['uuid']]);
+  $db->prepare('DELETE FROM soportes WHERE uuid = ?')->execute([$s['uuid']]);
+  $db->prepare('INSERT INTO admin_registro (accion, detalle, ip, agente) VALUES (?, ?, ?, ?)')
+     ->execute(['eliminar_soporte', $s['uuid'] . ' · ' . $s['nombre'], $_SERVER['REMOTE_ADDR'] ?? '', mb_substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 300)]);
+  $db->commit();
+  return $s['nombre'];
+}

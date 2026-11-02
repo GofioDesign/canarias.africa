@@ -149,6 +149,7 @@ textarea{min-height:110px;width:100%;resize:vertical}
 .foto-obra{margin:6px 0 4px;display:flex;flex-direction:column;gap:6px}
 .foto-obra img{display:block;width:100%;max-height:min(70vh,560px);object-fit:cover;border-radius:4px;background:var(--line)}
 .foto-obra figcaption{font-family:var(--f-mono);font-size:.72rem;color:var(--muted)}
+.guia-foto{font-size:.88rem;color:var(--muted);border-left:3px solid var(--verde,#0A8A3A);padding:2px 0 2px 12px}.guia-foto p{margin:0 0 6px}form.obsf .guia-foto label{display:flex;flex-direction:row;align-items:flex-start;gap:8px;color:var(--ink);font-family:var(--f-body);font-size:.88rem}.guia-foto input{margin-top:4px}
 .tt-foto{display:flex;flex-direction:column;gap:4px;width:180px;white-space:normal}
 .tt-foto img{width:180px;height:120px;object-fit:cover;border-radius:3px;background:#ddd}
 .ficha-head{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:28px;align-items:start}
@@ -2286,7 +2287,7 @@ function bloqueCompletar(o,abierto){
     pagadores:`<label for="c-pn">Quién la pagó<select id="c-pn">${Object.entries(NATUR).map(([k,n])=>`<option value="${k}">${n}</option>`).join("")}</select></label>
       <label for="c-pe">Entidad<input id="c-pe" type="text" list="c-ent" placeholder="Ayuntamiento, empresa… (si es un particular, no se publica)"><datalist id="c-ent">${[...entidadesDe("publica"),...entidadesDe("privada")].map(e=>`<option value="${esc(e)}">`).join("")}</datalist></label>`,
     lugar:`<label class="full" for="c-lug">Dónde está exactamente<input id="c-lug" type="text" placeholder="Calle, número, plaza, paraje"></label>`,
-    foto:`<label class="full" for="c-foto">Una foto de la obra<input id="c-foto" type="file" accept="image/*" capture="environment"></label>`};
+    foto:`<label class="full" for="c-foto">Una foto de la obra<input id="c-foto" type="file" accept="image/*" capture="environment"></label>${GUIA_FOTO("c")}`};
   return `<details class="completar"${abierto?" open":""}><summary>¿Conoces más detalles de esta obra? Colabora</summary>
     <p class="faltan muted">De esta obra no sabemos: <b>${u.map(k=>DESCONOCIBLES[k].toLowerCase()).join(", ")}</b>. Si conoces algo, cuéntanoslo: el equipo lo revisa antes de publicarlo.</p>
     <form class="obsf" id="compf" data-obra="${o.id}" novalidate style="margin-top:14px">
@@ -2309,7 +2310,7 @@ async function completar(e){
   const d={obra:f.dataset.obra,alias:v("c-alias"),fuente:v("c-fue"),texto:v("c-fue"),fecha_obra:v("c-fec"),fecha_precision:v("c-fec")?v("c-fp"):"",tipo:v("c-tipo"),descripcion:v("c-desc"),lugar:v("c-lug"),
     agentes:v("c-ag")?JSON.stringify([{nombre:v("c-ag"),rol:"autoria",certeza:v("c-agc")||"atribuida"}]):"",
     pagadores:v("c-pe")||v("c-pn")==="particular"?JSON.stringify([{naturaleza:v("c-pn"),entidad:v("c-pe"),modalidad:""}]):"",
-    foto,licencia:foto?"cesión no exclusiva con crédito":"",acepta_derechos:"1",acepta_privacidad:"1"};
+    foto,licencia:licFoto("c",foto),commons:foto&&licFoto("c",foto)==="CC BY-SA 4.0"?"1":"",acepta_derechos:"1",acepta_privacidad:"1"};
   if(!["fecha_obra","tipo","descripcion","lugar","agentes","pagadores"].some(k=>d[k])&&!foto) return bad("Rellena al menos uno de los datos.");
   if(!await enviarAPI("completar",d)) return bad("No se ha podido enviar. Inténtalo de nuevo en un rato.");
   f.closest("details").innerHTML=`<div class="ok"><h3>¡Gracias!</h3><p>El equipo revisará lo que nos cuentas y lo pasará a la ficha.${DEMO?" En este prototipo no se envía a ningún sitio.":""}</p></div>`;
@@ -2319,6 +2320,10 @@ let PRESEL="";
 const qrHash=o=>`/q/${o.qr.cod}`;
 /* En producción el código lo valida el servidor al redirigir y al recibir la observación. En la vista previa se compara con el token de ejemplo. */
 const qrValido=(o,c)=>!!c&&o.qr.st==="activo"&&(!DEMO||c===o.qr.cod);
+/* Qué pedimos al hacer la foto de una obra, y permiso opcional para compartirla en Wikimedia Commons */
+const GUIA_FOTO=p=>`<div class="full guia-foto"><p><b>Cómo hacer la foto:</b> la obra entera y algo de su entorno (calle, fachada, paisaje), de frente, con buena luz y sin reflejos. Que no se reconozca a nadie. Si la obra es delicada o está en terreno privado, que la foto no delate dónde está.</p>
+  <label><input type="checkbox" id="${p}-commons"> <span>Además, autorizo a compartir mi foto en <a href="#derechos">Wikimedia Commons</a> con licencia CC BY-SA 4.0 y mi crédito. Solo se sube si la obra está de forma permanente en la vía pública (un mural, un grafiti en la calle, una escultura); si no, se queda solo en el archivo.</span></label></div>`;
+const licFoto=(p,foto)=>foto?($("#"+p+"-commons")&&$("#"+p+"-commons").checked?"CC BY-SA 4.0":"cesión no exclusiva con crédito"):"";
 const LIC=`<label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-lic" required style="margin-top:4px"> <span>Confirmo que las fotos o documentos son míos o puedo compartirlos. Conservo mis derechos y autorizo, sin exclusividad, a mostrarlos con mi crédito en el archivo (<a href="#derechos">derechos de imagen</a>).</span></label>`;
 const PRIV=`<label class="full" style="flex-direction:row;align-items:flex-start;gap:8px;font-family:var(--f-body);font-size:.9rem;color:var(--ink)"><input type="checkbox" id="o-priv" name="acepta_privacidad" value="1" required style="margin-top:4px"> <span>He leído la <a href="#privacidad">política de privacidad</a> y acepto que canarias.africa guarde estos datos para revisar y publicar mi aportación.</span></label>`;
 const ALIAS=()=>SES&&SES.alias&&!DEMO?`<p class="muted" style="align-self:end">Lo envías como <strong>${esc(SES.alias)}</strong>: quedará a tu nombre en <a href="#colabora">Colabora</a> y sumará méritos cuando se apruebe.</p><input id="o-alias" type="hidden" value="${esc(SES.alias)}">`
@@ -2338,7 +2343,7 @@ function vQR(o,cod,estado,web){
       ${["plenitud","desgaste","intervencion","transformacion","desaparicion"].map(f=>`<label><input type="radio" name="o-fase" id="o-fase-${f}" value="${f}" ${f===o.fase?"checked":""}> ${FASES[f].n}</label>`).join("")}
     </div></fieldset>
     <label class="full" for="o-txt">Qué ves<textarea id="o-txt" placeholder="Por ejemplo: la parte baja ha perdido color; hay una pintada nueva a la derecha."></textarea></label>
-    <label for="o-foto">Foto de hoy (opcional)<input id="o-foto" type="file" accept="image/*" capture="environment"></label>
+    <label for="o-foto">Foto de hoy (opcional)<input id="o-foto" type="file" accept="image/*" capture="environment"></label>${GUIA_FOTO("o")}
     ${ALIAS()}${LIC}${PRIV}
     <p class="full muted" id="o-err" style="font-size:.9rem"></p>
     <div class="full btns"><button class="btn" type="submit">Enviar observación</button></div>
@@ -2388,7 +2393,7 @@ function vAportar(){
     ${["publica","privada"].map(n=>`<datalist id="ent-${n}">${entidadesDe(n).map(e=>`<option value="${esc(e)}">`).join("")}</datalist>`).join("")}
     <label class="full" for="o-txt">Lo que sabes de ella (opcional) ${NOLOSE("descripcion")}<textarea id="o-txt" placeholder="Qué representa, técnica, historia, cómo está."></textarea></label>
     <label class="full" for="o-n-fue">Cómo lo sabes (opcional)<textarea id="o-n-fue" placeholder="Testimonio de vecinos, placa, artículo, documento… No se publica: ayuda a verificar."></textarea></label>
-    <label for="o-foto">Foto (opcional)<input id="o-foto" type="file" accept="image/*" capture="environment"></label>
+    <label for="o-foto">Foto (opcional)<input id="o-foto" type="file" accept="image/*" capture="environment"></label>${GUIA_FOTO("o")}
     ${ALIAS()}
     <fieldset class="full"><legend>¿Se puede publicar dónde está?</legend><div class="radios" style="flex-direction:column;gap:8px">
       <label><input type="radio" name="o-ubic" value="abierta" checked> Sí, el punto exacto: está en un espacio público y no corre peligro.</label>
@@ -2456,13 +2461,13 @@ async function enviar(e){
       lugar:v("#o-n-lug"),municipio:v("#o-n-mun"),lat:v("#o-lat"),lon:v("#o-lon"),precision_gps:v("#o-prec"),
       agentes:repValor("agentes"),pagadores:repValor("pagadores"),relaciones:repValor("relaciones"),
       descripcion:txt,texto:txt,fuentes:v("#o-n-fue"),alias,sensibilidad:ubic,desconocidos:[...document.querySelectorAll('input[name="o-unk"]:checked')].map(x=>x.value).join(","),posible_sensible:ubic!=="abierta"?"1":"",
-      isla:(()=>{ const f=MUNIS_CANARIAS.find(x=>normNombre(x[0])===normNombre(v("#o-n-mun"))); return (v("#o-lat")?islaDe(+v("#o-lat"),+v("#o-lon")):null)||(f?islaDe(f[2],f[3]):""); })(),foto:archivo("#o-foto"),acepta_derechos:"1",acepta_privacidad:"1"})) return bad("No se ha podido enviar. Inténtalo de nuevo en un rato.");
+      isla:(()=>{ const f=MUNIS_CANARIAS.find(x=>normNombre(x[0])===normNombre(v("#o-n-mun"))); return (v("#o-lat")?islaDe(+v("#o-lat"),+v("#o-lon")):null)||(f?islaDe(f[2],f[3]):""); })(),foto:archivo("#o-foto"),licencia:licFoto("o",archivo("#o-foto")),commons:licFoto("o",archivo("#o-foto"))==="CC BY-SA 4.0"?"1":"",acepta_derechos:"1",acepta_privacidad:"1"})) return bad("No se ha podido enviar. Inténtalo de nuevo en un rato.");
     $("#okbox").innerHTML=`<div class="ok"><h3>Propuesta recibida</h3><p>El equipo la revisará y abrirá una ficha con identificador nuevo.${DEMO?" En este prototipo no se envía a ningún sitio.":""}</p></div>`;
   } else {
     const id=f.dataset.obra, o=byId(id);
     const comun={obra:id,texto:txt,alias,acepta_derechos:"1",acepta_privacidad:"1"};
     const ok=modo==="qr"
-      ? await enviarAPI("qr",{...comun,qr_codigo:f.querySelector('[name="qr_codigo"]').value,fase:document.querySelector('input[name="o-fase"]:checked').value,foto:archivo("#o-foto")})
+      ? await enviarAPI("qr",{...comun,qr_codigo:f.querySelector('[name="qr_codigo"]').value,fase:document.querySelector('input[name="o-fase"]:checked').value,foto:archivo("#o-foto"),licencia:licFoto("o",archivo("#o-foto")),commons:licFoto("o",archivo("#o-foto"))==="CC BY-SA 4.0"?"1":""})
       : (txt? await enviarAPI("contexto",{...comun,tipo:document.querySelector('input[name="o-ctx"]:checked').value,fuente:$("#o-fuente").value.trim(),documento:archivo("#o-doc")}) : true);
     if(!ok) return bad("No se ha podido enviar. Inténtalo de nuevo en un rato.");
     if(modo==="contexto"){ if(!txt) return bad("Escribe tu aportación antes de enviarla.");
@@ -2988,7 +2993,8 @@ function vDerechos(){
       <li>Usarlo para investigación, estudio, crítica o docencia en un centro educativo.</li>
       <li>Citar textos breves, indicando la fuente.</li>
       <li>Compartir en redes personales o en webs informativas sin fin comercial, con el crédito completo.</li></ul>
-      <p class="muted" style="font-size:.9rem">Las obras situadas de forma permanente en la vía pública se pueden fotografiar libremente (art. 35.2 de la Ley de Propiedad Intelectual). Eso no incluye las obras en muros privados, interiores o efímeras.</p></div>
+      <p class="muted" style="font-size:.9rem">Las obras situadas de forma permanente en la vía pública se pueden fotografiar libremente (art. 35.2 de la Ley de Propiedad Intelectual). Eso no incluye las obras en muros privados, interiores o efímeras.</p>
+      <p class="muted" style="font-size:.9rem"><b>Wikimedia Commons.</b> Al enviar una foto puedes autorizar, además, que la compartamos en Wikimedia Commons con licencia CC BY-SA 4.0 y tu crédito. Solo subimos fotos de obras permanentes en la vía pública (murales, grafitis en la calle, esculturas), nunca de obras efímeras, interiores, en terreno privado o de ubicación reservada, ni fotos en las que se reconozca a personas. Commons no permite retirar una foto por cambiar de opinión: piénsalo antes de marcar la casilla.</p></div>
     <div><h3>Qué necesita permiso</h3><ul class="normas">
       <li>Cualquier uso comercial: productos, publicidad, publicaciones de pago, cine y televisión, uso por empresas o galerías.</li>
       <li>Prensa: portadas y reportajes que no hayamos facilitado.</li>

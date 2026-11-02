@@ -30,6 +30,7 @@ function db(): PDO {
   $db->exec(file_get_contents(PRIVADO . '/esquema.sql'));
   migrar_catalogo($db);
   migrar_soportes($db);
+  migrar_admin($db);
   return $db;
 }
 
@@ -104,9 +105,25 @@ function cabeceras_remitente(string $nombre): string {
 }
 
 // mail() con el sobre (Return-Path) del remitente, para que el SPF se compruebe contra su dominio.
-function enviar_correo(string $para, string $asunto, string $texto, string $cabeceras): void {
+// Devuelve si el servidor de correo lo aceptó (no si llegó).
+function enviar_correo(string $para, string $asunto, string $texto, string $cabeceras): bool {
   $de = config()['remitente'] ?? config()['contacto'];
-  @mail($para, '=?UTF-8?B?' . base64_encode($asunto) . '?=', $texto, $cabeceras . "\r\nContent-Type: text/plain; charset=utf-8", '-f' . $de);
+  return @mail($para, '=?UTF-8?B?' . base64_encode($asunto) . '?=', $texto, $cabeceras . "\r\nContent-Type: text/plain; charset=utf-8", '-f' . $de);
+}
+
+// Columnas que añade el panel a bases de datos antiguas: «archivado» (fecha) en las colas de revisión.
+// Archivar saca un elemento de la lista sin borrarlo; se puede devolver.
+function migrar_admin(PDO $db): void {
+  foreach (['envios', 'participa_ideas', 'obras_propuestas'] as $t) {
+    $hay = array_column($db->query("PRAGMA table_info($t)")->fetchAll(), 'name');
+    if (!in_array('archivado', $hay, true)) $db->exec("ALTER TABLE $t ADD COLUMN archivado TEXT");
+  }
+}
+
+// Registro de acciones delicadas de /admin (borrados, cambios de alias, correos a la lista, descargas de la copia).
+function registrar_admin(string $accion, string $detalle = ''): void {
+  db()->prepare('INSERT INTO admin_registro (accion, detalle, ip, agente) VALUES (?, ?, ?, ?)')
+    ->execute([$accion, mb_substr($detalle, 0, 1000), $_SERVER['REMOTE_ADDR'] ?? '', mb_substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 300)]);
 }
 
 function avisar(string $asunto, string $texto): void {

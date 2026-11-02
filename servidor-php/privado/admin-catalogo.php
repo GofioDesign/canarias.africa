@@ -119,7 +119,7 @@ if ($sub === '/publicar' && $metodo === 'POST') {
 if ($sub === '/campo/subir' && $metodo === 'POST') campo_subir($foto_formulario);
 
 if ($sub === '/catalogo') {
-  $html = $aviso_pub() . '<p><a href=/admin/obra>+ Nueva obra</a> · <a href=/admin/soportes>Soportes</a> · <a href=/admin/funciones>Funciones</a> · <a href=/admin/eventos>Eventos</a> · <a href=/admin/rutas>Rutas</a> · <a href=/admin/artistas>Artistas</a></p>
+  $html = $aviso_pub() . '<div class=botonera><a class=boton href=/admin/obra>+ Nueva obra</a> <a class="boton secundario" href=/admin/campo>Registrar en campo</a></div>
     <form method=post action=/admin/publicar><input type=hidden name=csrf value=' . $csrf . '><button>Publicar ahora en canarias.africa</button>
     <span class=meta>Al guardar se publica solo; este botón fuerza una copia nueva.</span></form>
     <p class=meta>La fuente es este servidor (<a href=/datos/obras.geojson>/datos/obras.geojson</a>); canarias.africa sirve una copia en /datos/, que leen la web y uMap.</p>
@@ -307,7 +307,7 @@ if ($sub === '/obra/versiones') {
 
 // ---------------- Rutas ----------------
 if ($sub === '/rutas') {
-  $html = '<p><a href=/admin/ruta>+ Nueva ruta</a> · <a href=/admin/catalogo>Obras</a></p><p class=meta>Se publican en <a href=/datos/rutas.geojson>/datos/rutas.geojson</a>. Solo cuentan las paradas publicadas y con punto (nunca las reservadas).</p><table class=filtrable><tr><th>Ruta</th><th>Paradas</th><th>Publicada</th></tr>';
+  $html = '<div class=botonera><a class=boton href=/admin/ruta>+ Nueva ruta</a></div><p class=meta>Se publican en <a href=/datos/rutas.geojson>/datos/rutas.geojson</a>. Solo cuentan las paradas publicadas y con punto (nunca las reservadas).</p><table class=filtrable><tr><th>Ruta</th><th>Paradas</th><th>Publicada</th></tr>';
   foreach ($db->query('SELECT * FROM rutas ORDER BY nombre') as $r) {
     $n = count(array_filter(explode(',', $r['paradas'])));
     $html .= "<tr><td><a href='/admin/ruta?id={$h($r['id'])}'>{$h($r['nombre'])}</a></td><td>$n</td><td>" . ($r['publicada'] ? 'sí' : 'no') . '</td></tr>';
@@ -395,7 +395,7 @@ HTML
 
 // ---------------- Artistas ----------------
 if ($sub === '/artistas') {
-  $html = '<p><a href=/admin/artista>+ Nuevo perfil</a> · <a href=/admin/catalogo>Obras</a></p><p class=meta>Galería de artistas. Su tienda se alojará en canarias.africa (fase siguiente); mientras, el campo «Tienda» puede enlazar a la suya. Se publica en <a href=/datos/artistas.geojson>/datos/artistas.geojson</a>, solo con su consentimiento.</p><table class=filtrable><tr><th>Artista</th><th>Disciplina</th><th>Municipio</th><th>Publicada</th></tr>';
+  $html = '<div class=botonera><a class=boton href=/admin/artista>+ Nuevo perfil</a></div><p class=meta>Galería de artistas. Su tienda se alojará en canarias.africa (fase siguiente); mientras, el campo «Tienda» puede enlazar a la suya. Se publica en <a href=/datos/artistas.geojson>/datos/artistas.geojson</a>, solo con su consentimiento.</p><table class=filtrable><tr><th>Artista</th><th>Disciplina</th><th>Municipio</th><th>Publicada</th></tr>';
   foreach ($db->query('SELECT * FROM artistas ORDER BY nombre') as $a) {
     $html .= "<tr><td><a href='/admin/artista?id={$h($a['id'])}'>{$h($a['nombre'])}</a></td><td>{$h($a['disciplina'])}</td><td>{$h($a['municipio'])}</td><td>" . ($a['publicada'] ? 'sí' : 'no') . '</td></tr>';
   }
@@ -474,7 +474,7 @@ if ($sub === '/azulejos') {
 }
 
 if ($sub === '/soportes') {
-  $html = (!empty($_GET['eliminado']) ? '<p class=hecho>Soporte «' . $h($_GET['eliminado']) . '» eliminado.</p>' : '') . $aviso_pub() . '<p><a href=/admin/soporte>+ Nuevo soporte</a> · <a href=/admin/azulejos>Imprimir azulejos (PDF)</a> · <a href=/admin/catalogo>Obras</a></p>
+  $html = $aviso_pub() . '<div class=botonera><a class=boton href=/admin/soporte>+ Nuevo soporte</a> <a class="boton secundario" href=/admin/azulejos>Imprimir azulejos (PDF)</a></div>
     <p class=meta>La etiqueta QR identifica el soporte, no una obra: en un mismo muro puede haber varias obras, o unas encima de otras con el tiempo. Se publica en <a href=/datos/soportes.geojson>/datos/soportes.geojson</a> (los soportes con punto y alguna obra publicada).</p>
     <table class=filtrable><tr><th>Soporte</th><th>Tipo</th><th>Municipio</th><th>Obras ahora</th><th>Etiquetas</th></tr>';
   foreach ($db->query('SELECT * FROM soportes ORDER BY actualizado DESC') as $s) {
@@ -500,10 +500,12 @@ if ($sub === '/soporte') {
   }
   if ($metodo === 'POST' && !empty($_POST['eliminar'])) {
     try {
-      if (empty($_POST['confirmo'])) throw new InvalidArgumentException('Marca la casilla para confirmar que quieres eliminarlo.');
+      $s0 = soporte($id) ?? throw new InvalidArgumentException('Ese soporte no existe.');
+      if (!nombre_confirmado(nombre_soporte($s0))) throw new InvalidArgumentException('No se ha eliminado: el nombre escrito no coincide.');
       $nombre = soporte_eliminar($id);
       $_SESSION['publicacion'] = publicar_web();
-      header('Location: /admin/soportes?eliminado=' . urlencode($nombre), true, 303);
+      aviso('Soporte «' . ($nombre ?: $id) . '» eliminado.');
+      header('Location: /admin/soportes', true, 303);
       exit;
     } catch (InvalidArgumentException $e) { $error = $e->getMessage(); }
   } elseif ($metodo === 'POST') {
@@ -555,11 +557,8 @@ if ($sub === '/soporte') {
     . $campo('etiqueta_nueva', 'Dar de alta una etiqueta libre en este soporte', '', 'text', 'Lo normal es colocarlas con la app: guardan su punto GPS y se verifican, también las de una web (en un cartel, un local…). Aquí, un código del pool (/admin/qr) para una etiqueta que solo se muestra en pantalla (queda confirmada, sin GPS) o que se colocó sin la app.')
     . '<p><button class=aprobada>Guardar</button> <a href=/admin/soportes>Volver</a></p></form>' . $js_nodos
     . ($id ? "<form id=retirar method=post action=/admin/soporte><input type=hidden name=csrf value=$csrf><input type=hidden name=id value=\"{$h($id)}\"></form>" : '')
-    . ($id ? "<details style='margin-top:32px'><summary>Eliminar este soporte</summary>
-      <form method=post action=/admin/soporte><input type=hidden name=csrf value=$csrf><input type=hidden name=id value=\"{$h($id)}\"><input type=hidden name=eliminar value=1>
-      <p class=meta>Se borran el soporte y sus vínculos con obras; las obras no se tocan. Si ya hay un azulejo impreso o colocado con este UUID, su QR dejará de abrir nada. No se puede eliminar si tiene etiquetas QR colocadas.</p>
-      <p><label><input type=checkbox name=confirmo value=1> Sí, quiero eliminar «{$h($v('nombre') ?: 'este soporte')}».</label></p>
-      <p><button class=rechazada>Eliminar soporte</button></p></form></details>" : '');
+    . ($id && soporte($id) ? zona_borrado('/admin/soporte', ['id' => $id, 'eliminar' => 1], nombre_soporte(soporte($id)), 'este soporte',
+        'Se borran el soporte y sus vínculos con obras; las obras no se tocan. Si ya hay un azulejo impreso o colocado con este UUID, su QR dejará de abrir nada. No se puede eliminar si tiene etiquetas QR colocadas.') : '');
   pagina($id ? 'Editar soporte' : 'Nuevo soporte', $html);
 }
 
@@ -578,7 +577,7 @@ $ops_eventos = function (string $salvo = '') use ($db): array {
 };
 
 if ($sub === '/funciones') {
-  $html = $aviso_pub() . '<p><a href=/admin/funcion>+ Nueva función</a> · <a href=/admin/eventos>Eventos</a> · <a href=/admin/catalogo>Obras</a></p>
+  $html = $aviso_pub() . '<div class=botonera><a class=boton href=/admin/funcion>+ Nueva función</a></div>
     <p class=meta>Cada vez que una obra ocurre: un concierto, una representación, la romería de un año, una acción. Se publican en <a href=/datos/funciones.geojson>/datos/funciones.geojson</a> si alguna de sus obras está publicada.</p>
     <table class=filtrable><tr><th>Fecha</th><th>Función</th><th>Lugar</th><th>Estado</th><th>Publicada</th></tr>';
   foreach ($db->query('SELECT f.*, s.nombre AS soporte_nombre FROM funciones f LEFT JOIN soportes s ON s.uuid = f.soporte ORDER BY f.inicio DESC') as $f) {
@@ -634,7 +633,7 @@ if ($sub === '/funcion') {
 }
 
 if ($sub === '/eventos') {
-  $html = $aviso_pub() . '<p><a href=/admin/evento>+ Nuevo evento</a> · <a href=/admin/funciones>Funciones</a></p>
+  $html = $aviso_pub() . '<div class=botonera><a class=boton href=/admin/evento>+ Nuevo evento</a></div>
     <p class=meta>Festivales, giras, ciclos, temporadas y fiestas. Pueden ir unos dentro de otros (el festival → su edición de 2025). Se publican en <a href=/datos/eventos.geojson>/datos/eventos.geojson</a>.</p>
     <table class=filtrable><tr><th>Evento</th><th>Tipo</th><th>Fechas</th><th>Dentro de</th><th>Funciones</th><th>Publicado</th></tr>';
   foreach ($db->query('SELECT e.*, p.nombre AS padre_nombre, (SELECT COUNT(*) FROM funciones f WHERE f.evento = e.uuid) AS n FROM eventos e LEFT JOIN eventos p ON p.uuid = e.padre ORDER BY e.inicio DESC, e.nombre') as $e) {

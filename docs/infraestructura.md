@@ -49,7 +49,7 @@ Nada pasa por el proxy de Cloudflare: las operadoras españolas bloquean IP de C
 | `GET /teselas/osm/{z}/{x}/{y}.png` | Teselas de OSM desde la caché |
 | `GET /datos/{obras,qr,rutas,artistas}.geojson` | Catálogo público (lo leen la web y uMap); `/datos/umap/…` es el nombre antiguo |
 | `GET /datos/fotos/AAAA-MM/<id>.jpg` | Fotos subidas desde `/admin`, solo si una obra o artista publicado las usa |
-| `/admin` | Moderación, pool de etiquetas, personas (nivel Custodia), obras propuestas, lista y votos del lanzamiento (con CSV e ideas nuevas) y descarga de la base de datos (con contraseña) |
+| `/admin` | Panel con contraseña y menú por categorías. **Revisar:** envíos, obras propuestas, ideas y votos. **Catálogo:** obras, soportes, funciones, eventos, rutas, artistas. **En la calle:** app En campo, etiquetas QR, azulejos. **Comunidad:** personas colaboradoras (cambiar alias, custodia), lista de participantes (alias, borrar, CSV) y «Escribir a la lista» (correo a todas las confirmadas, por lotes de `correos_por_lote` con el cron). **Sistema:** registro de acciones y copia de la base de datos. Envíos, ideas y obras propuestas se pueden archivar (y devolver); para eliminar cualquier cosa hay que escribir su nombre, como en GitHub, y queda en el registro |
 | `/admin/campo` | App «En campo» (instalable en el móvil): registra obras sin cobertura y las sube como borradores sin publicar cuando vuelve la red |
 
 ## Puesta en marcha

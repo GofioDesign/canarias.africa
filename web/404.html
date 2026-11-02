@@ -6,12 +6,15 @@
 <meta name="robots" content="noindex">
 <title>canarias.africa</title>
 <script>
+  // canarias.africa/<UUID del soporte> (el QR de los azulejos) abre el soporte: /prototipo/#/s/<uuid>.
   // Cada etiqueta tiene un código corto en base32 de Crockford (p. ej. 7KQ2M9XD) que se puede teclear como
   // canarias.africa/<código>. GitHub Pages no tiene esa ruta y sirve esta página, que lo pasa al prototipo: /prototipo/#/q/<código>.
   // /scan (el QR común de los azulejos) tiene su propia página; cualquier otra ruta va a la portada.
   (function () {
     var p = location.pathname.replace(/^\/|\/$/g, "");
     if (/^scan$/i.test(p)) { location.replace("/prototipo/#scan"); return; }
+    // El QR del azulejo lleva el UUID del soporte (en mayúsculas): canarias.africa/<UUID>.
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(p)) { location.replace("/prototipo/#/s/" + p.toLowerCase()); return; }
     var c = p.replace(/-/g, "").toUpperCase().replace(/O/g, "0").replace(/[IL]/g, "1");
     location.replace(/^[0-9A-HJKMNP-TV-Z]{8,16}$/.test(c) ? "/prototipo/#/q/" + c : "/");
   })();

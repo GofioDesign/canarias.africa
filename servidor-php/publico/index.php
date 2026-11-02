@@ -18,10 +18,11 @@ if ($metodo === 'POST' && !str_starts_with($ruta, '/admin') && $ruta !== '/api/p
 
 try {
   // Leaflet servido desde este mismo dominio (el mapa de /admin y la app sin conexión no dependen de otro sitio).
-  if ($metodo === 'GET' && preg_match('#^/vendor/leaflet-1\.9\.4/(leaflet\.(?:css|js))$#', $ruta, $m)) {
+  // Y el generador de QR, que usa /admin para los PDF de azulejos.
+  if ($metodo === 'GET' && preg_match('#^/vendor/(leaflet-1\.9\.4/leaflet\.(?:css|js)|qrcode-generator-1\.4\.4/qrcode\.js)$#', $ruta, $m)) {
     header('Content-Type: ' . (str_ends_with($m[1], '.css') ? 'text/css' : 'application/javascript') . '; charset=utf-8');
     header('Cache-Control: public, max-age=31536000, immutable');
-    readfile(PRIVADO . '/vendor/leaflet-1.9.4/' . $m[1]);
+    readfile(PRIVADO . '/vendor/' . $m[1]);
     exit;
   }
   if ($metodo === 'GET' && preg_match('#^/teselas/osm/(\d{1,2})/(\d+)/(\d+)\.png$#', $ruta, $m)) teselas((int) $m[1], (int) $m[2], (int) $m[3]);
@@ -48,6 +49,7 @@ try {
   if ($metodo === 'GET' && $ruta === '/api/qr/mis-etiquetas') qr_mis_etiquetas();
   // Después de las rutas fijas de /api/qr/ (mis-etiquetas también encaja en el patrón de un código).
   if ($metodo === 'GET' && preg_match('#^/api/qr/(' . RE_CODIGO . ')$#i', $ruta, $m)) qr_resolver($m[1]);
+  if ($metodo === 'GET' && preg_match('#^/api/soporte/(' . RE_UUID . ')$#i', $ruta, $m)) soporte_resolver($m[1]);
   if ($metodo === 'POST' && preg_match('#^/api/qr/(' . RE_CODIGO . ')/ampliar$#i', $ruta, $m)) qr_ampliar($m[1]);
   if ($metodo === 'POST' && preg_match('#^/api/qr/(' . RE_CODIGO . ')/aviso$#i', $ruta, $m)) qr_aviso($m[1]);
   if ($metodo === 'POST' && $ruta === '/api/participa') participa_alta();

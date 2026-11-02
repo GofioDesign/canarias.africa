@@ -3111,9 +3111,9 @@ const MSGQR={libre:["Etiqueta sin asignar","Este código todavía está en el po
 /* La etiqueta identifica un soporte: un muro, una roca… o una web. En él puede haber varias obras, unas encima de
    otras con el tiempo. Si hay más de una, se elige cuál se observa; las anteriores quedan como memoria del soporte. */
 const QRSEL=new Map();
-function bloqueSoporte(cod,r,sel){
+function bloqueSoporte(cod,r,sel,siempre){
   const s=r.soporte, ob=(r.obras||[]).filter(x=>x&&x.uuid);
-  if(!s||(ob.length<2&&!s.url)) return "";
+  if(!s||(!siempre&&ob.length<2&&!s.url)) return "";
   const fila=x=>{ const o=byId(x.uuid), t=esc(x.titulo||(o&&o.t)||"Obra"), cuando=x.actual?(x.desde?`desde ${esc(x.desde)}`:"ahora"):`${x.desde?esc(x.desde)+"–":"hasta "}${esc(x.hasta||"")}`;
     return `<li>${x.uuid===sel?`<strong>${t}</strong> <span class="cinta mini">observando</span>`:o?`<button type="button" class="enlace" data-qrsel="${esc(cod)}|${esc(x.uuid)}">${t}</button>`:t} <span class="muted">· ${cuando}</span></li>`; };
   const ahora=ob.filter(x=>x.actual), antes=ob.filter(x=>!x.actual);
@@ -3121,6 +3121,21 @@ function bloqueSoporte(cod,r,sel){
     ${s.url?`<p><a href="${esc(s.url)}" rel="noopener" target="_blank">${esc(s.url)}</a></p>`:""}
     ${ahora.length?`<p class="muted" style="margin:0">Obras aquí ahora${ahora.length>1?" (elige cuál observas)":""}:</p><ul>${ahora.map(fila).join("")}</ul>`:""}
     ${antes.length?`<p class="muted" style="margin:0">Antes estuvieron aquí:</p><ul>${antes.map(fila).join("")}</ul>`:""}</section>`;
+}
+/* Azulejo: su QR lleva el UUID del soporte (canarias.africa/<UUID> → #/s/<uuid>). Muestra el soporte, sus obras
+   (ahora y antes) y la ficha de la que se elija, con «¿Conoces más detalles? Colabora». */
+async function resolverSoporte(u){
+  const r=await api("/api/soporte/"+encodeURIComponent(u));
+  QRRES.set("s:"+u,r.status===0?{estado:"sin_conexion"}:r.ok?{obra:r.j.obra||null,estado:r.j.estado||"sin_etiqueta",soporte:r.j.soporte||null,gps:r.j.gps!==false,obras:Array.isArray(r.j.obras)?r.j.obras:[]}:{estado:"desconocido"});
+  route();
+}
+function vSoporte(u,r){
+  if(!r.soporte){ const [t,d]=r.estado==="sin_conexion"?MSGQR.sin_conexion:["Este QR no es válido","Este soporte no existe en canarias.africa o no se puede mostrar."];
+    return `<section class="stack"><h1>${t}</h1><p class="lede muted">${d}</p><p><a href="#archivo">Ir al archivo</a></p></section>`; }
+  const k="s:"+u, sel=QRSEL.get(k)||r.obra, o=sel&&byId(sel);
+  if(o) VIA_QR=o.id;
+  return bloqueSoporte(k,r,o&&o.id,true)+(o?cabObra(o,"Has escaneado el QR de este soporte")+bloqueCompletar(o,true)+presenciaHueco(o)
+    :`<section class="stack"><p class="lede muted">${(r.obras||[]).length?"La ficha de esta obra se publicará en la próxima actualización del archivo.":"Este soporte todavía no tiene obras publicadas."}</p></section>`);
 }
 function vEtiqueta(cod,r){
   if(r.estado==="asignado"){
@@ -3403,6 +3418,8 @@ function route(){
     const r=DEMO?qrDemo(cod):QRRES.get(cod);
     if(!r){ html=`<p class="muted">Comprobando el código…</p>`; resolverQR(cod); }
     else html=vEtiqueta(cod,r); }
+  else if(h.startsWith("/s/")){ const u=decodeURIComponent(h.slice(3)).toLowerCase(), r=QRRES.get("s:"+u); sec="archivo";
+    if(!r){ html=`<p class="muted">Comprobando el soporte…</p>`; resolverSoporte(u); } else html=vSoporte(u,r); }
   else if(h.startsWith("/entrar")){ sec="colabora"; html=`<p class="muted">Entrando…</p>`; entrarConToken(new URLSearchParams(h.split("?")[1]||"").get("t")||""); }
   else if(h.startsWith("/observar/")){ const [ruta,qs]=h.split("?"), o=byId(decodeURIComponent(ruta.slice(10))), cod=new URLSearchParams(qs||"").get("qr"); sec="archivo"; html=o&&qrValido(o,cod)?vQR(o,cod):`<h1>Este QR no es válido</h1><p class="muted">Puede que el código se haya sustituido o que la obra no tenga QR activo. <a href="#archivo">Volver al archivo</a></p>`; }
   else if(h.startsWith("contexto-")){ const o=OBRAS.find(x=>"contexto-"+x.id.toLowerCase()===h); sec="archivo"; html=o?vContexto(o):`<h1>Ficha no encontrada</h1>`; }

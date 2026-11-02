@@ -481,6 +481,14 @@ if ($sub === '/soportes') {
 if ($sub === '/soporte') {
   $error = '';
   $id = (string) ($_REQUEST['id'] ?? '');
+  // Retirar una etiqueta del soporte (se quitó de la pared, o era de prueba): queda en su historial como «retirado».
+  if ($metodo === 'POST' && !empty($_POST['retirar'])) {
+    $st = $db->prepare('SELECT codigo FROM qr_codigos WHERE codigo = ? AND soporte = ?');
+    $st->execute([(string) $_POST['retirar'], $id]);
+    if ($cod = $st->fetchColumn()) { cambiar_estado($cod, 'retirado', null, ['motivo' => 'retirada desde /admin']); $_SESSION['publicacion'] = publicar_web(); }
+    header('Location: /admin/soporte?id=' . urlencode($id), true, 303);
+    exit;
+  }
   if ($metodo === 'POST' && !empty($_POST['eliminar'])) {
     try {
       if (empty($_POST['confirmo'])) throw new InvalidArgumentException('Marca la casilla para confirmar que quieres eliminarlo.');
@@ -517,7 +525,8 @@ if ($sub === '/soporte') {
   if ($id) {
     $st = $db->prepare('SELECT codigo, estado, ultima_verificacion FROM qr_codigos WHERE soporte = ? ORDER BY creado');
     $st->execute([$id]);
-    foreach ($st->fetchAll() as $q) $etiquetas .= "<li><code>{$h($q['codigo'])}</code> · {$h($q['estado'])}" . ($q['ultima_verificacion'] ? " · verificada {$h($q['ultima_verificacion'])}" : '') . '</li>';
+    foreach ($st->fetchAll() as $q) $etiquetas .= "<li><code>{$h($q['codigo'])}</code> · {$h($q['estado'])}" . ($q['ultima_verificacion'] ? " · verificada {$h($q['ultima_verificacion'])}" : '')
+      . (in_array($q['estado'], ESTADOS_EN_SITIO, true) ? " <button form=retirar name=retirar value=\"{$h($q['codigo'])}\" class=enlace onclick=\"return confirm('¿Retirar la etiqueta {$h($q['codigo'])}? Dejará de contar como colocada.')\">Retirar</button>" : '') . '</li>';
   }
   $html = $estilo_form . ($error ? "<p class=error>{$h($error)}</p>" : '') . (!empty($_GET['ok']) ? '<p class=hecho>Guardado.</p>' . $aviso_pub() : '')
     . "<form method=post action=/admin/soporte><input type=hidden name=csrf value=$csrf><input type=hidden name=id value=\"{$h($id)}\">"
@@ -536,6 +545,7 @@ if ($sub === '/soporte') {
     . '<h2>Etiquetas QR</h2>' . ($etiquetas ? "<ul>$etiquetas</ul>" : '<p class=meta>Sin etiquetas todavía.</p>')
     . $campo('etiqueta_nueva', 'Dar de alta una etiqueta libre en este soporte', '', 'text', 'Lo normal es colocarlas con la app: guardan su punto GPS y se verifican, también las de una web (en un cartel, un local…). Aquí, un código del pool (/admin/qr) para una etiqueta que solo se muestra en pantalla (queda confirmada, sin GPS) o que se colocó sin la app.')
     . '<p><button class=aprobada>Guardar</button> <a href=/admin/soportes>Volver</a></p></form>' . $js_nodos
+    . ($id ? "<form id=retirar method=post action=/admin/soporte><input type=hidden name=csrf value=$csrf><input type=hidden name=id value=\"{$h($id)}\"></form>" : '')
     . ($id ? "<details style='margin-top:32px'><summary>Eliminar este soporte</summary>
       <form method=post action=/admin/soporte><input type=hidden name=csrf value=$csrf><input type=hidden name=id value=\"{$h($id)}\"><input type=hidden name=eliminar value=1>
       <p class=meta>Se borran el soporte y sus vínculos con obras; las obras no se tocan. Si ya hay un azulejo impreso o colocado con este UUID, su QR dejará de abrir nada. No se puede eliminar si tiene etiquetas QR colocadas.</p>

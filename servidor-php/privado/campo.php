@@ -48,7 +48,8 @@ function campo_subir(callable $foto_formulario): never {
   $uuid = strtolower((string) ($_POST['uuid'] ?? ''));
   if (!preg_match('/^' . RE_UUID . '$/', $uuid)) error_publico('Falta el identificador de la obra.', 422);
   if (obra($uuid)) json_respuesta(['ok' => true, 'id' => $uuid, 'repetida' => true]);
-  $d = array_intersect_key($_POST, array_flip(['titulo', 'lat', 'lon', 'isla', 'municipio', 'lugar', 'tipo', 'fase', 'sensibilidad', 'descripcion', 'desconocidos']));
+  $d = array_intersect_key($_POST, array_flip(['titulo', 'lat', 'lon', 'isla', 'municipio', 'lugar', 'tipo', 'fase', 'sensibilidad', 'descripcion', 'desconocidos',
+    'disciplina', 'permanencia', 'fecha_obra', 'fecha_precision', 'agentes', 'pagadores']));
   $d['publicada'] = 0;
   $d['isla'] = isset(ISLAS_CODIGO[$d['isla'] ?? '']) ? $d['isla'] : '';
   // La precisión del GPS y la nota quedan en «fuentes», a la vista al revisar la ficha.
@@ -76,7 +77,11 @@ function campo_pagina(): never {
     'desaparicion' => 'Desaparición: borrada o retirada', 'memoria' => 'Memoria: ya no existe', 'gestacion' => 'Gestación: en proyecto'];
   $sens = ['abierta' => 'Abierta (punto exacto)', 'difusa' => 'Difusa (zona de ~2 km)', 'reservada' => 'Reservada: obra delicada (solo la isla)'];
   $islas = ['' => 'La que diga el GPS'] + ISLAS_CODIGO;
-  $desc = implode(' ', array_map(fn($k, $t) => "<label class=casilla><input type=checkbox name=desconocidos value=$k> {$h($t)}</label>", array_keys(CAMPOS_DESCONOCIBLES), CAMPOS_DESCONOCIBLES));
+  // Cada dato que se puede desconocer lleva al lado su casilla «No se sabe»: si se marca, el campo se desactiva y la ficha
+  // pública lo muestra como desconocido; si se rellena, se guarda el dato.
+  $nose = fn(string $k, string $t = 'No se sabe') => "<label class=nose><input type=checkbox name=desconocidos value=$k> {$h($t)}</label>";
+  $opc = json_encode(['rol' => ROLES_AGENTE, 'certeza' => CERTEZAS, 'naturaleza' => NATURALEZAS, 'modalidad' => MODALIDADES],
+    JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
   header('Content-Type: text/html; charset=utf-8');
   header('Cache-Control: no-cache');
   echo <<<HTML
@@ -101,6 +106,10 @@ input,select,textarea,button{font:inherit;padding:8px 10px;border:1px solid var(
 .item .t{font-weight:600;overflow-wrap:anywhere}.item .acc{margin-top:4px;display:flex;flex-wrap:wrap;gap:6px}.item button{padding:4px 8px;font-size:14px}
 .est{font-size:12px;padding:1px 6px;border-radius:8px;border:1px solid currentColor}.est.pendiente{color:var(--av)}.est.subida{color:var(--ok)}.est.revisar{color:var(--no)}
 details summary{cursor:pointer;color:var(--muted)}
+.campo>label{display:block}.campo label>span{display:block;font-weight:600;font-size:14px}.nose{display:inline-block;margin:4px 0;font-size:14px;color:var(--muted)}.nose input{width:auto;margin-right:4px}
+.grupo{border:1px solid var(--rule);border-radius:4px;margin:12px 0;padding:8px 12px}.grupo legend{font-weight:600;font-size:14px}.grupo small{display:block;color:var(--muted);font-size:13px}
+.fila{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;padding-bottom:8px;border-bottom:1px dashed var(--rule)}.fila input[type=text],.fila select{flex:1 1 140px;min-width:0}.fila .chk{font-size:14px}
+.apagado>*:not(.nose):not(legend){opacity:.45}
 </style></head><body><main>
 <div class=barra><h1>En campo</h1><span id=red class=red></span><a class=meta href=/admin>Volver a /admin</a></div>
 <p class=meta>Registra obras aunque no haya cobertura: se guardan en este móvil y se suben solas, sin publicar, cuando vuelve la red. Después se revisan y se completan en /admin.</p>
@@ -109,21 +118,30 @@ details summary{cursor:pointer;color:var(--muted)}
 <input type=hidden name=id>
 <label class=campo><span>Título *</span><input name=titulo required maxlength=300 placeholder="Si no tiene, describe lo que se ve: «Mural del lavadero»"></label>
 <label class=campo><span>Foto</span><input type=file name=foto accept="image/*" capture=environment><small>Se reduce en el móvil antes de guardarla. No guarda la ubicación de la foto.</small></label>
-<img id=vista alt="" hidden>
+<img id=vista alt="" hidden><div data-campo=foto>{$nose('foto', 'Sin foto por ahora')}</div>
 <div class=campo><span>Punto</span>
 <p style="margin:4px 0"><button type=button id=gps>Tomar el punto con el GPS</button> <span id=gpsinfo class=meta></span></p>
 <div class=dos><input name=lat type=number step=any min=27.4 max=29.6 placeholder=Latitud inputmode=decimal><input name=lon type=number step=any min=-18.4 max=-13.2 placeholder=Longitud inputmode=decimal></div>
 <input type=hidden name=precision><small>Sin punto, hace falta al menos el municipio.</small></div>
 <div class=dos><label class=campo><span>Municipio</span><input name=municipio maxlength=120></label><label class=campo><span>Isla</span><select name=isla>{$ops($islas)}</select></label></div>
-<label class=campo><span>Lugar</span><input name=lugar maxlength=300 placeholder="Calle, plaza, barranco…"></label>
+<div class=campo data-campo=lugar><label><span>Lugar</span><input name=lugar maxlength=300 placeholder="Calle, plaza, barranco…"></label>{$nose('lugar')}</div>
 <label class=campo><span>Sensibilidad</span><select name=sensibilidad>{$ops($sens, 'abierta')}</select><small>Ante la duda, protege más: se puede abrir después, pero lo publicado no se puede borrar del todo.</small></label>
-<details><summary>Más datos (opcional)</summary>
-<label class=campo><span>Tipo</span><input name=tipo maxlength=120 placeholder="Mural, escultura, grafiti, instalación…"></label>
+
+<h2>Lo que se sabe de la obra</h2>
+<p class=meta>Rellena lo que sepas. Lo que no se sepa, márcalo como «No se sabe»: la ficha pública lo muestra así e invita a completarlo.</p>
+<fieldset class=grupo data-campo=agentes><legend>Quién la hizo</legend>
+<small>Autoría, colaboración, encargo… «Visible» solo si ha aceptado figurar o es una figura pública; si no, se guarda pero no se publica.</small>
+<div class=filas id=f-agentes></div><button type=button data-mas=agentes>+ Añadir persona o colectivo</button> {$nose('agentes')}</fieldset>
+<div class=campo data-campo=fecha_obra><span>Cuándo se hizo</span>
+<div class=dos><input name=fecha_obra maxlength=60 placeholder="Año, década o época"><select name=fecha_precision>{$ops(PRECISIONES_FECHA)}</select></div>{$nose('fecha_obra')}</div>
+<div class=dos><label class=campo><span>Disciplina</span><select name=disciplina>{$ops(DISCIPLINAS)}</select></label><label class=campo><span>Permanencia</span><select name=permanencia>{$ops(PERMANENCIAS)}</select></label></div>
+<div class=campo data-campo=tipo><label><span>Tipo de obra</span><input name=tipo maxlength=120 placeholder="Mural, escultura, grafiti, instalación…"></label>{$nose('tipo')}</div>
 <label class=campo><span>Fase</span><select name=fase>{$ops($fases, 'plenitud')}</select></label>
-<label class=campo><span>Descripción</span><textarea name=descripcion rows=3></textarea></label>
-<div class=campo><span>Datos que no se conocen</span>$desc</div>
+<div class=campo data-campo=descripcion><label><span>Descripción</span><textarea name=descripcion rows=3></textarea></label>{$nose('descripcion')}</div>
+<fieldset class=grupo data-campo=pagadores><legend>Quién la pagó</legend>
+<small>Entidad pública o privada. Si la pagó un particular, su nombre se guarda pero no se publica.</small>
+<div class=filas id=f-pagadores></div><button type=button data-mas=pagadores>+ Añadir quién la pagó</button> {$nose('pagadores')}</fieldset>
 <label class=campo><span>Nota para la revisión</span><textarea name=nota rows=2 placeholder="Lo que quieras recordar al pasarla a la ficha (no se publica)"></textarea></label>
-</details>
 <div id=msg></div>
 <div class=guardar><div><button type=button id=nueva hidden>Cancelar</button><button class=primario>Guardar en el móvil</button></div></div>
 </form>
@@ -136,6 +154,25 @@ details summary{cursor:pointer;color:var(--muted)}
 const f=document.getElementById('f'), \$=id=>document.getElementById(id);
 let foto=null;  // Blob JPEG ya reducido
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+const OPC=$opc;
+// Filas de personas y de quién pagó: [clave, tipo, etiqueta u opciones]
+const FILAS={agentes:[['nombre','text','Nombre o colectivo'],['rol','select',OPC.rol],['certeza','select',OPC.certeza],['visible','check','Visible']],
+  pagadores:[['naturaleza','select',OPC.naturaleza],['entidad','text','Entidad'],['modalidad','select',OPC.modalidad]]};
+function fila(tipo,d={}){ const r=document.createElement('div'); r.className='fila';
+  for(const [k,t,o] of FILAS[tipo]){ let i;
+    if(t==='select'){ i=document.createElement('select'); for(const [v,n] of Object.entries(o)) i.add(new Option(n,v)); if(d[k]!==undefined) i.value=d[k]; }
+    else { i=document.createElement('input'); i.type=t==='check'?'checkbox':'text'; if(t==='check') i.checked=!!d[k]; else { i.placeholder=o; i.maxLength=300; if(d[k]!==undefined) i.value=d[k]; } }
+    i.dataset.k=k;
+    if(t==='check'){ const l=document.createElement('label'); l.className='chk'; l.append(i,' '+o); r.append(l); } else r.append(i); }
+  const x=document.createElement('button'); x.type='button'; x.textContent='Quitar'; x.onclick=()=>r.remove(); r.append(x);
+  document.getElementById('f-'+tipo).append(r); return r; }
+const leerFilas=tipo=>[...document.getElementById('f-'+tipo).children].map(r=>Object.fromEntries([...r.querySelectorAll('[data-k]')].map(i=>[i.dataset.k,i.type==='checkbox'?i.checked:i.value.trim()])))
+  .filter(x=>tipo==='agentes'?x.nombre:(x.naturaleza==='particular'||x.entidad));
+document.querySelectorAll('[data-mas]').forEach(b=>b.onclick=()=>fila(b.dataset.mas).querySelector('input,select').focus());
+// «No se sabe» desactiva el campo al que acompaña.
+const apagar=c=>{ const g=c.closest('[data-campo]'); g.classList.toggle('apagado',c.checked);
+  g.querySelectorAll('input,select,textarea,button').forEach(i=>{ if(i!==c) i.disabled=c.checked; }); };
+f.querySelectorAll('[name=desconocidos]').forEach(c=>c.onchange=()=>apagar(c));
 const aviso=(t,cl='')=>\$('msg').innerHTML=t?'<p class="aviso '+cl+'">'+t+'</p>':'';
 
 // Estado de la red
@@ -159,9 +196,13 @@ f.foto.onchange=async()=>{ const a=f.foto.files[0]; if(!a) return;
     e=>{ \$('gpsinfo').textContent=''; aviso('No se ha podido leer la ubicación: '+esc(e.message),'no'); },{enableHighAccuracy:true,timeout:60000,maximumAge:0});
   setTimeout(()=>navigator.geolocation.clearWatch(w),20000); };
 
-f.onsubmit=async ev=>{ ev.preventDefault(); aviso('');
-  const d=Object.fromEntries(['titulo','lat','lon','precision','municipio','isla','lugar','sensibilidad','tipo','fase','descripcion','nota'].map(k=>[k,f[k].value.trim()]));
+const CAMPOS=['titulo','lat','lon','precision','municipio','isla','lugar','sensibilidad','disciplina','permanencia','tipo','fase','fecha_obra','fecha_precision','descripcion','nota'];
+f.onsubmit=async ev=>{ ev.preventDefault(); aviso(''); let d;
+  d=Object.fromEntries(CAMPOS.map(k=>[k,f[k].value.trim()]));
   d.desconocidos=[...f.querySelectorAll('[name=desconocidos]:checked')].map(i=>i.value);
+  for(const k of ['agentes','pagadores']) d[k]=JSON.stringify(d.desconocidos.includes(k)?[]:leerFilas(k));
+  for(const k of ['lugar','fecha_obra','tipo','descripcion']) if(d.desconocidos.includes(k)) d[k]='';
+  if(d.desconocidos.includes('fecha_obra')) d.fecha_precision='';
   if(!d.titulo) return aviso('Falta el título.','no');
   if(!!d.lat!==!!d.lon) return aviso('Faltan la latitud o la longitud.','no');
   if(d.lat&&(+d.lat<27.4||+d.lat>29.6||+d.lon<-18.4||+d.lon>-13.2)) return aviso('Las coordenadas no caen en Canarias.','no');
@@ -171,12 +212,14 @@ f.onsubmit=async ev=>{ ev.preventDefault(); aviso('');
   limpiar(); aviso('Guardada en el móvil.'+(navigator.onLine?' Subiendo…':' Se subirá cuando haya conexión.'),'ok');
   await pintar(); subir(); };
 
-const limpiar=()=>{ f.reset(); f.id.value=''; foto=null; \$('vista').hidden=true; \$('gpsinfo').textContent=''; \$('nueva').hidden=true; };
+const limpiar=()=>{ f.reset(); f.id.value=''; for(const k of ['agentes','pagadores']) document.getElementById('f-'+k).innerHTML='';
+  f.querySelectorAll('[name=desconocidos]').forEach(apagar); foto=null; \$('vista').hidden=true; \$('gpsinfo').textContent=''; \$('nueva').hidden=true; };
 \$('nueva').onclick=()=>{ limpiar(); aviso(''); };
 
 async function editar(id){ const i=await Cola.una(id); if(!i) return; limpiar(); f.id.value=id;
-  for(const [k,v] of Object.entries(i.datos)) if(f[k]&&k!=='desconocidos') f[k].value=v;
-  f.querySelectorAll('[name=desconocidos]').forEach(c=>c.checked=(i.datos.desconocidos||[]).includes(c.value));
+  for(const k of CAMPOS) if(i.datos[k]!==undefined) f[k].value=i.datos[k];
+  for(const k of ['agentes','pagadores']) { try{ JSON.parse(i.datos[k]||'[]').forEach(x=>fila(k,x)); }catch(e){} }
+  f.querySelectorAll('[name=desconocidos]').forEach(c=>{ c.checked=(i.datos.desconocidos||[]).includes(c.value); apagar(c); });
   if(i.foto){ \$('vista').src=URL.createObjectURL(i.foto); \$('vista').hidden=false; }
   \$('nueva').hidden=false; scrollTo(0,0); }
 

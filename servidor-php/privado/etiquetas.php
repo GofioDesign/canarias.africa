@@ -91,6 +91,23 @@ function qr_resolver(string $codigo): never {
   json_respuesta($r);
 }
 
+// El QR del azulejo apunta a canarias.africa/<UUID DEL SOPORTE> (en mayúsculas, que ocupa menos en el QR).
+// Devuelve lo mismo que qr_resolver para que la web lo pinte igual. Los soportes reservados no se resuelven.
+function soporte_resolver(string $uuid): never {
+  $s = soporte(strtolower($uuid));
+  if (!$s || sensibilidad_soporte($s) === 'reservada') json_respuesta(['obra' => null, 'soporte' => null, 'obras' => [], 'estado' => 'desconocido'], 404);
+  $obras = [];
+  foreach (obras_de_soporte($s['uuid'], true) as $o) {
+    $obras[] = array_filter(['uuid' => $o['obra'], 'titulo' => $o['titulo'], 'actual' => $o['hasta'] === '', 'desde' => $o['desde'], 'hasta' => $o['hasta']], fn($v) => $v !== '');
+  }
+  $actual = array_values(array_filter($obras, fn($o) => $o['actual']));
+  $st = db()->prepare("SELECT estado FROM qr_codigos WHERE soporte = ? AND estado IN ('colocado','confirmado','sin_verificar','desaparecida','danado') ORDER BY creado DESC LIMIT 1");
+  $st->execute([$s['uuid']]);
+  header('Cache-Control: public, max-age=300');
+  json_respuesta(['estado' => $st->fetchColumn() ?: 'sin_etiqueta', 'gps' => $s['lat'] !== null, 'obra' => $actual[0]['uuid'] ?? $obras[0]['uuid'] ?? null, 'obras' => $obras,
+    'soporte' => array_filter(['uuid' => $s['uuid'], 'nombre' => $s['nombre'], 'tipo' => $s['tipo'], 'url' => $s['url'] ?? '', 'municipio' => $s['municipio']], fn($v) => $v !== '')]);
+}
+
 function qr_asignar(): never {
   $c = exigir_colaborador();
   $p = perfil((int) $c['id']);

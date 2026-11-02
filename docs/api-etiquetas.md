@@ -31,13 +31,18 @@ Responde `{ok, valida, motivo: null|fuera_del_radio|gps_impreciso, distancia_m, 
 - `GET /api/publico/qr/<uuid-obra>/historial` → `{obra, etiquetas:[{etiqueta, estado, ultima_verificacion, confianza, eventos:[{tipo, fecha, alias?, distancia_m?, motivo?}]}]}`. No incluye el código de la etiqueta ni coordenadas de personas.
 - `GET /api/publico/etiquetas.geojson` → etiquetas confirmadas o sin verificar, para el mapa. Las de obras difusas van en el centro de su celda.
 - `GET /api/publico/obras/<uuid>` → observaciones aprobadas.
+- `GET /api/soporte/<UUID>` (mayúsculas o minúsculas) → lo mismo que `/api/qr/<código>`: `{estado, gps, obra, obras, soporte}`. Es el QR del azulejo. Los soportes reservados dan 404.
 
 ## Observación
 La observación sigue enviando `obra` y `qr_codigo` (el código de la etiqueta).
 
 ## GitHub Pages
+- `canarias.africa/<UUID del soporte>` (el QR del azulejo 15 × 15, en mayúsculas) → `404.html` → `/prototipo/#/s/<uuid en minúsculas>`. Muestra el soporte, sus obras de ahora y de antes, y la ficha de la elegida con «¿Conoces más detalles? Colabora».
 - `canarias.africa/<código>` (de 8 a 16 caracteres, admite guiones y minúsculas) → `404.html` → `/#/q/<CÓDIGO>`.
 - `canarias.africa/scan` (el QR común de los azulejos) → `scan/index.html` → `/#scan`.
+
+## Azulejos para imprimir (/admin/azulejos)
+Se marcan soportes y el navegador genera un PDF (sin servicios externos) con dos páginas A4 por soporte: en espejo para el transfer de tóner y al derecho para la prueba de lectura o la calcomanía. El diseño es el de `sistema-qr/azulejo-15x15`: QR de 94 mm a `HTTPS://CANARIAS.AFRICA/<UUID>`, el UUID en una cinta negra y CANARIAS.AFRICA. El generador de QR es qrcode-generator 1.4.4 (MIT), servido desde `/vendor/`.
 
 ## Completar una ficha (público, multipart)
 `POST /api/collections/completar_obra/records`: `obra` (UUID de una obra publicada) y los datos que se conocen de los campos marcados como desconocidos: `agentes` y `pagadores` (JSON), `fecha_obra`, `fecha_precision`, `tipo`, `descripcion`, `lugar`, `foto`; además `fuente`, `alias` y `acepta_privacidad=1`. Llega a /admin como envío «Completar ficha»; desde allí se pasa a la ficha (solo rellena campos vacíos; las personas nombradas quedan sin publicar hasta revisarlas). La lista de campos desconocidos sale en `obras.geojson` como `desconocidos` (y en texto, `por_conocer`).

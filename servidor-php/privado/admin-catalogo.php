@@ -438,8 +438,34 @@ if ($sub === '/artista') {
 
 // ---------------- Soportes ----------------
 // Lo que identifica cada etiqueta QR: una pared, una roca, un banco… o una web. Lleva sus obras con «desde» y «hasta».
+// PDF de azulejos 15 × 15 (QR al UUID del soporte), del derecho y en espejo para el transfer. Se genera en el navegador.
+if ($sub === '/azulejos.js') { header('Content-Type: application/javascript; charset=utf-8'); readfile(PRIVADO . '/azulejos.js'); exit; }
+if ($sub === '/azulejos') {
+  $marcados = array_flip(array_map('strtolower', (array) ($_GET['id'] ?? [])));
+  $filas = '';
+  foreach ($db->query('SELECT * FROM soportes ORDER BY actualizado DESC') as $s) {
+    $res = sensibilidad_soporte($s) === 'reservada';
+    $filas .= "<tr><td><input type=checkbox name=u value='{$h($s['uuid'])}'" . (isset($marcados[$s['uuid']]) ? ' checked' : '') . ($res ? ' disabled' : '') . "></td>"
+      . "<td><a href='/admin/soporte?id={$h($s['uuid'])}'>{$h($s['nombre'] ?: 'Sin nombre')}</a>" . ($res ? ' <span class=meta>(reservado: sin QR)</span>' : '') . "</td><td>{$h($s['municipio'])}</td><td><code>" . strtoupper($h($s['uuid'])) . '</code></td></tr>';
+  }
+  $html = '<p class=meta>Marca los soportes y genera el PDF. Por cada uno salen dos páginas A4: <strong>en espejo</strong> para el transfer de tóner boca abajo y <strong>al derecho</strong> para probar la lectura en papel o para calcomanía al agua. El QR lleva <code>HTTPS://CANARIAS.AFRICA/&lt;UUID&gt;</code> en mayúsculas (sale más pequeño y se lee de más lejos). Imprime al 100 %, sin «ajustar a página»: la barra de control mide 100 mm.</p>'
+    . ($filas ? "<p><button type=button id=todos>Marcar todos</button> <button type=button id=pdf class=aprobada>Generar PDF</button> <span id=res class=meta></span></p>
+      <table class=filtrable><tr><th></th><th>Soporte</th><th>Municipio</th><th>UUID</th></tr>$filas</table>
+      <script src=/vendor/qrcode-generator-1.4.4/qrcode.js></script><script src=/admin/azulejos.js></script>
+      <script>
+      const cajas=()=>[...document.querySelectorAll('input[name=u]:not(:disabled)')];
+      document.getElementById('todos').onclick=()=>cajas().forEach(c=>c.checked=!c.closest('tr').hidden);
+      document.getElementById('pdf').onclick=()=>{ const u=cajas().filter(c=>c.checked).map(c=>c.value), r=document.getElementById('res');
+        if(!u.length){ r.textContent='Marca al menos un soporte.'; return; }
+        const a=document.createElement('a'); a.href=URL.createObjectURL(pdfAzulejos(u)); a.download='azulejos-'+new Date().toISOString().slice(0,10)+'.pdf';
+        a.textContent='Descargar de nuevo'; r.textContent=u.length+(u.length>1?' azulejos, ':' azulejo, ')+2*u.length+' páginas. '; r.append(a); a.click(); };
+      </script>"
+      : '<div class=vacio>No hay soportes todavía. <a class=boton href=/admin/soporte>+ Crear el primer soporte</a></div>');
+  pagina('Azulejos para imprimir', $html);
+}
+
 if ($sub === '/soportes') {
-  $html = $aviso_pub() . '<p><a href=/admin/soporte>+ Nuevo soporte</a> · <a href=/admin/catalogo>Obras</a></p>
+  $html = $aviso_pub() . '<p><a href=/admin/soporte>+ Nuevo soporte</a> · <a href=/admin/azulejos>Imprimir azulejos (PDF)</a> · <a href=/admin/catalogo>Obras</a></p>
     <p class=meta>La etiqueta QR identifica el soporte, no una obra: en un mismo muro puede haber varias obras, o unas encima de otras con el tiempo. Se publica en <a href=/datos/soportes.geojson>/datos/soportes.geojson</a> (los soportes con punto y alguna obra publicada).</p>
     <table class=filtrable><tr><th>Soporte</th><th>Tipo</th><th>Municipio</th><th>Obras ahora</th><th>Etiquetas</th></tr>';
   foreach ($db->query('SELECT * FROM soportes ORDER BY actualizado DESC') as $s) {
@@ -487,7 +513,7 @@ if ($sub === '/soporte') {
   }
   $html = $estilo_form . ($error ? "<p class=error>{$h($error)}</p>" : '') . (!empty($_GET['ok']) ? '<p class=hecho>Guardado.</p>' . $aviso_pub() : '')
     . "<form method=post action=/admin/soporte><input type=hidden name=csrf value=$csrf><input type=hidden name=id value=\"{$h($id)}\">"
-    . ($id ? "<p class=meta>Id: <code>{$h($id)}</code></p>" : '')
+    . ($id ? "<p class=meta>Id: <code>{$h($id)}</code></p><p class=meta>QR del azulejo: <code>https://canarias.africa/" . strtoupper($h($id)) . "</code> (en mayúsculas: el QR sale más pequeño) · <a href='/admin/azulejos?id[]={$h($id)}'>Azulejo en PDF</a></p>" : '')
     . $campo('nombre', 'Nombre', $v('nombre'), 'text', 'Por ejemplo: «Muro norte del lavadero», «Web del colectivo».', ['required' => 'required'])
     . '<div class=par>' . $lista('tipo', 'Tipo', TIPOS_SOPORTE, (string) $v('tipo')) . $lista('sensibilidad', 'Sensibilidad', $ETIQUETAS_SENS, (string) $v('sensibilidad')) . '</div>'
     . '<p class=meta>La protección que cuenta es la mayor entre la del soporte y la de sus obras: si una obra es delicada, el soporte tampoco se publica con detalle.</p>'

@@ -1,0 +1,90 @@
+{
+ "capturas": [
+  {
+   "url": "https://canarias.africa/apple-touch-icon.png",
+   "motivo": "cambio en la web",
+   "commit": "d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+   "fecha": "2026-11-02T10:53:15+00:00",
+   "wayback": "https://web.archive.org/web/20261102104423/https://canarias.africa/apple-touch-icon.png"
+  },
+  {
+   "url": "https://canarias.africa/compartir.png",
+   "motivo": "cambio en la web",
+   "commit": "d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+   "fecha": "2026-11-02T10:57:23+00:00",
+   "wayback": "https://web.archive.org/web/20261102105724/https://canarias.africa/compartir.png"
+  },
+  {
+   "url": "https://canarias.africa/convocatorias.json",
+   "motivo": "cambio en la web",
+   "commit": "d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+   "fecha": "2026-11-02T11:01:31+00:00",
+   "wayback": "https://web.archive.org/web/20261102101014/https://canarias.africa/convocatorias.json"
+  },
+  {
+   "url": "https://canarias.africa/favicon.svg",
+   "motivo": "cambio en la web",
+   "commit": "d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+   "fecha": "2026-11-02T11:05:41+00:00",
+   "wayback": "https://web.archive.org/web/20261102104632/https://canarias.africa/favicon.svg"
+  },
+  {
+   "url": "https://canarias.africa/",
+   "motivo": "cambio en la web",
+   "commit": "d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+   "fecha": "2026-11-02T11:07:50+00:00",
+   "wayback": "https://web.archive.org/web/20261102100820/https://canarias.africa/"
+  },
+  {
+   "url": "https://canarias.africa/prototipo/",
+   "motivo": "cambio en la web",
+   "commit": "d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+   "fecha": "2026-11-02T11:13:26+00:00",
+   "wayback": "https://web.archive.org/web/20261102101516/https://canarias.africa/prototipo/#scan"
+  },
+  {
+   "url": "https://canarias.africa/robots.txt",
+   "motivo": "cambio en la web",
+   "commit": "d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+   "fecha": "2026-11-02T11:17:40+00:00",
+   "wayback": "https://web.archive.org/web/20261102105029/https://canarias.africa/robots.txt"
+  },
+  {
+   "url": "https://canarias.africa/scan/",
+   "motivo": "cambio en la web",
+   "commit": "d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+   "fecha": "2026-11-02T11:19:49+00:00",
+   "wayback": "https://web.archive.org/web/20261102101516/https://canarias.africa/prototipo/#scan"
+  },
+  {
+   "url": "https://github.com/GofioDesign/canarias.africa/commit/d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+   "motivo": "commit",
+   "commit": "d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+   "fecha": "2026-11-02T11:24:07+00:00",
+   "wayback": "https://web.archive.org/web/20261102112418/https://github.com/GofioDesign/canarias.africa/commit/d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac"
+  }
+ ],
+ "pendientes": [
+  {
+   "url": "https://canarias.africa/404.html",
+   "motivo": "cambio en la web",
+   "commit": "d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+   "intentos": 1
+  },
+  {
+   "url": "https://canarias.africa/marca/gofio-design-2026.svg",
+   "motivo": "cambio en la web",
+   "commit": "d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+   "intentos": 1
+  },
+  {
+   "url": "https://canarias.africa/marca/sello-un-proyecto-gofio-design.svg",
+   "motivo": "cambio en la web",
+   "commit": "d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+   "intentos": 1
+  }
+ ],
+ "obras": {},
+ "ultimo_commit": "d58fc20e0a9d2ad4a5ca50ed0ef802c1db4247ac",
+ "actualizado": "2026-11-02T10:53:02+00:00"
+}

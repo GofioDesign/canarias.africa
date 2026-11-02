@@ -333,7 +333,24 @@ CREATE TABLE IF NOT EXISTS participa_envios (
   creado   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- Registro de acciones delicadas en /admin (por ahora, descargas de la copia de la base de datos).
+-- Correos a toda la lista, escritos en /admin/correo. La cola guarda a quién falta por enviar (salen por lotes).
+CREATE TABLE IF NOT EXISTS correo_campanas (
+  id         INTEGER PRIMARY KEY,
+  asunto     TEXT NOT NULL,
+  texto      TEXT NOT NULL,
+  total      INTEGER NOT NULL DEFAULT 0,
+  creado     TEXT NOT NULL DEFAULT (datetime('now')),
+  terminado  TEXT
+);
+CREATE TABLE IF NOT EXISTS correo_cola (
+  campana       INTEGER NOT NULL REFERENCES correo_campanas(id),
+  participante  INTEGER NOT NULL REFERENCES participantes(id),
+  estado        TEXT NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente','enviado','error','omitido')),
+  enviado       TEXT,
+  PRIMARY KEY (campana, participante)
+);
+
+-- Registro de acciones delicadas en /admin: descargas de la copia, borrados, cambios de alias, correos a la lista.
 CREATE TABLE IF NOT EXISTS admin_registro (
   id       INTEGER PRIMARY KEY,
   accion   TEXT NOT NULL,

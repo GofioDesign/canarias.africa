@@ -164,6 +164,9 @@ function soportes_features(): array {
 // Elimina un soporte: sus vínculos con obras desaparecen, las obras no. No se puede si tiene una etiqueta QR en su sitio
 // (colocada, confirmada…): primero hay que retirarla o pasarla a otro soporte. Las etiquetas antiguas quedan sin soporte.
 // Queda constancia en admin_registro. Ojo: un azulejo ya impreso con este UUID dejará de abrir nada.
+// Lo que hay que escribir para eliminar un soporte: su nombre o, si no tiene, el principio de su UUID.
+function nombre_soporte(array $s): string { return trim((string) $s['nombre']) ?: substr($s['uuid'], 0, 8); }
+
 function soporte_eliminar(string $uuid): string {
   $db = db();
   $s = soporte($uuid) ?? throw new InvalidArgumentException('Ese soporte no existe.');
@@ -176,8 +179,7 @@ function soporte_eliminar(string $uuid): string {
   $db->prepare('UPDATE qr_codigos SET soporte = NULL WHERE soporte = ?')->execute([$s['uuid']]);
   $db->prepare('DELETE FROM obra_soporte WHERE soporte = ?')->execute([$s['uuid']]);
   $db->prepare('DELETE FROM soportes WHERE uuid = ?')->execute([$s['uuid']]);
-  $db->prepare('INSERT INTO admin_registro (accion, detalle, ip, agente) VALUES (?, ?, ?, ?)')
-     ->execute(['eliminar_soporte', $s['uuid'] . ' · ' . $s['nombre'], $_SERVER['REMOTE_ADDR'] ?? '', mb_substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 300)]);
+  registrar_admin('eliminar_soporte', $s['uuid'] . ' · ' . $s['nombre']);
   $db->commit();
   return $s['nombre'];
 }

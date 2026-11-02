@@ -23,6 +23,9 @@ return [
   'teselas_max_mb' => 300,
   'foto_lado_max' => 1600,
   'envios_por_hora_e_ip' => 20,
+  // Correos a toda la lista (/admin/correo): cuántos salen en cada lote (uno por hora con el cron, o al pulsar el botón).
+  // Pregunta al hosting cuántos correos por hora permite y deja margen para los de confirmación y entrada.
+  'correos_por_lote' => 50,
 
   // Etiquetas QR (propuestas del 28-10-2026; ajustables).
   'qr' => [

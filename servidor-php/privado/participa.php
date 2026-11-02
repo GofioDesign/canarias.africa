@@ -145,12 +145,52 @@ function participa_baja(string $metodo): never {
        <form method=post><input type=hidden name=t value=$t><button>Darme de baja</button></form>");
 }
 
-function enviar_correo_lista(string $para, string $asunto, string $texto, string $baja): void {
+function enviar_correo_lista(string $para, string $asunto, string $texto, string $baja): bool {
   $c = config();
   $url = rtrim($c['api'], '/') . '/api/participa/baja?t=' . $baja;
   $texto .= "\n--\nCANARIAS · Catálogo Atlántico de Núnea Arqueología · " . $c['web'] . "\nPara no recibir más correos: $url\n";
-  enviar_correo($para, $asunto, $texto, cabeceras_remitente('CANARIAS · Catálogo Atlántico de Núnea Arqueología')
+  return enviar_correo($para, $asunto, $texto, cabeceras_remitente('CANARIAS · Catálogo Atlántico de Núnea Arqueología')
     . "\r\nList-Unsubscribe: <$url>\r\nList-Unsubscribe-Post: List-Unsubscribe=One-Click");
+}
+
+// Correos a toda la lista desde /admin/correo. Cada correo enviado a mano entra en una cola y sale por lotes
+// (los hostings compartidos limitan los correos por hora): un lote al crearlo, otro con cada pasada del cron
+// y otro cada vez que se pulsa «Enviar el siguiente lote». Solo a personas confirmadas; quien se da de baja
+// mientras tanto ya no lo recibe. Cada correo lleva su enlace de baja.
+function correo_campana_crear(string $asunto, string $texto): int {
+  $db = db();
+  $db->beginTransaction();
+  $db->prepare('INSERT INTO correo_campanas (asunto, texto) VALUES (?, ?)')->execute([$asunto, $texto]);
+  $id = (int) $db->lastInsertId();
+  $db->prepare("INSERT INTO correo_cola (campana, participante) SELECT ?, id FROM participantes WHERE estado = 'confirmada'")->execute([$id]);
+  $db->prepare('UPDATE correo_campanas SET total = (SELECT COUNT(*) FROM correo_cola WHERE campana = ?) WHERE id = ?')->execute([$id, $id]);
+  $db->commit();
+  return $id;
+}
+
+// Sustituye {saludo} («Hola, Ana:» o «Hola:») y {alias} en el texto de un correo de la lista.
+function correo_personalizar(string $texto, string $alias): string {
+  return strtr($texto, ['{saludo}' => $alias !== '' ? "Hola, $alias:" : 'Hola:', '{alias}' => $alias]);
+}
+
+// Envía como mucho $max correos pendientes de la cola. Devuelve cuántos ha enviado.
+function correo_lote(int $max): int {
+  $db = db();
+  $st = $db->prepare("SELECT q.campana, q.participante, c.asunto, c.texto, p.correo, p.alias, p.baja, p.estado FROM correo_cola q
+      JOIN correo_campanas c ON c.id = q.campana JOIN participantes p ON p.id = q.participante
+      WHERE q.estado = 'pendiente' ORDER BY q.campana, q.participante LIMIT ?");
+  $st->execute([max(0, $max)]);
+  $marcar = $db->prepare("UPDATE correo_cola SET estado = ?, enviado = datetime('now') WHERE campana = ? AND participante = ?");
+  $n = 0;
+  foreach ($st->fetchAll() as $q) {
+    if ($q['estado'] !== 'confirmada') { $marcar->execute(['omitido', $q['campana'], $q['participante']]); continue; }
+    $ok = enviar_correo_lista($q['correo'], $q['asunto'], correo_personalizar($q['texto'], $q['alias']), $q['baja']);
+    $marcar->execute([$ok ? 'enviado' : 'error', $q['campana'], $q['participante']]);
+    $n++;
+  }
+  $db->exec("UPDATE correo_campanas SET terminado = datetime('now') WHERE terminado IS NULL
+      AND NOT EXISTS (SELECT 1 FROM correo_cola q WHERE q.campana = correo_campanas.id AND q.estado = 'pendiente')");
+  return $n;
 }
 
 function pagina_simple(string $titulo, string $cuerpo, int $estado = 200): never {

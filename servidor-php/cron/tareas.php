@@ -13,6 +13,9 @@ publicar_web();
 caducar_asignaciones();
 envejecer_etiquetas();
 
+// 1b. Correos a la lista escritos en /admin/correo: un lote por pasada (el hosting limita los correos por hora).
+correo_lote((int) ($c['correos_por_lote'] ?? 50));
+
 // 2. Recortar la caché de teselas: si pasa del límite, se borran primero las menos usadas recientemente.
 $dir = PRIVADO . '/cache/teselas';
 if (is_dir($dir)) {

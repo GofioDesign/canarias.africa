@@ -81,7 +81,9 @@ function guardar_foto(string $tmp, string $tipo): string {
     'image/webp' => @imagecreatefromwebp($tmp),
     default => false,
   };
-  if (!$img) error_publico('La foto debe ser JPEG, PNG o WebP.');
+  if (!$img) error_publico(in_array($tipo, ['image/heic', 'image/heif'], true)
+    ? 'Esta foto está en formato HEIC y el servidor no la puede abrir. En el móvil, elige «Más compatible» (JPEG) en los ajustes de la cámara o haz una captura de la foto.'
+    : 'La foto debe ser JPEG, PNG o WebP.');
   if ($tipo === 'image/jpeg' && function_exists('exif_read_data')) {
     $giro = [3 => 180, 6 => -90, 8 => 90][@exif_read_data($tmp)['Orientation'] ?? 1] ?? 0;
     if ($giro) $img = imagerotate($img, $giro, 0);

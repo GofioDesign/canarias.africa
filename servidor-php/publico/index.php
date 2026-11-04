@@ -114,6 +114,10 @@ function recibir_envio(string $coleccion): never {
   $formularios = ['observaciones' => 'observacion', 'contexto' => 'contexto', 'propuestas_obra' => 'obra_nueva',
     'propuestas_ruta' => 'ruta', 'inscripciones' => 'inscripcion', 'completar_obra' => 'completar'];
   $formulario = $formularios[$coleccion] ?? error_publico('Formulario desconocido.', 404);
+  // Si el envío pasa de post_max_size, PHP vacía $_POST y $_FILES: avisar de eso y no de la privacidad.
+  if (!$_POST && !$_FILES && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+    error_publico('El envío pesa demasiado para el servidor. Manda menos fotos o más pequeñas.', 413);
+  }
   if (!in_array($_POST['acepta_privacidad'] ?? '', ['true', 'on', '1'], true)) {
     error_publico('Hay que aceptar el aviso de privacidad para enviar el formulario.');
   }
@@ -140,10 +144,22 @@ function recibir_envio(string $coleccion): never {
   }
   $datos = [];
   foreach ($_POST as $k => $v) if (is_string($v)) $datos[substr((string) $k, 0, 60)] = mb_substr($v, 0, 5000);
-  $fotos = [];
+  // Varias fotos: llegan como foto, foto_2, foto_3… (o como foto[]). La web ya las reduce en el móvil.
+  $archivos = [];
   foreach ($_FILES as $f) {
-    if (is_array($f['error']) || $f['error'] === UPLOAD_ERR_NO_FILE) continue;
-    if ($f['error'] !== UPLOAD_ERR_OK || $f['size'] > 15 * 1024 * 1024) error_publico('La foto no ha llegado bien o pasa de 15 MB.');
+    if (is_array($f['error'])) {
+      foreach (array_keys($f['error']) as $i) $archivos[] = ['error' => $f['error'][$i], 'size' => $f['size'][$i], 'tmp_name' => $f['tmp_name'][$i]];
+    } else $archivos[] = $f;
+  }
+  $archivos = array_values(array_filter($archivos, fn($f) => $f['error'] !== UPLOAD_ERR_NO_FILE));
+  if (count($archivos) > 8) error_publico('Como mucho 8 fotos por envío.');
+  $fotos = [];
+  foreach ($archivos as $n => $f) {
+    $cual = count($archivos) > 1 ? ' ' . ($n + 1) : '';
+    if (in_array($f['error'], [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true) || $f['size'] > 15 * 1024 * 1024) {
+      error_publico("La foto$cual pesa demasiado para el servidor. Prueba con una más pequeña.", 413);
+    }
+    if ($f['error'] !== UPLOAD_ERR_OK) error_publico("La foto$cual no ha llegado entera. Vuelve a probar.");
     $fotos[] = guardar_foto($f['tmp_name'], mime_content_type($f['tmp_name']) ?: '');
   }
   // Con la cuenta iniciada, el envío queda a su nombre (y el alias es el de la cuenta).

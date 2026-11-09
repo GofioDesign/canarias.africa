@@ -132,10 +132,16 @@
    "commit": "59975a81a7c45c502d5fb967e03d9a635033dfb9",
    "fecha": "2026-11-04T22:18:09+00:00",
    "wayback": "https://web.archive.org/web/20261104222008/https://github.com/GofioDesign/canarias.africa/commit/59975a81a7c45c502d5fb967e03d9a635033dfb9"
+  },
+  {
+   "url": "https://canarias.africa/",
+   "motivo": "estrato semanal",
+   "fecha": "2026-11-09T13:55:18+00:00",
+   "wayback": "https://web.archive.org/web/20261109135525/https://canarias.africa/"
   }
  ],
  "pendientes": [],
  "obras": {},
- "ultimo_commit": "59975a81a7c45c502d5fb967e03d9a635033dfb9",
- "actualizado": "2026-11-04T22:12:10+00:00"
+ "ultimo_commit": "5a9b1b52fe807efddd290e71c02b7e677a10e5ce",
+ "actualizado": "2026-11-09T13:55:18+00:00"
 }

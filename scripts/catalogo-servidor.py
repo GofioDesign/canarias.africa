@@ -30,7 +30,7 @@ for capa in CAPAS:
             url = f"{BASE}/datos/{nombre}.geojson"
             req = urllib.request.Request(url, headers={"User-Agent": "canarias.africa publicar-web (GitHub Actions)"})
             try:
-                with urllib.request.urlopen(req, timeout=60) as r:
+                with urllib.request.urlopen(req, timeout=20) as r:
                     datos = json.load(r)
                 break
             except urllib.error.HTTPError as e:

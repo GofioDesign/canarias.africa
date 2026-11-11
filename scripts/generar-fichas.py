@@ -170,7 +170,7 @@ except Exception:  # noqa: BLE001
 
 def foto_obra(url):
     """Descarga la foto de la obra (solo https, hasta 8 MB) para la tarjeta de compartir; None si no se puede."""
-    if not url or not str(url).startswith("https://"):
+    if not url or not str(url).startswith("https://") or (_API_CAIDA and str(url).startswith(API)):
         return None
     import urllib.request
     try:
@@ -431,30 +431,49 @@ def glifo(uuid, publicos, privados, espectadores=0):
 API = os.environ.get("CA_API", "https://api.canarias.africa").rstrip("/")
 
 
+_API_CAIDA = False  # tras el primer fallo de conexión no se insiste: una publicación no debe quedarse colgada esperando al servidor
+
+
+def _api_caida(err):
+    global _API_CAIDA
+    import urllib.error
+    if not isinstance(err, urllib.error.HTTPError):  # un 404 de una obra no es una caída del servidor
+        _API_CAIDA = True
+        print(f"::warning::api.canarias.africa no responde ({err}): las fichas se generan sin sus datos")
+
+
 def vinculos_api(uuid):
     """Vínculos de personas que guarda api.canarias.africa: el número de privados y los que todas las partes han publicado."""
     import urllib.request
+    if _API_CAIDA:
+        return (0, [])
     try:
         with urllib.request.urlopen(f"{API}/api/publico/obras/{uuid}/vinculos", timeout=10) as r:
             d = json.loads(r.read())
             return int(d.get("privados") or 0), [x for x in d.get("publicos") or [] if isinstance(x, dict)]
-    except Exception:
+    except Exception as err:  # noqa: BLE001
+        _api_caida(err)
         return 0, []  # sin servidor (pruebas, vista previa): solo cuenta lo del catálogo
 
 
 def versiones_api(uuid):
     """Árbol de modificaciones que guarda el servidor (cada edición en /admin es una versión)."""
     import urllib.request
+    if _API_CAIDA:
+        return []
     try:
         with urllib.request.urlopen(f"{API}/api/publico/obras/{uuid}/versiones", timeout=10) as r:
             return [v for v in json.loads(r.read()).get("versiones") or [] if isinstance(v, dict) and v.get("version")]
-    except Exception:
+    except Exception as err:  # noqa: BLE001
+        _api_caida(err)
         return []
 
 
 def huellas_api(uuid):
     """Huellas anónimas de espectadores (visitas, escaneos, verificaciones, observaciones) en api.canarias.africa."""
     import urllib.request
+    if _API_CAIDA:
+        return {}
     try:
         with urllib.request.urlopen(f"{API}/api/publico/obras/{uuid}/huellas", timeout=10) as r:
             d = json.loads(r.read())
@@ -463,7 +482,8 @@ def huellas_api(uuid):
                 if isinstance(d.get(k), dict):
                     hu[k] = {str(m)[:7]: int(n or 0) for m, n in d[k].items() if re.fullmatch(r"\d{4}-\d{2}", str(m)[:7])}
             return hu
-    except Exception:
+    except Exception as err:  # noqa: BLE001
+        _api_caida(err)
         return {}
 
 

@@ -51,14 +51,19 @@ jobs:
         with:
           fetch-depth: 0  # el árbol de modificaciones de cada ficha sale del historial de git
       - uses: actions/configure-pages@v5
+      # Si api.canarias.africa no responde, la publicación sigue sin la copia (la web lee del servidor) en vez de
+      # quedarse colgada: el 2026-11-02 este paso se quedó esperando más de 7 minutos y bloqueó todas las publicaciones.
       - name: Copiar el catálogo del servidor (obras, QR, rutas, artistas) a canarias.africa/datos/
-        run: |
-          python3 scripts/catalogo-servidor.py
-          python3 scripts/comprobar-catalogo.py
+        timeout-minutes: 3
+        continue-on-error: true
+        run: python3 scripts/catalogo-servidor.py
+      - name: Comprobar que la copia no publica ubicaciones sensibles
+        run: python3 scripts/comprobar-catalogo.py
       - name: Pillow y la fuente Inter para las imágenes de compartir (sin ellas se usa la de la portada)
         continue-on-error: true
         run: sudo apt-get update -qq && sudo apt-get install -y -qq python3-pil fonts-inter
       - name: Fichas estáticas, estratos de archive.org, páginas de soporte, imágenes de compartir y sitemap
+        timeout-minutes: 15
         run: python3 scripts/generar-fichas.py
       - name: Generar propuestas.json y abrir el debate de las propuestas nuevas
         run: python3 scripts/propuestas.py

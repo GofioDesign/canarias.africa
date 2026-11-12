@@ -145,17 +145,17 @@
    "commit": "ab0d66f5220d8d19717db667d08b5a77a9d6beaf",
    "fecha": "2026-11-11T21:05:41+00:00",
    "wayback": "https://web.archive.org/web/20261111210549/https://github.com/GofioDesign/canarias.africa/commit/ab0d66f5220d8d19717db667d08b5a77a9d6beaf"
-  }
- ],
- "pendientes": [
+  },
   {
    "url": "https://github.com/GofioDesign/canarias.africa/commit/b818fece45dd1a713d06771311991b5cd6dcfb7d",
    "motivo": "commit",
    "commit": "b818fece45dd1a713d06771311991b5cd6dcfb7d",
-   "intentos": 1
+   "fecha": "2026-11-12T00:38:41+00:00",
+   "wayback": "https://web.archive.org/web/20261111211126/https://github.com/GofioDesign/canarias.africa/commit/b818fece45dd1a713d06771311991b5cd6dcfb7d"
   }
  ],
+ "pendientes": [],
  "obras": {},
- "ultimo_commit": "b818fece45dd1a713d06771311991b5cd6dcfb7d",
- "actualizado": "2026-11-11T21:05:41+00:00"
+ "ultimo_commit": "e382a4addc118ae182df4d8168a4a6c9ec5365db",
+ "actualizado": "2026-11-12T00:38:41+00:00"
 }

@@ -158,10 +158,16 @@
    "motivo": "estrato semanal",
    "fecha": "2026-11-17T07:50:44+00:00",
    "wayback": "https://web.archive.org/web/20261116215855/https://canarias.africa/"
+  },
+  {
+   "url": "https://canarias.africa/",
+   "motivo": "estrato semanal",
+   "fecha": "2026-11-24T15:54:20+00:00",
+   "wayback": "https://web.archive.org/web/20261124155424/https://canarias.africa/"
   }
  ],
  "pendientes": [],
  "obras": {},
- "ultimo_commit": "60e9f7cad10db03ad24ad68c6d85a36d8c91b1db",
- "actualizado": "2026-11-17T07:50:44+00:00"
+ "ultimo_commit": "3016c440a99ac565c622b384a7a6156b9d3460a6",
+ "actualizado": "2026-11-24T15:54:20+00:00"
 }
